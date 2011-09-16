@@ -1,6 +1,6 @@
 (function($) {
   
-  var baseUrl = 'https://api-staging.cloudmine.me/v1/app/';
+  var baseUrl = 'https://api.cloudmine.me/v1/app/';
   $.cm = {
     getJSON: function(appid, apikey, keys, callback) {
       var url = baseUrl + appid + '/text';
