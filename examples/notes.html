@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>CloudMine Demo App Monitor</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js" language="javascript"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.16/jquery-ui.min.js" language="javascript"></script>
+    <script src="../js/cloudmine.js" language="javascript"></script>
+    <style>
+      th {
+        background-color: #ccc;
+        text-align: left;
+      }
+    </style>
+  </head>
+  <body>
+    <script language="javascript">
+      $(document).ready(function() {
+          var appid = "e3eda9b8240e4bb3a0ab9f53400104f5";
+          var apikey = "f824d345ffb04fda9491ff3f7af0e7aa";
+
+          cloudmine.init({app_id: appid, api_key: apikey});
+
+          var cached = {};
+          var fetch = function() {
+              cloudmine.getValues(null, {
+                  success: function(success){
+                      $('#content').html('');
+                      var table = $('table#template').clone();
+                      table.attr('id', 'thedata').attr('style', '');
+
+                      success.forEach(function(key, value){
+                          table.find('tbody').append('<tr><td>'+value.title+'</td><td>'+value.note.replace("\n", "<br />")+ '</td></tr>');
+                          if(!cached || !cached[key] || cached[key].modified != value.modified) {
+                              var lastRow = table.find('tr:last');
+                              lastRow.css('background-color', 'yellow');
+                              setTimeout(function() { lastRow.animate({ backgroundColor: '#fff' }, 'slow'); }, 500);
+                          }
+                      });
+
+                      cached = success;
+                      $('#content').append(table);
+                  }
+              });
+          };
+
+          fetch();
+          setInterval(fetch, 1000);
+      });
+    </script>
+    <h1>Todo List Web Portal</h1>
+    <table id="template" style="display:none" width="100%">
+      <thead><th>Title</th><th>Content</th></thead>
+      <tbody></tbody>
+    </table>
+    <div id="content">&nbsp;</div>
+  </body>
+</html>
