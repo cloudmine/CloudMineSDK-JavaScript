@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js" language="javascript"></script>
+    <script src="../examples/jquery.cloudmine.js" language="javascript"></script>
+    <script language="javascript">
+      $(document).ready(function() {
+        $('#message').bind('keydown', function(event) {
+          if(event.which == 13) {
+            var key = new Date().getTime();
+            var data = { 'message': $('#message').val(), 'name': $('#name').val() };
+            $.cm.insertValueForKey('a3197ade1a804c20989a8440556a1ae8', '781153b149ad4e888791da0fae34d0d2', key, data);
+            $('#message').val('');
+          }
+        });
+
+        setInterval(function() {
+          $.cm.getJSON('a3197ade1a804c20989a8440556a1ae8', '781153b149ad4e888791da0fae34d0d2', null, function(data) {
+            var chat = '';
+            $.each(data.success, function(key, value) {
+              chat += value.name + ': ' + value.message + "\n";
+            });
+            $('#chat').val(chat);
+          });
+        }, 500);
+      });
+    </script>
+  </head>
+  <body>
+    <textarea id="chat" cols="60" rows="20"></textarea>
+    <p>Name: <input type="text" id="name" /> Message: <input type="text" id="message" /></p>
+  </body>
+</html>
