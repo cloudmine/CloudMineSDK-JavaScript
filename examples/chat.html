@@ -6,20 +6,35 @@
     <script language="javascript">
       $(document).ready(function() {
         $('#message').bind('keydown', function(event) {
+          // Only bind to the return/enter key being pressed.
           if(event.which == 13) {
+
+            // Construct some sort of unique identifier (in this case, we are using the UNIX timestamp).
             var key = new Date().getTime();
+
+            // This is our data model. Basically just store the person's name and their message in a JSON object.
             var data = { 'message': $('#message').val(), 'name': $('#name').val() };
+
+            // Call the CloudMine jQuery plugin to actually push the data to the CM servers.
             $.cm.insertValueForKey('a3197ade1a804c20989a8440556a1ae8', '781153b149ad4e888791da0fae34d0d2', key, data);
+
+            // Clear the message box.
             $('#message').val('');
           }
         });
 
+        // Setup polling of the CloudMine servers to update the chat box.
         setInterval(function() {
+          // Call the CloudMine jQuery plugin to grab all the data from the server. In this case
+          // we want to get all the keys since they represent all the messages.
           $.cm.getJSON('a3197ade1a804c20989a8440556a1ae8', '781153b149ad4e888791da0fae34d0d2', null, function(data) {
             var chat = '';
             $.each(data.success, function(key, value) {
+              // Basic string concatination to build the string to display to the user in the chat box.
               chat += value.name + ': ' + value.message + "\n";
             });
+
+            // Show the assembled string in the chat box.
             $('#chat').val(chat);
           });
         }, 500);
