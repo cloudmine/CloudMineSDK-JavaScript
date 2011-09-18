@@ -64,7 +64,7 @@
             cm.setValues(data, callback, merge(opts || {}, {method: "PUT"}));
         },
 
-        getValues: function(callbacks, keys, opts){
+        getValues: function(keys, callbacks, opts){
             opts = merge({}, settings, opts);
             var url = build_url(opts, "text");
 
