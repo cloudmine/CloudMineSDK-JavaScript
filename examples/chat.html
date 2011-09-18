@@ -19,7 +19,10 @@
 
                   // This is our data model.
                   // Basically just store the person's name and their message in a JSON object.
-                  var data = { 'message': $('#message').val(), 'name': $('#name').val() };
+                  var data = {
+                      'name': $('#name').val(),
+                      'message': $('#message').val()
+                  };
 
                   // Call the CloudMine API to actually push the data to the CM servers.
                   cloudmine.updateValue(key, data, function(){
@@ -36,17 +39,15 @@
               // Call the CloudMine API to grab all the data from the server. In this case
               // we want to get all the keys since they represent all the messages.
               var chat = '';
-              cloudmine.getValues(null, {
-                  success: function(success) {
-                      // Basic string concatination to build the string
-                      // to display to the user in the chat box.
-                      success.forEach(function(key, value){
-                          chat += value.name + ': ' + value.message + "\n";
-                      });
+              cloudmine.getValues(null, function(success) {
+                  // Basic string concatination to build the string
+                  // to display to the user in the chat box.
+                  success.forEach(function(key, value){
+                      chat += value.name + ': ' + value.message + "\n";
+                  });
 
-                      // Show the assembled string in the chat box.
-                      $('#chat').val(chat);
-                  }
+                  // Show the assembled string in the chat box.
+                  $('#chat').val(chat);
               });
           }
 

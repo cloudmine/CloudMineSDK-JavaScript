@@ -72,6 +72,10 @@
                 url += "?keys=" + keys.join(",");
             }
 
+            if( typeof(callbacks) == "function" ){
+                callbacks = { success: callbacks };
+            }
+
             var callback_wrapper = callbacks && function(data){
                 // data has .success and .errors
                 if(data.success){
