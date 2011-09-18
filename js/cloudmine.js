@@ -34,10 +34,28 @@
     };
 
     var cm = {
+        /**
+         * Initialize the library with the APPID and API Key
+         *
+         * Parameter: opts
+         *     An object with the following keys:
+         *       app_id:  The app id
+         *       api_key: The API key
+         */
         init: function(opts){
             settings = merge({}, settings, opts);
         },
 
+        /**
+         * Set (overwrite) new values for provided keys.
+         *
+         * Parameter: values
+         *     An object of key/value pairs.  The keys in this object are
+         *     the top-level keys in the CloudMine API.
+         *
+         * Parameter: callback
+         *     Gets called with the JSON response when the request returns.
+         */
         setValues: function(values, callback, opts){
             opts = merge({}, settings, opts);
             var url = build_url(opts, "text");
@@ -52,18 +70,53 @@
             });
         },
 
+        /**
+         * Update the value for a single key
+         *
+         * Parameter: key
+         *     The key for the value to update
+         *
+         * Parameter: value
+         *     The object with the updated data
+         *
+         * Parameter: callback
+         *     Gets called with the JSON response when the request returns.
+         */
         updateValue: function(key, value, callback, opts){
             var data = {};
             data[key] = value;
             cm.setValues(data, callback, merge(opts || {}, {method: "POST"}));
         },
 
+        /**
+         * Sets the value for a single key
+         *
+         * Parameter: key
+         *     The key for the value to update
+         *
+         * Parameter: value
+         *     The object with the data to set
+         *
+         * Parameter: callback
+         *     Gets called with the JSON response when the request returns.
+         */
         setValue: function(key, value, callback, opts){
             var data = {};
             data[key] = value;
             cm.setValues(data, callback, merge(opts || {}, {method: "PUT"}));
         },
 
+        /**
+         * Gets key/value pairs for the specified keys
+         *
+         * Parameter: keys
+         *     An array of key names to get.  Can be set to null to get all data.
+         *
+         * Parameter: callbacks
+         *     Either a function that will be called with an object of succesfully
+         *     retreived key/value pairs that match the request or an object
+         *     with 'success' and 'errors' callback functions.
+         */
         getValues: function(keys, callbacks, opts){
             opts = merge({}, settings, opts);
             var url = build_url(opts, "text");
@@ -100,6 +153,15 @@
             });
         },
 
+        /**
+         * Deletes specified key/value pairs
+         *
+         * Parameter: callback
+         *     Gets called when the request returns.
+         *
+         * Parameter: keys
+         *     An array of key names to delete.  Can be set to null to delete all data.
+         */
         deleteValues: function(callback, keys, opts){
             opts = merge({}, settings, opts);
             var url = build_url(opts, "data");
