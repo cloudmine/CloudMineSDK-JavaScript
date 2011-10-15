@@ -7,7 +7,7 @@
 
     var merge = function(to, from1, from2){
         var from_list = [from1 || {}, from2 || {}];
-        for(from in from_list){
+        for(var from in from_list){
             if(from_list.hasOwnProperty(from)){
                 from = from_list[from];
                 if(from){
@@ -31,6 +31,18 @@
 
     var build_url = function(opts, postfix){
         return opts.api_url + "/v1/app/" + opts.app_id + "/" + postfix;
+    };
+
+    var qs = {
+        stringify: function(data){
+            var ret = [];
+            for (var d in data){
+                if(data.hasOwnProperty(d)){
+                    ret.push(encodeURIComponent(d) + "=" + encodeURIComponent(data[d]));
+                }
+            }
+            return ret.join("&");
+        }
     };
 
     var cm = {
@@ -154,6 +166,8 @@
         },
 
         /**
+         * DEPRECATED!  Use deleteKeys instead!
+         *
          * Deletes specified key/value pairs
          *
          * Parameter: callback
@@ -173,6 +187,57 @@
             $.ajax(url, {
                 headers: { 'X-CloudMine-ApiKey': opts.api_key },
                 type: 'DELETE',
+                success: callback
+            });
+        },
+
+        /**
+         * Deletes specified key/value pairs
+         *
+         * Parameter: callback
+         *     Gets called when the request returns.
+         *
+         * Parameter: keys
+         *     An array of key names to delete.  Can be set to null to delete all data.
+         */
+        deleteKeys: function(keys, callback, opts){
+            opts = merge({}, settings, opts);
+            var url = build_url(opts, "data");
+
+            if(keys){
+                url += "?keys=" + keys.join(",");
+            }
+
+            $.ajax(url, {
+                headers: { 'X-CloudMine-ApiKey': opts.api_key },
+                type: 'DELETE',
+                success: callback
+            });
+        },
+
+        /**
+         * Performs a search query
+         *
+         * Parameter: query
+         *     A string query. See API documentation for details.
+         *   Examples:
+         *        [type="student"]
+         *        a.b[x > 5, x < 10]
+         *
+         * Parameter: callback
+         *     A function that will be called with an object of succesfully
+         *     retreived key/value pairs that match the query
+         */
+        search: function(query, callback, opts){
+            opts = merge({}, settings, opts);
+            var url = build_url(opts, "search");
+
+            if(query){
+                url += "?" + qs.stringify({q: query});
+            }
+
+            $.ajax(url, {
+                headers: { 'X-CloudMine-ApiKey': opts.api_key },
                 success: callback
             });
         },
