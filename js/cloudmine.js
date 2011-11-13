@@ -74,6 +74,7 @@
 
             $.ajax(url, {
                 headers: { 'X-CloudMine-ApiKey': opts.api_key },
+                dataType: 'json',
                 processData: false,
                 type: opts.method || 'POST',
                 contentType: 'application/json',
@@ -161,6 +162,7 @@
 
             $.ajax(url, {
                 headers: { 'X-CloudMine-ApiKey': opts.api_key },
+                dataType: 'json',
                 success: callback_wrapper
             });
         },
@@ -186,6 +188,7 @@
 
             $.ajax(url, {
                 headers: { 'X-CloudMine-ApiKey': opts.api_key },
+                dataType: 'json',
                 type: 'DELETE',
                 success: callback
             });
@@ -238,6 +241,7 @@
 
             $.ajax(url, {
                 headers: { 'X-CloudMine-ApiKey': opts.api_key },
+                dataType: 'json',
                 success: callback
             });
         },
