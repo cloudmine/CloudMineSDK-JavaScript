@@ -1,1 +1,4 @@
-This is a work in progress and shouldn't actually be used for anything real at this point.
+## The JavaScript SDK supports the basic CloudMine API. 
+
+## Dependencies
+* jQuery
