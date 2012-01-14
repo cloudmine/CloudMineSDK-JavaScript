@@ -10,6 +10,10 @@
 
           cloudmine.init({app_id: appid, api_key: apikey});
 
+          var opts = {
+              // can be used to override user auth and params
+          };
+
           $('#message').bind('keydown', function(event) {
               // Only bind to the return/enter key being pressed.
               if(event.which == 13) {
@@ -27,7 +31,7 @@
                   // Call the CloudMine API to actually push the data to the CM servers.
                   cloudmine.updateValue(key, data, function(){
                       cloudmine.log("Saved: " + key + ": " + data);
-                  });
+                  }, opts);
 
                   // Clear the message box.
                   $('#message').val('');
@@ -48,11 +52,11 @@
 
                   // Show the assembled string in the chat box.
                   $('#chat').val(chat);
-              });
+              }, opts);
           }
 
           updateChat();
-          setInterval(updateChat, 1000);
+          setInterval(updateChat, 30000);
       });
     </script>
   </head>
