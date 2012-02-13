@@ -60,7 +60,7 @@
      */
     var apply_params = function(url, opts){
         var params = {};
-        var valid_params = ["f", "count", "skip", "limit"];
+        var valid_params = ["f", "count", "skip", "limit", "params"];
         var param;
         for(var index in valid_params){
             if(valid_params.hasOwnProperty(index)){
