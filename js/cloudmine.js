@@ -3,7 +3,7 @@
         api_url: "https://api.cloudmine.me",
         app_id: null,
         api_key: null,
-        login_token: null
+        session_token: null
     };
 
     var merge = function(to, from1, from2){
@@ -84,8 +84,8 @@
   var make_headers = function(opts) {
     opts = merge({}, settings, opts);
     var headers = { 'X-CloudMine-ApiKey': opts.api_key };
-    if(opts.login_token) {
-      headers = merge({}, headers, { 'X-CloudMine-LoginToken': opts.login_token });
+    if(opts.session_token) {
+      headers = merge({}, headers, { 'X-CloudMine-SessionToken': opts.session_token });
     }
 
     return headers;
@@ -166,7 +166,7 @@
           type: 'POST',
           headers: { 'X-CloudMine-ApiKey' : opts.api_key, 'Authorization': get_auth(user) },
           success: function(data, textStatus, jqXHR) {
-            settings.login_token = data.token;
+            settings.session_token = data.token;
             if(typeof(callback) == 'function') {
               callback(data, textStatus, jqXHR);
             }
@@ -182,12 +182,12 @@
        *
        * Parameter: opts
        *     An object with additional configuration options.
-       *     Can be used to override: api_url, app_id, api_key, login_token
+       *     Can be used to override: api_url, app_id, api_key, session_token
        */
       logout: function(callback, opts) {
         opts = merge({}, settings, opts);
 
-        if(!opts.login_token)
+        if(!opts.session_token)
           return; // nothing to do here
 
         var logoutUrl = opts.api_url + '/v1/app/' + opts.app_id + '/account/logout';
@@ -198,9 +198,9 @@
           contentType: 'application/json',
           processData: false,
           type: 'POST',
-          headers: { 'X-CloudMine-ApiKey' : opts.api_key, 'X-CloudMine-LoginToken': opts.login_token },
+          headers: { 'X-CloudMine-ApiKey' : opts.api_key, 'X-CloudMine-SessionToken': opts.session_token },
           success: function(data, textStatus, jqXHR) {
-            settings.login_token = null;
+            settings.session_token = null;
             if(typeof(callback) == 'function') {
               callback(data, textStatus, jqXHR);
             }
@@ -212,7 +212,7 @@
        * Returns true if we are currently logged in, false otherwise.
        */
       loggedIn: function() {
-        return !!settings.login_token;
+        return !!settings.session_token;
       },
 
         /**
@@ -227,7 +227,7 @@
          *
          * Parameter: opts
          *     An object with additional configuration options.
-         *     Can be used to override: api_url, app_id, api_key, method, login_token
+         *     Can be used to override: api_url, app_id, api_key, method, session_token
          *     And to specify extension parameters: f, limit, count, etc.
          */
         setValues: function(values, callback, opts){
@@ -261,7 +261,7 @@
          *
          * Parameter: opts
          *     An object with additional configuration options.
-         *     Can be used to override: api_url, app_id, api_key, method, login_token
+         *     Can be used to override: api_url, app_id, api_key, method, session_token
          *     And to specify extension parameters: f, limit, count, etc.
          */
         updateValue: function(key, value, callback, opts){
@@ -284,7 +284,7 @@
          *
          * Parameter: opts
          *     An object with additional configuration options.
-         *     Can be used to override: api_url, app_id, api_key, method, login_token
+         *     Can be used to override: api_url, app_id, api_key, method, session_token
          *     And to specify extension parameters: f, limit, count, etc.
          */
         setValue: function(key, value, callback, opts){
