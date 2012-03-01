@@ -105,6 +105,39 @@
         },
 
       /**
+       * Creates a new user.
+       *
+       * Parameter: user
+       *     An object containing "username" and "password" as fields.
+       *
+       * Parameter: callback
+       *     A function that gets called when the operation returns.
+       *
+       * Parameter: opts
+       *     An object with additional configuration options.
+       *     Can be used to override: api_url, app_id, api_key
+       */
+      createUser: function(user, callback, opts) {
+        opts = merge({}, settings, opts);
+
+        var tokenUrl = opts.api_url + '/v1/app/' + opts.app_id + '/account/create';
+
+        $.ajax(tokenUrl, {
+          cache: false,
+          dataType: 'text',
+          crossDomain: true,
+          contentType: 'application/json',
+          processData: false,
+          type: 'PUT',
+          headers: { 'X-CloudMine-ApiKey' : opts.api_key },
+          data: JSON.stringify({ email: user.username, password: user.password }),
+          success: function(data, textStatus, jqXHR) {
+            callback(data, textStatus, jqXHR);
+          }
+        });
+      },
+
+      /**
        * Login as a user. Subsequent requests will be submitted using
        * the login loken obtained from logging in.
        *
