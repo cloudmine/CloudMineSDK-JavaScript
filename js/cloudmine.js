@@ -168,7 +168,7 @@
                 success: function(data, textStatus, jqXHR) {
                     settings.session_token = data.session_token;
                     if(typeof(callback) == 'function') {
-                        callback(data, textStatus, jqXHR);
+                        callback.apply(this, arguments);
                     }
                 }
             });
@@ -202,7 +202,7 @@
                 success: function(data, textStatus, jqXHR) {
                     settings.session_token = null;
                     if(typeof(callback) == 'function') {
-                        callback(data, textStatus, jqXHR);
+                        callback.apply(this, arguments);
                     }
                 }
             });
