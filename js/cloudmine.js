@@ -131,9 +131,7 @@
                 type: 'PUT',
                 headers: { 'X-CloudMine-ApiKey' : opts.api_key },
                 data: JSON.stringify({ email: user.username, password: user.password }),
-                success: function(data, textStatus, jqXHR) {
-                    callback(data, textStatus, jqXHR);
-                }
+                success: callback
             });
         },
 
