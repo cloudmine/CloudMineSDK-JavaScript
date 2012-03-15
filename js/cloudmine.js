@@ -81,15 +81,15 @@
             : undefined;
     }
 
-  var make_headers = function(opts) {
-    opts = merge({}, settings, opts);
-    var headers = { 'X-CloudMine-ApiKey': opts.api_key };
-    if(opts.session_token) {
-      headers = merge({}, headers, { 'X-CloudMine-SessionToken': opts.session_token });
-    }
+    var make_headers = function(opts) {
+        opts = merge({}, settings, opts);
+        var headers = { 'X-CloudMine-ApiKey': opts.api_key };
+        if(opts.session_token) {
+            headers = merge({}, headers, { 'X-CloudMine-SessionToken': opts.session_token });
+        }
 
-    return headers;
-  }
+        return headers;
+    }
 
     var cm = {
         /**
@@ -104,116 +104,116 @@
             settings = merge({}, settings, opts);
         },
 
-      /**
-       * Creates a new user.
-       *
-       * Parameter: user
-       *     An object containing "username" and "password" as fields.
-       *
-       * Parameter: callback
-       *     A function that gets called when the operation returns.
-       *
-       * Parameter: opts
-       *     An object with additional configuration options.
-       *     Can be used to override: api_url, app_id, api_key
-       */
-      createUser: function(user, callback, opts) {
-        opts = merge({}, settings, opts);
+        /**
+         * Creates a new user.
+         *
+         * Parameter: user
+         *     An object containing "username" and "password" as fields.
+         *
+         * Parameter: callback
+         *     A function that gets called when the operation returns.
+         *
+         * Parameter: opts
+         *     An object with additional configuration options.
+         *     Can be used to override: api_url, app_id, api_key
+         */
+        createUser: function(user, callback, opts) {
+            opts = merge({}, settings, opts);
 
-        var tokenUrl = opts.api_url + '/v1/app/' + opts.app_id + '/account/create';
+            var tokenUrl = opts.api_url + '/v1/app/' + opts.app_id + '/account/create';
 
-        $.ajax(tokenUrl, {
-          cache: false,
-          dataType: 'text',
-          crossDomain: true,
-          contentType: 'application/json',
-          processData: false,
-          type: 'PUT',
-          headers: { 'X-CloudMine-ApiKey' : opts.api_key },
-          data: JSON.stringify({ email: user.username, password: user.password }),
-          success: function(data, textStatus, jqXHR) {
-            callback(data, textStatus, jqXHR);
-          }
-        });
-      },
+            $.ajax(tokenUrl, {
+                cache: false,
+                dataType: 'text',
+                crossDomain: true,
+                contentType: 'application/json',
+                processData: false,
+                type: 'PUT',
+                headers: { 'X-CloudMine-ApiKey' : opts.api_key },
+                data: JSON.stringify({ email: user.username, password: user.password }),
+                success: function(data, textStatus, jqXHR) {
+                    callback(data, textStatus, jqXHR);
+                }
+            });
+        },
 
-      /**
-       * Login as a user. Subsequent requests will be submitted using
-       * the login loken obtained from logging in.
-       *
-       * Parameter: user
-       *     An object containing "username" and "password" as fields.
-       *
-       * Parameter: callback
-       *     A function that gets called when the operation returns.
-       *
-       * Parameter: opts
-       *     An object with additional configuration options.
-       *     Can be used to override: api_url, app_id, api_key
-       */
-      login: function(user, callback, opts) {
-        opts = merge({}, settings, opts);
+        /**
+         * Login as a user. Subsequent requests will be submitted using
+         * the login loken obtained from logging in.
+         *
+         * Parameter: user
+         *     An object containing "username" and "password" as fields.
+         *
+         * Parameter: callback
+         *     A function that gets called when the operation returns.
+         *
+         * Parameter: opts
+         *     An object with additional configuration options.
+         *     Can be used to override: api_url, app_id, api_key
+         */
+        login: function(user, callback, opts) {
+            opts = merge({}, settings, opts);
 
-        var tokenUrl = opts.api_url + '/v1/app/' + opts.app_id + '/account/login';
+            var tokenUrl = opts.api_url + '/v1/app/' + opts.app_id + '/account/login';
 
-        $.ajax(tokenUrl, {
-          cache: false,
-          dataType: 'text',
-          crossDomain: true,
-          contentType: 'application/json',
-          dataType: 'json',
-          processData: false,
-          type: 'POST',
-          headers: { 'X-CloudMine-ApiKey' : opts.api_key, 'Authorization': get_auth(user) },
-          success: function(data, textStatus, jqXHR) {
-            settings.session_token = data.token;
-            if(typeof(callback) == 'function') {
-              callback(data, textStatus, jqXHR);
-            }
-          }
-        });
-      },
+            $.ajax(tokenUrl, {
+                cache: false,
+                dataType: 'text',
+                crossDomain: true,
+                contentType: 'application/json',
+                dataType: 'json',
+                processData: false,
+                type: 'POST',
+                headers: { 'X-CloudMine-ApiKey' : opts.api_key, 'Authorization': get_auth(user) },
+                success: function(data, textStatus, jqXHR) {
+                    settings.session_token = data.session_token;
+                    if(typeof(callback) == 'function') {
+                        callback(data, textStatus, jqXHR);
+                    }
+                }
+            });
+        },
 
-      /**
-       * Logout the current user.
-       *
-       * Parameter: callback
-       *     Function called when the request returns.
-       *
-       * Parameter: opts
-       *     An object with additional configuration options.
-       *     Can be used to override: api_url, app_id, api_key, session_token
-       */
-      logout: function(callback, opts) {
-        opts = merge({}, settings, opts);
+        /**
+         * Logout the current user.
+         *
+         * Parameter: callback
+         *     Function called when the request returns.
+         *
+         * Parameter: opts
+         *     An object with additional configuration options.
+         *     Can be used to override: api_url, app_id, api_key, session_token
+         */
+        logout: function(callback, opts) {
+            opts = merge({}, settings, opts);
 
-        if(!opts.session_token)
-          return; // nothing to do here
+            if(!opts.session_token)
+                return; // nothing to do here
 
-        var logoutUrl = opts.api_url + '/v1/app/' + opts.app_id + '/account/logout';
-        $.ajax(logoutUrl, {
-          cache: false,
-          dataType: 'text',
-          crossDomain: true,
-          contentType: 'application/json',
-          processData: false,
-          type: 'POST',
-          headers: { 'X-CloudMine-ApiKey' : opts.api_key, 'X-CloudMine-SessionToken': opts.session_token },
-          success: function(data, textStatus, jqXHR) {
-            settings.session_token = null;
-            if(typeof(callback) == 'function') {
-              callback(data, textStatus, jqXHR);
-            }
-          }
-        });
-      },
+            var logoutUrl = opts.api_url + '/v1/app/' + opts.app_id + '/account/logout';
+            $.ajax(logoutUrl, {
+                cache: false,
+                dataType: 'text',
+                crossDomain: true,
+                contentType: 'application/json',
+                processData: false,
+                type: 'POST',
+                headers: { 'X-CloudMine-ApiKey' : opts.api_key, 'X-CloudMine-SessionToken': opts.session_token },
+                success: function(data, textStatus, jqXHR) {
+                    settings.session_token = null;
+                    if(typeof(callback) == 'function') {
+                        callback(data, textStatus, jqXHR);
+                    }
+                }
+            });
+        },
 
-      /**
-       * Returns true if we are currently logged in, false otherwise.
-       */
-      loggedIn: function() {
-        return !!settings.session_token;
-      },
+        /**
+         * Returns true if we are currently logged in, false otherwise.
+         */
+        loggedIn: function() {
+            return !!settings.session_token;
+        },
 
         /**
          * Set (overwrite) new values for provided keys.
@@ -514,7 +514,7 @@
 
         log: function(msg){
             window.console && console.log(msg);
-        },
+        }
     };
 
     // Base64 Library from http://www.webtoolkit.info
