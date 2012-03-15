@@ -2,7 +2,8 @@
     var settings = {
         api_url: "https://api.cloudmine.me",
         app_id: null,
-        api_key: null
+        api_key: null,
+        session_token: null
     };
 
     var merge = function(to, from1, from2){
@@ -80,6 +81,16 @@
             : undefined;
     }
 
+    var make_headers = function(opts) {
+        opts = merge({}, settings, opts);
+        var headers = { 'X-CloudMine-ApiKey': opts.api_key };
+        if(opts.session_token) {
+            headers = merge({}, headers, { 'X-CloudMine-SessionToken': opts.session_token });
+        }
+
+        return headers;
+    }
+
     var cm = {
         /**
          * Initialize the library with the APPID and API Key
@@ -94,6 +105,115 @@
         },
 
         /**
+         * Creates a new user.
+         *
+         * Parameter: user
+         *     An object containing "username" and "password" as fields.
+         *
+         * Parameter: callback
+         *     A function that gets called when the operation returns.
+         *
+         * Parameter: opts
+         *     An object with additional configuration options.
+         *     Can be used to override: api_url, app_id, api_key
+         */
+        createUser: function(user, callback, opts) {
+            opts = merge({}, settings, opts);
+
+            var tokenUrl = opts.api_url + '/v1/app/' + opts.app_id + '/account/create';
+
+            $.ajax(tokenUrl, {
+                cache: false,
+                dataType: 'text',
+                crossDomain: true,
+                contentType: 'application/json',
+                processData: false,
+                type: 'PUT',
+                headers: { 'X-CloudMine-ApiKey' : opts.api_key },
+                data: JSON.stringify({ email: user.username, password: user.password }),
+                success: callback
+            });
+        },
+
+        /**
+         * Login as a user. Subsequent requests will be submitted using
+         * the login loken obtained from logging in.
+         *
+         * Parameter: user
+         *     An object containing "username" and "password" as fields.
+         *
+         * Parameter: callback
+         *     A function that gets called when the operation returns.
+         *
+         * Parameter: opts
+         *     An object with additional configuration options.
+         *     Can be used to override: api_url, app_id, api_key
+         */
+        login: function(user, callback, opts) {
+            opts = merge({}, settings, opts);
+
+            var tokenUrl = opts.api_url + '/v1/app/' + opts.app_id + '/account/login';
+
+            $.ajax(tokenUrl, {
+                cache: false,
+                dataType: 'text',
+                crossDomain: true,
+                contentType: 'application/json',
+                dataType: 'json',
+                processData: false,
+                type: 'POST',
+                headers: { 'X-CloudMine-ApiKey' : opts.api_key, 'Authorization': get_auth(user) },
+                success: function(data, textStatus, jqXHR) {
+                    settings.session_token = data.session_token;
+                    if(typeof(callback) == 'function') {
+                        callback.apply(this, arguments);
+                    }
+                }
+            });
+        },
+
+        /**
+         * Logout the current user.
+         *
+         * Parameter: callback
+         *     Function called when the request returns.
+         *
+         * Parameter: opts
+         *     An object with additional configuration options.
+         *     Can be used to override: api_url, app_id, api_key, session_token
+         */
+        logout: function(callback, opts) {
+            opts = merge({}, settings, opts);
+
+            if(!opts.session_token)
+                return; // nothing to do here
+
+            var logoutUrl = opts.api_url + '/v1/app/' + opts.app_id + '/account/logout';
+            $.ajax(logoutUrl, {
+                cache: false,
+                dataType: 'text',
+                crossDomain: true,
+                contentType: 'application/json',
+                processData: false,
+                type: 'POST',
+                headers: { 'X-CloudMine-ApiKey' : opts.api_key, 'X-CloudMine-SessionToken': opts.session_token },
+                success: function(data, textStatus, jqXHR) {
+                    settings.session_token = null;
+                    if(typeof(callback) == 'function') {
+                        callback.apply(this, arguments);
+                    }
+                }
+            });
+        },
+
+        /**
+         * Returns true if we are currently logged in, false otherwise.
+         */
+        loggedIn: function() {
+            return !!settings.session_token;
+        },
+
+        /**
          * Set (overwrite) new values for provided keys.
          *
          * Parameter: values
@@ -105,7 +225,7 @@
          *
          * Parameter: opts
          *     An object with additional configuration options.
-         *     Can be used to override: api_url, app_id, api_key, method, usero
+         *     Can be used to override: api_url, app_id, api_key, method, session_token
          *     And to specify extension parameters: f, limit, count, etc.
          */
         setValues: function(values, callback, opts){
@@ -115,8 +235,7 @@
             url = apply_params(url, opts);
 
             $.ajax(url, {
-                headers: { 'X-CloudMine-ApiKey': opts.api_key,
-                           'Authorization': get_auth(opts.user) },
+                headers: make_headers(opts),
                 dataType: 'json',
                 processData: false,
                 type: opts.method || 'POST',
@@ -140,7 +259,7 @@
          *
          * Parameter: opts
          *     An object with additional configuration options.
-         *     Can be used to override: api_url, app_id, api_key, method, user
+         *     Can be used to override: api_url, app_id, api_key, method, session_token
          *     And to specify extension parameters: f, limit, count, etc.
          */
         updateValue: function(key, value, callback, opts){
@@ -163,7 +282,7 @@
          *
          * Parameter: opts
          *     An object with additional configuration options.
-         *     Can be used to override: api_url, app_id, api_key, method, user
+         *     Can be used to override: api_url, app_id, api_key, method, session_token
          *     And to specify extension parameters: f, limit, count, etc.
          */
         setValue: function(key, value, callback, opts){
@@ -221,8 +340,7 @@
             };
 
             $.ajax(url, {
-                headers: { 'X-CloudMine-ApiKey': opts.api_key,
-                           'Authorization': get_auth(opts.user) },
+                headers: make_headers(opts),
                 dataType: 'json',
                 success: callback_wrapper
             });
@@ -270,8 +388,7 @@
             url = apply_params(url, opts);
 
             $.ajax(url, {
-                headers: { 'X-CloudMine-ApiKey': opts.api_key,
-                           'Authorization': get_auth(opts.user) },
+                headers: make_headers(opts),
                 type: 'DELETE',
                 success: callback
             });
@@ -319,8 +436,7 @@
             };
 
             $.ajax(url, {
-                headers: { 'X-CloudMine-ApiKey': opts.api_key,
-                           'Authorization': get_auth(opts.user) },
+                headers: make_headers(opts),
                 dataType: 'json',
                 success: callback_wrapper
             });
