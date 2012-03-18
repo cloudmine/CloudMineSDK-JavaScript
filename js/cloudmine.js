@@ -140,43 +140,56 @@
          * the login loken obtained from logging in.
          *
          * Parameter: user
-         *     An object containing "username" and "password" as fields.
+         *     If the user doesn't have a session token, this object should contain "username" and "password" as fields.
+         *     If the user does have a session token (meaning they have been logged in before), this object should contain
+         *        "session_token" as a field with the user's session token as the value. You can do this if you are doing something
+         *        like storing the session token in HTML5 local storage to keep them logged in between page refreshes.
          *
          * Parameter: callback
-         *     A function that gets called when the operation returns.
+         *     A function that gets called when the operation returns. This function is passed an object with the data in
+         *     the response body.
          *
          * Parameter: opts
          *     An object with additional configuration options.
          *     Can be used to override: api_url, app_id, api_key
          */
         login: function(user, callback, opts) {
-            opts = merge({}, settings, opts);
-
-            var tokenUrl = opts.api_url + '/v1/app/' + opts.app_id + '/account/login';
-
-            $.ajax(tokenUrl, {
-                cache: false,
-                dataType: 'text',
-                crossDomain: true,
-                contentType: 'application/json',
-                dataType: 'json',
-                processData: false,
-                type: 'POST',
-                headers: { 'X-CloudMine-ApiKey' : opts.api_key, 'Authorization': get_auth(user) },
-                success: function(data, textStatus, jqXHR) {
-                    settings.session_token = data.session_token;
-                    if(typeof(callback) == 'function') {
-                        callback.apply(this, arguments);
-                    }
+            if (user.hasOwnProperty('session_token')) {
+                // User is already logged in, so just set the session token.
+                settings.session_token = user.session_token;
+                if(typeof(callback) == 'function') {
+                    callback.apply(this, { session_token: session_token });
                 }
-            });
+            } else {
+                opts = merge({}, settings, opts);
+
+                var tokenUrl = opts.api_url + '/v1/app/' + opts.app_id + '/account/login';
+
+                $.ajax(tokenUrl, {
+                    cache: false,
+                    dataType: 'text',
+                    crossDomain: true,
+                    contentType: 'application/json',
+                    dataType: 'json',
+                    processData: false,
+                    type: 'POST',
+                    headers: { 'X-CloudMine-ApiKey' : opts.api_key, 'Authorization': get_auth(user) },
+                    success: function(data, textStatus, jqXHR) {
+                        settings.session_token = data.session_token;
+                        if(typeof(callback) == 'function') {
+                            callback.apply(this, arguments);
+                        }
+                    }
+                });
+            }
         },
 
         /**
          * Logout the current user.
          *
          * Parameter: callback
-         *     Function called when the request returns.
+         *     A function that gets called when the operation returns. This function is passed an object with the data in
+         *     the response body.
          *
          * Parameter: opts
          *     An object with additional configuration options.
@@ -221,7 +234,8 @@
          *     the top-level keys in the CloudMine API.
          *
          * Parameter: callback
-         *     Gets called with the JSON response when the request returns.
+         *     A function that gets called when the operation returns. This function is passed an object with the data in
+         *     the response body.
          *
          * Parameter: opts
          *     An object with additional configuration options.
@@ -241,7 +255,7 @@
                 type: opts.method || 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify(values),
-                success: callback 
+                success: callback
             });
         },
 
@@ -255,7 +269,8 @@
          *     The object with the updated data
          *
          * Parameter: callback
-         *     Gets called with the JSON response when the request returns.
+         *     A function that gets called when the operation returns. This function is passed an object with the data in
+         *     the response body.
          *
          * Parameter: opts
          *     An object with additional configuration options.
@@ -278,7 +293,8 @@
          *     The object with the data to set
          *
          * Parameter: callback
-         *     Gets called with the JSON response when the request returns.
+         *     A function that gets called when the operation returns. This function is passed an object with the data in
+         *     the response body.
          *
          * Parameter: opts
          *     An object with additional configuration options.
