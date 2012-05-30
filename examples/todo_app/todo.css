@@ -1,0 +1,73 @@
+html{
+  font-family: Arial;
+}
+
+#header{
+  width: 700px;
+  height: 100px;
+  margin: 0px auto;
+  background: url('cm.png') left no-repeat;
+}
+
+#header div{
+  position: relative;
+  top: 30px;
+  left:160px;
+  font-size:30px;
+  color: #0091d3;
+}
+
+#header div .black{
+  color: #000;
+}
+
+#todo{
+  width: 700px;
+  margin: 0px auto;
+  display: none;
+}
+
+#login{
+  width: 700px;
+  margin: 0px auto;
+}
+
+#login_button, #register_button{
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  background: #E4E5E6;
+  color: #222222;
+  font-size:20px;
+}
+
+#login_button:hover, #register_button:hover{
+  background:#97c4d7;
+}
+
+input[type='text'], input[type='password']{
+  border: none;
+  border-radius: 5px;
+  background: #E4E5E6;
+  padding: 5px 10px;
+  font-size:20px;
+  outline:none;
+}
+
+.todo_item{
+  border: none;
+  border-radius: 5px;
+  background: #E4E5E6;
+  padding: 5px;
+  font-size:20px;
+  outline:none;
+  margin-bottom: 5px;
+  white-space:nowrap;
+  display:inline-block;
+  cursor:pointer;
+}
+
+.todo_item.done{
+  text-decoration:line-through;
+}
+
