@@ -5,7 +5,10 @@
         api_key: null,
         session_token: null
     };
-
+  
+    /*
+      * Takes three objects. Combines the second and third and puts into first. Third object will overwrite second if they share keys.
+    */
     var merge = function(to, from1, from2){
         var from_list = [from1 || {}, from2 || {}];
         for(var from in from_list){
@@ -117,8 +120,10 @@
          *     An object with additional configuration options.
          *     Can be used to override: api_url, app_id, api_key
          */
-        createUser: function(user, callback, opts) {
+        createUser: function(user, callbacks, opts) {
             opts = merge({}, settings, opts);
+
+            callbacks = this._parseCallbacks(callbacks);
 
             var tokenUrl = opts.api_url + '/v1/app/' + opts.app_id + '/account/create';
 
@@ -131,7 +136,8 @@
                 type: 'PUT',
                 headers: { 'X-CloudMine-ApiKey' : opts.api_key },
                 data: JSON.stringify({ email: user.username, password: user.password }),
-                success: callback
+                success: callbacks.success,
+                error: callbacks.error
             });
         },
 
@@ -147,19 +153,20 @@
          *
          * Parameter: callback
          *     A function that gets called when the operation returns. This function is passed an object with the data in
-         *     the response body.
+        *     the response body.
          *
          * Parameter: opts
          *     An object with additional configuration options.
          *     Can be used to override: api_url, app_id, api_key
          */
-        login: function(user, callback, opts) {
+        login: function(user, callbacks, opts) {
+
+            callbacks = this._parseCallbacks(callbacks);
+
             if (user.hasOwnProperty('session_token')) {
                 // User is already logged in, so just set the session token.
                 settings.session_token = user.session_token;
-                if(typeof(callback) == 'function') {
-                    callback.apply(this, { session_token: session_token });
-                }
+                callbacks.success.apply(this, { session_token: settings.session_token });
             } else {
                 opts = merge({}, settings, opts);
 
@@ -176,10 +183,9 @@
                     headers: { 'X-CloudMine-ApiKey' : opts.api_key, 'Authorization': get_auth(user) },
                     success: function(data, textStatus, jqXHR) {
                         settings.session_token = data.session_token;
-                        if(typeof(callback) == 'function') {
-                            callback.apply(this, arguments);
-                        }
-                    }
+                        callbacks.success.apply(this, arguments);
+                    },
+                    error: callbacks.error
                 });
             }
         },
@@ -195,8 +201,10 @@
          *     An object with additional configuration options.
          *     Can be used to override: api_url, app_id, api_key, session_token
          */
-        logout: function(callback, opts) {
+        logout: function(callbacks, opts) {
             opts = merge({}, settings, opts);
+
+            callbacks = this._parseCallbacks(callbacks);
 
             if(!opts.session_token)
                 return; // nothing to do here
@@ -212,10 +220,9 @@
                 headers: { 'X-CloudMine-ApiKey' : opts.api_key, 'X-CloudMine-SessionToken': opts.session_token },
                 success: function(data, textStatus, jqXHR) {
                     settings.session_token = null;
-                    if(typeof(callback) == 'function') {
-                        callback.apply(this, arguments);
-                    }
-                }
+                    callbacks.success.apply(this, arguments);
+                },
+                error: callbacks.error
             });
         },
 
@@ -242,11 +249,13 @@
          *     Can be used to override: api_url, app_id, api_key, method, session_token
          *     And to specify extension parameters: f, limit, count, etc.
          */
-        setValues: function(values, callback, opts){
+        setValues: function(values, callbacks, opts){
             opts = merge({}, settings, opts);
             var url = build_url(opts, "text");
 
             url = apply_params(url, opts);
+
+            callbacks = this._parseCallbacks(callbacks);
 
             $.ajax(url, {
                 headers: make_headers(opts),
@@ -255,7 +264,8 @@
                 type: opts.method || 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify(values),
-                success: callback
+                success: callbacks.success,
+                error: callbacks.error
             });
         },
 
@@ -277,10 +287,11 @@
          *     Can be used to override: api_url, app_id, api_key, method, session_token
          *     And to specify extension parameters: f, limit, count, etc.
          */
-        updateValue: function(key, value, callback, opts){
+        updateValue: function(key, value, callbacks, opts){
             var data = {};
             data[key] = value;
-            cm.setValues(data, callback, merge(opts || {}, {method: "POST"}));
+            // Not running _parseCallbacks here... we'll catch it in setValues
+            cm.setValues(data, callbacks, merge(opts || {}, {method: "POST"}));
         },
 
         /**
@@ -301,10 +312,11 @@
          *     Can be used to override: api_url, app_id, api_key, method, session_token
          *     And to specify extension parameters: f, limit, count, etc.
          */
-        setValue: function(key, value, callback, opts){
+        setValue: function(key, value, callbacks, opts){
             var data = {};
             data[key] = value;
-            cm.setValues(data, callback, merge(opts || {}, {method: "PUT"}));
+            // Not running _parseCallbacks here... we'll catch it in setValues
+            cm.setValues(data, callbacks, merge(opts || {}, {method: "PUT"}));
         },
 
         /**
@@ -316,7 +328,7 @@
          * Parameter: callbacks
          *     Either a function that will be called with an object of succesfully
          *     retreived key/value pairs that match the request or an object
-         *     with 'success' and 'errors' callback functions.
+         *     with 'success' and 'error' callback functions.
          *
          * Parameter: opts
          *     An object with additional configuration options.
@@ -333,32 +345,15 @@
 
             url = apply_params(url, opts);
 
-            if( typeof(callbacks) == "function" ){
-                callbacks = { success: callbacks };
-            }
+            // If we got a function, assume it's the success function.
 
-            var callback_wrapper = callbacks && function(data){
-                // data has .success and .errors
-                if(data.success){
-                    if(!data.success.forEach){
-                        merge(data.success, {forEach: forEach});
-                    }
-
-                    callbacks.success(data.success);
-                };
-
-                if(callbacks.error){
-                    if(!data.errors.forEach){
-                        merge(data.errors, {forEach: forEach});
-                    }
-                    callbacks.error(data.errors);
-                };
-            };
+            callbacks = this._parseCallbacks(callbacks);
 
             $.ajax(url, {
                 headers: make_headers(opts),
                 dataType: 'json',
-                success: callback_wrapper
+                success: callbacks.success,
+                error: callbacks.error
             });
         },
 
@@ -373,8 +368,8 @@
          * Parameter: keys
          *     An array of key names to delete.  Can be set to null to delete all data.
          */
-        deleteValues: function(callback, keys, opts){
-            return cm.deleteKeys(keys, callback, opts);
+        deleteValues: function(callbacks, keys, opts){
+            return cm.deleteKeys(keys, callbacks, opts);
         },
 
         /**
@@ -391,7 +386,7 @@
          *     Can be used to override: api_url, app_id, api_key, method, user
          *     And to specify extension parameters: f, limit, count, etc.
          */
-        deleteKeys: function(keys, callback, opts){
+        deleteKeys: function(keys, callbacks, opts){
             opts = merge({}, settings, opts);
             var url = build_url(opts, "data");
 
@@ -403,10 +398,13 @@
 
             url = apply_params(url, opts);
 
+            callbacks = this._parseCallbacks(callbacks);
+
             $.ajax(url, {
                 headers: make_headers(opts),
                 type: 'DELETE',
-                success: callback
+                success: callbacks.success,
+                error: callbacks.error
             });
         },
 
@@ -428,7 +426,7 @@
          *     Can be used to override: api_url, app_id, api_key, method, user
          *     And to specify extension parameters: f, limit, count, etc.
          */
-        search: function(query, callback, opts){
+        search: function(query, callbacks, opts){
             opts = merge({}, settings, opts);
             var url = build_url(opts, "search");
 
@@ -438,23 +436,14 @@
 
             url = apply_params(url, opts);
 
-            var callback_wrapper = callback && function(data){
-                // data has .success and .errors
-                if(data.success && !data.success.forEach){
-                    merge(data.success, {forEach: forEach});
-                };
+            callbacks = this._parseCallbacks(callbacks);
 
-                if(data.errors && !data.errors.forEach){
-                    merge(data.errors, {forEach: forEach});
-                };
-
-                callback(data);
-            };
 
             $.ajax(url, {
                 headers: make_headers(opts),
                 dataType: 'json',
-                success: callback_wrapper
+                success: callbacks.success,
+                error: callbacks.error
             });
         },
 
@@ -492,11 +481,11 @@
                            'Authorization': get_auth(opts.user) },
                 type: opts.method || 'POST',
                 statusCode: {
-                    200: callbacks.valid,
-                    201: callbacks.created,
-                    401: callbacks.unauthorized,
-                    404: callbacks.error,
-                    400: callbacks.error
+                    200: callbacks.valid || callbacks.success || function(){ },
+                    201: callbacks.created || function(){ },
+                    401: callbacks.unauthorized || function(){ },
+                    404: callbacks.error || function(){ },
+                    400: callbacks.error || function(){ }
                 }
             });
         },
@@ -528,8 +517,49 @@
 
         log: function(msg){
             window.console && console.log(msg);
-        }
-    };
+        },
+
+
+       /**
+        * Takes any user input for callbacks and returns an object that will always work with $.ajax.success and .error. Resorts to empty functions.
+        *
+        * Parameter: callbacks
+        *     Anything. If it's a function, it will be set as the success function with no error function.
+        *     If it's an object, the success and/or error properties of it will be returned as they are. (Whatever's available). Other properties will be ignored.
+        *     
+        * Returns: object with 'success' and 'error' properties:
+        *          { success: function(){ ... }, error: function(){ ... } }
+       */
+        _parseCallbacks: function(callbacks){
+
+          // We're going to return _callbacks, which will have both success and error (empty by default)
+          var _callbacks = { success: function(){}, error: function(){} };
+
+          // If no callbacks were defined, return the empty object and run empty functions
+          if (callbacks != undefined){
+
+              // If we get a function, assume it's the success function and return with no error function
+              if( typeof(callbacks) == "function" ){
+                  _callbacks.success = callbacks;
+
+
+              // If we get an object supply whatever properties there are
+              } else if ( typeof(callbacks) == "object" ){
+
+                  if ( callbacks.hasOwnProperty("success")){
+                      _callbacks.success = callbacks.success;
+                  }
+
+                  if ( callbacks.hasOwnProperty("error")){
+                    _callbacks.error = callbacks.error;
+                  }
+              }
+          }
+          
+          // In the event of weirdness that we didn't capture, return empty callbacks
+          return _callbacks
+        },
+    }
 
     // Base64 Library from http://www.webtoolkit.info
     cm.Base64={_keyStr:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",encode:function(a){var b="";var c,d,e,f,g,h,i;var j=0;a=cm.Base64._utf8_encode(a);while(j<a.length){c=a.charCodeAt(j++);d=a.charCodeAt(j++);e=a.charCodeAt(j++);f=c>>2;g=(c&3)<<4|d>>4;h=(d&15)<<2|e>>6;i=e&63;if(isNaN(d)){h=i=64}else if(isNaN(e)){i=64}b=b+this._keyStr.charAt(f)+this._keyStr.charAt(g)+this._keyStr.charAt(h)+this._keyStr.charAt(i)}return b},decode:function(a){var b="";var c,d,e;var f,g,h,i;var j=0;a=a.replace(/[^A-Za-z0-9\+\/\=]/g,"");while(j<a.length){f=this._keyStr.indexOf(a.charAt(j++));g=this._keyStr.indexOf(a.charAt(j++));h=this._keyStr.indexOf(a.charAt(j++));i=this._keyStr.indexOf(a.charAt(j++));c=f<<2|g>>4;d=(g&15)<<4|h>>2;e=(h&3)<<6|i;b=b+String.fromCharCode(c);if(h!=64){b=b+String.fromCharCode(d)}if(i!=64){b=b+String.fromCharCode(e)}}b=cm.Base64._utf8_decode(b);return b},_utf8_encode:function(a){a=a.replace(/\r\n/g,"\n");var b="";for(var c=0;c<a.length;c++){var d=a.charCodeAt(c);if(d<128){b+=String.fromCharCode(d)}else if(d>127&&d<2048){b+=String.fromCharCode(d>>6|192);b+=String.fromCharCode(d&63|128)}else{b+=String.fromCharCode(d>>12|224);b+=String.fromCharCode(d>>6&63|128);b+=String.fromCharCode(d&63|128)}}return b},_utf8_decode:function(a){var b="";var c=0;var d=c1=c2=0;while(c<a.length){d=a.charCodeAt(c);if(d<128){b+=String.fromCharCode(d);c++}else if(d>191&&d<224){c2=a.charCodeAt(c+1);b+=String.fromCharCode((d&31)<<6|c2&63);c+=2}else{c2=a.charCodeAt(c+1);c3=a.charCodeAt(c+2);b+=String.fromCharCode((d&15)<<12|(c2&63)<<6|c3&63);c+=3}}return b}};

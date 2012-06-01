@@ -2,6 +2,21 @@ html{
   font-family: Arial;
 }
 
+#main{
+  width: 700px;
+  margin: 0px auto;
+}
+
+#todo_header{
+  display: none;
+}
+
+.grey{
+  color:#d2d2d2;
+  margin-left: 10px;
+  display: inline-block;
+}
+
 #header{
   width: 700px;
   height: 100px;
@@ -21,10 +36,14 @@ html{
   color: #000;
 }
 
-#todo{
+#todo, #new{
   width: 700px;
   margin: 0px auto;
   display: none;
+}
+
+#new{
+  margin-top:40px;
 }
 
 #login{
@@ -32,7 +51,7 @@ html{
   margin: 0px auto;
 }
 
-#login_button, #register_button{
+#login_button, #register_button, #create_button, #logout_button{
   border: none;
   border-radius: 5px;
   cursor: pointer;
@@ -41,11 +60,26 @@ html{
   font-size:20px;
 }
 
-#login_button:hover, #register_button:hover{
+#login_button{
+  background:#a7e1fa;
+}
+
+#logout_button{
+  display: inline-block;
+  float:right;
+  position:relative;
+  bottom:50px;
+}
+
+#login_button:hover, 
+#register_button:hover, 
+#create_button:hover,
+#logout_button:hover{
   background:#97c4d7;
 }
 
-input[type='text'], input[type='password']{
+input[type='text'], 
+input[type='password']{
   border: none;
   border-radius: 5px;
   background: #E4E5E6;
@@ -54,7 +88,37 @@ input[type='text'], input[type='password']{
   outline:none;
 }
 
-.todo_item{
+#new_item input[type='text']{
+  border: none;
+  border-radius: 5px;
+  background: #FFF;
+  padding: 5px 10px;
+  font-size:20px;
+  outline:none;
+}
+
+#due_in{
+  width:40px;
+}
+
+#priority_buttons, #due_in_hours{
+  margin-top:10px;
+}
+
+input[type='checkbox']{
+  margin: 0px 10px 0px 2px;
+}
+
+
+input::-webkit-input-placeholder {
+  color: rgba(0,0,0,0.3);  
+}
+
+input:-moz-placeholder{
+  color: rgba(0,0,0,0.3);  
+}
+
+.todo_item, #new_item{
   border: none;
   border-radius: 5px;
   background: #E4E5E6;
@@ -64,10 +128,76 @@ input[type='text'], input[type='password']{
   margin-bottom: 5px;
   white-space:nowrap;
   display:inline-block;
-  cursor:pointer;
+}
+
+#new_item{
+  color:#000;
+}
+
+#new_item:hover{
+  color:#000;
+}
+
+.todo_item{
+  cursor: pointer;
+}
+
+.todo_item:hover, #new_item.inactive:hover{
+  background:#d0d0d0;
 }
 
 .todo_item.done{
   text-decoration:line-through;
+  color:#818181;
+  background:#eeeeee;
 }
 
+
+.delete_button{
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  background: url('close_button.png');
+  cursor: pointer;
+  margin: 0px 2px 0px 10px;
+}
+
+.delete_button:hover{
+  background-position: 0px -15px;
+}
+
+.delete_button:active{
+  background-position: 0px -30px;
+}
+
+.priority{
+  width: 25px;
+  height: 25px;
+  cursor: pointer;
+  display: inline-block;
+  margin: -5px 5px;
+}
+
+.priority:hover{
+  background-position: 0px -25px;
+}
+
+.due, .overdue{
+  margin-left: 10px;
+  font-size: 16px;
+}
+
+.due{
+  color:rgba(0,0,0,0.4);
+}
+
+.overdue{
+  color:rgba(255,0,0,1);
+}
+
+#restoring_session{
+  width: 700px;
+  margin:0px auto;
+  display: none;
+  margin-top:200px;
+}

@@ -5,8 +5,8 @@
     <script src="../js/cloudmine.js" language="javascript"></script>
     <script language="javascript">
       $(document).ready(function() {
-          var appid = "ae44751608f0431989b26a5943500596";
-          var apikey = "d5f3bfe83d7041889bd1b072bdba101e";
+          var appid = "327a12c8208b4297a06f8f5fb32cfecc";
+          var apikey = "931732f754654d3c80521024eba8f8ec";
 
           cloudmine.init({app_id: appid, api_key: apikey});
 
@@ -31,6 +31,7 @@
                   // Call the CloudMine API to actually push the data to the CM servers.
                   cloudmine.updateValue(key, data, function(){
                       cloudmine.log("Saved: " + key + ": " + data);
+                      updateChat();
                   }, opts);
 
                   // Clear the message box.
@@ -39,24 +40,27 @@
           });
 
           // Setup polling of the CloudMine servers to update the chat box.
-          var updateChat = function(){
+          updateChat = function(){
               // Call the CloudMine API to grab all the data from the server. In this case
               // we want to get all the keys since they represent all the messages.
               var chat = '';
-              cloudmine.getValues(null, function(success) {
+              cloudmine.getValues(null, function(response) {
+                  var i, value;
                   // Basic string concatination to build the string
                   // to display to the user in the chat box.
-                  success.forEach(function(key, value){
+                  
+                   for (i in response.success){
+                      value = response.success[i];
                       chat += value.name + ': ' + value.message + "\n";
-                  });
+                  }
 
                   // Show the assembled string in the chat box.
                   $('#chat').val(chat);
               }, opts);
           }
-
           updateChat();
-          setInterval(updateChat, 30000);
+
+          setInterval(updateChat, 10000);
       });
     </script>
   </head>
