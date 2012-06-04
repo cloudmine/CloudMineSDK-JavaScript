@@ -251,10 +251,39 @@
     }
   };
 
-  /** This class initiates the AJAX call to the server and contains request and response information.
-   * @class APICall
-   * @private
-   * 
+  /**
+   * WebService will return an instance of this class that should be used to interact with
+   * the API. Upon completion of the AJAX call, this object will fire the event handlers based on
+   * what were attached.
+   *
+   * You may chain event creation.
+   *
+   * Event firing order:
+   *    Successes: HTTP Code String, HTTP Code Number, 'success'
+   *    Meta: 'meta' - This is for operations that can write meta data.
+   *    Result: 'result' - This is results from code snippets if used.
+   *    Errors: HTTP Code String, HTTP Code Number, 'error'
+   *
+   * Event callback signatures:
+   *    HTTP Codes: function(keys, responseObject, statusCode)
+   *    'error': function(keys, responesObject, statusCode)
+   *    'success': function(keys, responseObject)
+   *    'meta': function(keys, responseObject)
+   *    'result: function(keys, responseObject)
+   *
+   * Valid HTTP Codes:
+   * 200, 'ok',           201, 'created',  400: 'badrequest',
+   * 401: 'unauthorized', 404: 'notfound', 409: 'conflict',
+   * 500: 'servererror'
+   *
+   * Example:
+   *    var cm = new cloudmine.WebService({appkey: "abcdef", apikey: "ghijkl"});
+   *    cm.get("MyObjectKey").on('success', function(data) {
+   *      console.log("Value of MyObjectKey: %o", data["MyObjectKey"]);
+   *    }).on('error', function(data, response, status) {
+   *      console.log("Oops, couldn't get Object! status=%o", status);
+   *    });
+   *
    * config:
    *  action: url fragment to API, e.g. "text"
    *  callbackData: additional data to store on response  Default: null
@@ -276,7 +305,6 @@
     this.responseHeaders = {};
     this.responseText = null;
     this.status = null;
-
 
     // Build the request headers
     var session = config.options ? config.options.session_token : null;
@@ -322,7 +350,7 @@
       // Event firing order: http status (e.g. ok, created), http status (e.g. 200, 201), success, meta, result, error.
       if (data.success) {
         // Callback signature: function(keys, response, statusCode)
-        if (http[self.status]) self.trigger(http[self.status], data.success, self, self.status, data);
+        if (http[self.status]) self.trigger(http[self.status], data.success, self, self.status);
         self.trigger(self.status, data.success, self, self.status);
 
         // Callback signature: function(keys, response);
@@ -359,6 +387,14 @@
   }
 
   APICall.prototype = {
+    /**
+     * Attach an event listener to this APICall object.
+     * @param eventType {String|number} The event to listen to. Can be an http code as number or string,
+     *                                  success, meta, result, error.
+     * @param callback {Function} Callback to call upon event trigger.
+     * @param context {Object} Context to call the callback in.
+     * @return The current APICall object
+     */
     on: function(eventType, callback, context) {
       if (isFunction(callback)) {
         context = context || this;
@@ -373,6 +409,12 @@
       return this;
     },
 
+    /**
+     * Trigger an event on this APICall object. This will call all event handlers in order.
+     * @param event {String|number} The event to trigger.
+     * @params All parameters following event will be sent to the event handlers.
+     * @return The current APICall object
+     */
     trigger: function(event/*, arg1...*/) {
       var events = this._events[event];
       if (events != null) {
@@ -381,8 +423,19 @@
           event[2].apply(event[1], args);
         });
       }
+      return this;
     },
 
+    /**
+     * Remove event handlers.
+     * Event handlers will be removed based on the parameters given. If no parameters are given, all
+     * event handlers will be removed.
+     * @param eventType {String|number} The event type which can be an http code as number or string,
+     *                                  or can be success, error, meta, result.
+     * @param callback {function} The function that was used to create the callback.
+     * @param context {Object} The context to call the callback in.
+     * @return The current APICall object
+     */
     off: function(eventType, callback, context) {
       if (eventType == null && callback == null && context == null) {
         this._events = {};
@@ -396,16 +449,26 @@
       return this;
     },
 
+    /**
+     * Aborts the current connection. This is ineffective for synchronous calls or completed calls.
+     * Synchronous calls can be achieved by setting async to false in WebService.
+     * @return The current APICall object
+     */
     abort: function() {
-      if (!this._config) {
+      if (!this._config && this.xhr) {
         this.xhr.abort();
         delete this.xhr;
-        return this;
       }
+      return this;
     },
 
+    /**
+     * If a synchronous ajax call is done (via setting: opts.async = false), you must call this function
+     * after you have attached all your event handlers. You should not attach event handlers after this
+     * is called.
+     */
     done: function() {
-      if (this._config) {
+      if (!this.xhr && this._config) {
         this.xhr = ajax(self.url, this._config);
         delete this._config;
       }
