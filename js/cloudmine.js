@@ -104,6 +104,49 @@
       return this.search(query, opts);
     },
 
+    // EXPERIMENTAL.
+    uploadFile: (function() {
+      // FileAPI: IE 10+, Firefox 3.6+, Chrome 13+, Opera 11.1, Safari 5 (Mac)
+      if (window.FileReader) {
+        return function(file, opts) {
+          opts = opts ? merge({}, this.options, opts) : this.options;
+          var apicall = new APICall({
+            action: 'binary',
+            method: 'post',
+            later: true,
+            options: opts,
+            appkey: opts.appkey,
+            apikey: opts.apikey
+          });
+
+          var reader = new FileReader();
+          reader.onload = function(e) {
+            apicall.setData(e.target.result).done();
+          };
+          reader.readAsBinaryString(file);
+          return this;
+        }
+      }
+
+      // TODO: Add flash uploader for older browsers.
+      return NotSupported;
+    })(),
+
+    // EXPERIMENTAL.
+    downloadFile: function(key, opts) {
+      opts = opts ? merge({}, this.options, opts) : this.options;
+      
+      return new APICall({
+        action: 'binary',
+        method: 'GET',
+        later: true,
+        options: opts,
+        appkey: opts.appkey,
+        apikey: opts.apikey,
+        processResponse: APICall.basicResponse
+      });
+    },
+
     createUser: function(username, password, opts) {
       opts = opts ? merge({}, this.options, opts) : this.options;
       var payload = JSON.stringify({
@@ -285,6 +328,7 @@
    *    });
    *
    * config:
+   *  later: Fire the AJAX call later.                    Default: false
    *  action: url fragment to API, e.g. "text"
    *  callbackData: additional data to store on response  Default: null
    *  contentType: content type for request               Default: "application/json"
@@ -377,7 +421,7 @@
     }
 
     // Let script continue before triggering ajax call
-    if (config.async) {
+    if (!config.later && config.async) {
       setTimeout(function() {
         self.xhr = ajax(self.url, config);
       }, 1);
@@ -450,14 +494,25 @@
     },
 
     /**
-     * Aborts the current connection. This is ineffective for synchronous calls or completed calls.
-     * Synchronous calls can be achieved by setting async to false in WebService.
+     * Aborts the current connection. This is ineffective for running synchronous calls or completed
+     * calls. Synchronous calls can be achieved by setting async to false in WebService.
      * @return The current APICall object
      */
     abort: function() {
       if (!this._config && this.xhr) {
         this.xhr.abort();
         delete this.xhr;
+      }
+      return this;
+    },
+
+    /**
+     * Set data to send to the server. This is ineffective for running ajax calls.
+     * @return The current APICall object
+     */
+    setData: function(data) {
+      if (!this.xhr && this._config) {
+        this._config.data = data;
       }
       return this;
     },
@@ -522,6 +577,7 @@
   // Default jQuery ajax configuration.
   var defaultConfig = {
     async: true,
+    later: false,
     contentType: 'application/json',
     processData: false,
     dataType: 'text',
@@ -639,6 +695,10 @@
     else throw "Missing jQuery-compatible ajax implementation";
     return ajax;
   }  
+
+  function NotSupported() {
+    throw "Operation Not Supported";
+  }
 
   // Export CloudMine objects. Node will see additional methods to set the ajax implementation and API call.
   this.cloudmine = this.cloudmine || {};
