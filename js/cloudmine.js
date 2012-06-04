@@ -462,7 +462,7 @@
     trigger: function(event/*, arg1...*/) {
       var events = this._events[event];
       if (events != null) {
-        args = slice(arguments, 2);
+        args = slice(arguments, 1);
         each(events, function(event) {
           event[2].apply(event[1], args);
         });
@@ -533,11 +533,14 @@
 
   // Use this for standard cloudmine text responses that have success/errors/meta/result fields.
   APICall.textResponse = function(data, xhr, response) {
+    out = {};
+
     // Attempt to detect a standard response.
     if (data.errors || data.success || data.meta || data.result) {
       out.success = data.success;
       out.meta = data.meta;
       out.result = data.result;
+      response.count = data.count;
 
       if (data.errors) {
         out.errors = {};
@@ -626,15 +629,20 @@
   }
 
   function each(item, callback, context) {
-    if (isObject(item)) {
-      context = context || this
-      if (item.forEach) {
-        item.forEach(callback, context);
-      } else {
-        for (var k in item) {
-          var obj = item[k];
-          if (!isFunction(obj)) callback.call(context, obj, k, context);
+    context = context || this
+    debugger
+    if (isArray(item)) {
+      if (item.forEach) item.forEach(callback, context);
+      else {
+        for (var i = 0; i < item.length; ++i) {
+          var obj = item[i];
+          if (obj != null) callback.call(context, obj, k, context);
         }
+      }
+    } else if (isObject(item)) {
+      for (var k in item) {
+        var obj = item[k];
+        if (obj != null) callback.call(context, obj, k, context);
       }
     }
   }
@@ -665,7 +673,7 @@
   }
 
   function isArray(item) {
-    return item && item.length != null
+    return isObject(item) && item.length != null
   }
 
   function isFunction(item) {
@@ -677,7 +685,7 @@
     for (var k in map) {
       if (map[k] != null && !isFunction(map[k])) out.push(esc(k) + "=" + esc(map[k]));
     }
-    return out;
+    return out.join('&');
   }
 
   function merge(obj/*, in...*/) {
