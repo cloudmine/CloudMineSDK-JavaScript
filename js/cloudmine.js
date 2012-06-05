@@ -64,14 +64,6 @@
 
       opts = opts ? merge({}, this.options, opts) : this.options;
 
-      else {
-        var out = {};
-        out[key] = value;
-        key = out;
-        opts = value;
-      }
-      opts = opts ? merge({}, this.options, opts) : this.options;
-
       return new APICall({
         action: 'text',
         type: 'PUT',
