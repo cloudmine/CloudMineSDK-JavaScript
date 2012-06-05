@@ -1,4 +1,3 @@
-
 (function() {
   /*
    * Constructor
@@ -30,7 +29,7 @@
         action: 'text',
         appkey: this.options.appkey,
         apikey: this.options.apikey,
-        method: 'GET',
+        type: 'GET',
         options: opts,
         query: server_params(opts, keys)
       });
@@ -43,7 +42,7 @@
 
       return new APICall({
         action: 'text',
-        method: 'POST',
+        type: 'POST',
         appkey: this.options.appkey,
         apikey: this.options.apikey,
         options: opts,
@@ -59,7 +58,7 @@
 
       return new APICall({
         action: 'text',
-        method: 'PUT',
+        type: 'PUT',
         appkey: this.options.appkey,
         apikey: this.options.apikey,
         options: opts,
@@ -75,7 +74,7 @@
 
       return new APICall({
         action: 'data',
-        method: 'DELETE',
+        type: 'DELETE',
         appkey: this.options.appkey,
         apikey: this.options.apikey,
         options: opts,
@@ -89,7 +88,7 @@
 
       return new APICall({
         action: 'search',
-        method: 'GET',
+        type: 'GET',
         appkey: this.options.appkey,
         apikey: this.options.apikey,
         query: server_params(opts, query),
@@ -112,7 +111,7 @@
           opts = opts ? merge({}, this.options, opts) : this.options;
           var apicall = new APICall({
             action: 'binary',
-            method: 'post',
+            type: 'post',
             later: true,
             options: opts,
             appkey: opts.appkey,
@@ -138,7 +137,7 @@
       
       return new APICall({
         action: 'binary',
-        method: 'GET',
+        type: 'GET',
         later: true,
         options: opts,
         appkey: opts.appkey,
@@ -156,7 +155,7 @@
 
       return new APICall({
         action: 'account/create',
-        method: 'POST',
+        type: 'POST',
         appkey: this.options.appkey,
         apikey: this.options.apikey,
         options: opts,
@@ -173,7 +172,7 @@
       
       return new APICall({
         action: 'account/password/change',
-        method: 'POST',
+        type: 'POST',
         appkey: this.options.appkey,
         apikey: this.options.apikey,
         data: payload,
@@ -193,7 +192,7 @@
 
       return new APICall({ 
         action: 'account/password/reset',
-        method: 'POST',
+        type: 'POST',
         appkey: this.options.appkey,
         apikey: this.options.apikey,
         options: opts,
@@ -210,7 +209,7 @@
 
       return new APICall({
         action: "account/password/reset/" + token,
-        method: 'POST',
+        type: 'POST',
         appkey: this.options.appkey,
         apikey: this.options.apikey,
         data: payload,
@@ -237,7 +236,7 @@
       var self = this;
       return new APICall({
         action: 'account/login',
-        method: 'POST',
+        type: 'POST',
         appkey: this.options.appkey,
         apikey: this.options.apikey,
         options: opts,
@@ -260,7 +259,7 @@
 
       return new APICall({
         action: 'account/logout',
-        method: 'POST',
+        type: 'POST',
         appkey: this.options.appkey,
         apikey: this.options.apikey,
         headers: {
@@ -283,7 +282,7 @@
       
       return new APICall({
         url: 'account',
-        method: opts.method || 'POST',
+        type: opts.method || 'POST',
         appkey: this.options.appkey,
         apikey: this.options.apikey,
         headers: {
@@ -346,18 +345,21 @@
     this.additionalData = config.callbackData;
     this.contentType = config.contentType;
     this.data = null;
+    this.requestData = config.data;
     this.responseHeaders = {};
     this.responseText = null;
     this.status = null;
+    this.type = config.type || 'GET';
 
     // Build the request headers
-    var session = config.options ? config.options.session_token : null;
-    this.requestHeaders = config.headers = merge({
+    this.requestHeaders = {
       'X-CloudMine-ApiKey': config.apikey,
-      'Content-Type': config.contentType,
-      'X-CloudMine-SessionToken': session
-    }, config.headers);
-
+      'Content-Type': config.contentType
+    };
+    var session = config.options ? config.options.session_token : null;
+    if (session) this.requestHeaders['X-CloudMine-SessionToken'] = session;
+    config.headers = merge(this.requestHeaders, config.headers);
+    
     // Build the URL
     var query = (config.query ? ("?" + stringify(config.query)) : "");
     this.url = [cloudmine.API, "/v1/app/", config.appkey, (session ? "/user/" : "/"), config.action, query].join("");
@@ -388,7 +390,8 @@
       }
 
       // Do not expose xhr object.
-      delete this.xhr;
+      self.xhr = undefined;
+      delete self.xhr;
 
       // Data has been processed by this point and should exist in success, errors, meta, or results hashes.
       // Event firing order: http status (e.g. ok, created), http status (e.g. 200, 201), success, meta, result, error.
@@ -445,8 +448,9 @@
         if (!this._events[eventType]) this._events[eventType] = [];
 
         // normal callback not called.
+        var self = this;
         this._events[eventType].push([callback, context, function() {
-          removeCallbacks(eventType, callback, context);
+          self.off(eventType, callback, context);
           callback.apply(this, arguments);
         }]);
       }
@@ -501,6 +505,7 @@
     abort: function() {
       if (!this._config && this.xhr) {
         this.xhr.abort();
+        this.xhr = undefined;
         delete this.xhr;
       }
       return this;
@@ -525,6 +530,7 @@
     done: function() {
       if (!this.xhr && this._config) {
         this.xhr = ajax(self.url, this._config);
+        this._config = undefined;
         delete this._config;
       }
       return this;
@@ -630,7 +636,6 @@
 
   function each(item, callback, context) {
     context = context || this
-    debugger
     if (isArray(item)) {
       if (item.forEach) item.forEach(callback, context);
       else {
