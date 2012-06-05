@@ -37,7 +37,12 @@
 
     update: function(key, value, opts) {
       if (!isObject(key)) key = { key: key, value: value }
-      else opts = value;
+      else {
+        var out = {};
+        out[key] = value;
+        key = out;
+        opts = value;
+      }
       opts = opts ? merge({}, this.options, opts) : this.options;
 
       return new APICall({
@@ -53,7 +58,12 @@
 
     set: function(key, value, opts) {
       if (!isObject(key)) key = { key: key, value: value }
-      else opts = value;
+      else {
+        var out = {};
+        out[key] = value;
+        key = out;
+        opts = value;
+      }
       opts = opts ? merge({}, this.options, opts) : this.options;
 
       return new APICall({
