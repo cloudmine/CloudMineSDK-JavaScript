@@ -577,9 +577,9 @@
     limit: 'limit',
     skip: 'skip',
     snippet: 'f', // Run code snippet on the data
-    params: 'params',
-    dontwait: 'async', // Only applies to code snippets
-    resultsonly: 'result_only', // Only applies to code snippets
+    params: 'params', // Only applies to code snippets, parameters for the code snippet (JSON).
+    dontwait: 'async', // Only applies to code snippets, don't wait for results.
+    resultsonly: 'result_only', // Only applies to code snippets, only show results from code snippet.
     count: 'count'
   };
 
