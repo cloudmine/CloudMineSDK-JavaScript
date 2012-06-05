@@ -36,9 +36,11 @@
     },
 
     update: function(key, value, opts) {
-      if (!isObject(key)) key = { key: key, value: value }
+      if (!isObject(key)) keys = { key: key, value: value }
       else opts = value;
       opts = opts ? merge({}, this.options, opts) : this.options;
+
+      debugger
 
       return new APICall({
         action: 'text',
@@ -47,7 +49,7 @@
         apikey: this.options.apikey,
         options: opts,
         query: server_params(opts),
-        data: JSON.stringify(keys)
+        data: JSON.stringify(key)
       });
     },
 

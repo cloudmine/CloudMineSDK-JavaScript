@@ -126,7 +126,7 @@ $(document).ready(function(){
       todo.login_user(input);
     },
 
-    push_item: function(data, unique_id, callback){
+    push_item: function(data, unique_id){
       var d = new Date();
       if (unique_id == undefined){
         unique_id = d.getTime();
@@ -148,17 +148,15 @@ $(document).ready(function(){
       // If it's a unique key, it creates a new object. 
       // If it already exists, it updates the object under that key.
 
-      cm.update(unique_id, data, callback(data),
+      cm.update(unique_id, data, { user: true }).on('success', function(response){ todo.draw_and_append_item(response) });
         // IMPORTANT: even when logged in, data doesn't save privately under the
         // user by default. Add a fourth opt argument with user: true to save privately
-        { user: true });
     },
 
     get_items: function(){
-      cm.get(null, function(response){
+      cm.get(null).on('success', function(response){
         // Save the response data
         todo.data = response;
-
         $('#login').hide();
         $('#todo, #new').show(); 
         // Set up the "New..." button to do its job
@@ -220,6 +218,8 @@ $(document).ready(function(){
       var todo_item, // Shortcut to the data for this todo item
           item_text, // The text that will display on the item
           todo_div, todo_checkbox, todo_delete; // DOM elements (main div, checkbox that indicates done-ness)
+
+      console.log(item_data);
 
       todo.data[item_data.__id__] = item_data;
       // Make DOM elements: list item div and checkbox for done/not done
