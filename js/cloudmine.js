@@ -70,7 +70,7 @@
     destroy: function(keys, opts) {
       opts = opts ? merge({}, this.options, opts) : this.options;
       if (keys == null) keys = {all: true};
-      else keys = isArray(keys) ? keys.join(',') : keys; 
+      else keys = {keys: (isArray(keys) ? keys.join(',') : keys)}; 
 
       return new APICall({
         action: 'data',
