@@ -36,12 +36,12 @@
     },
 
     update: function(key, value, opts) {
-      if (!isObject(key)){
+      if (isObject(key)) opts = value;
+      else {
         var out = {};
         out[key] = value;
         key = out;
-      } 
-
+      }
       opts = opts ? merge({}, this.options, opts) : this.options;
      
       return new APICall({
@@ -56,12 +56,12 @@
     },
 
     set: function(key, value, opts) {
-      if (!isObject(key)){
+      if (isObject(key)) opts = value;
+      else {
         var out = {};
         out[key] = value;
         key = out;
-      } 
-
+      }
       opts = opts ? merge({}, this.options, opts) : this.options;
 
       return new APICall({
@@ -71,14 +71,14 @@
         apikey: this.options.apikey,
         options: opts,
         query: server_params(opts),
-        data: JSON.stringify(keys)
+        data: JSON.stringify(key)
       });
     },
 
     destroy: function(keys, opts) {
       opts = opts ? merge({}, this.options, opts) : this.options;
       if (keys == null) keys = {all: true};
-      else keys = {key: 'keys', value: (isArray(keys) ? keys.join(',') : keys)}; 
+      else keys = {keys: (isArray(keys) ? keys.join(',') : keys)}
 
       return new APICall({
         action: 'data',
@@ -86,7 +86,7 @@
         appid: this.options.appid,
         apikey: this.options.apikey,
         options: opts,
-        query: server_params(opts, {'keys': keys})
+        query: server_params(opts, keys)
       });
     },
 
@@ -234,13 +234,16 @@
      *     OR
      *   session_token {String} session_token from previous login (retrieved from a cookie)
      */
-    login: function(user, opts) {
+    login: function(user, password, opts) {
+      if (isObject(user)) opts = password;
+      else user = {username: user, password: password};
+
       // Wipe out existing login information.
       this.options.username = null;
       this.options.password = null;
       this.options.session_token = null;
       opts = opts ? merge({}, this.options, opts) : this.options;
-      
+
       var self = this;
       return new APICall({
         action: 'account/login',
@@ -702,7 +705,7 @@
     var out = [];
     for (var k in map) {
       if (map[k] != null && !isFunction(map[k])){
-        out.push(esc(map[k].key) + "=" + esc(map[k].value));
+        out.push(esc(k) + "=" + esc(map[k]));
       }
     }
     return out.join('&');
