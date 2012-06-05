@@ -15,8 +15,8 @@
 $(document).ready(function(){
   // Initializing the Cloudmine library requires your App ID and personal API key,
   // which you can find on your Dashboard on cloudmine.me
-  var app_id = '84e5c4a381e7424b8df62e055f0b69db',
-      api_key = '84c8c3f1223b4710b180d181cd6fb1df',
+  var appid = '84e5c4a381e7424b8df62e055f0b69db',
+      apikey = '84c8c3f1223b4710b180d181cd6fb1df',
       login_user, register_user, cookie, _c;
 
   // Binding event handlers to the login/registration buttons
@@ -30,7 +30,7 @@ $(document).ready(function(){
     todo.create_item();
   });
   $('#logout_button').click(function(){
-    cloudmine.logout(todo.logout_user);
+    cm.logout(todo.logout_user);
   });
 
   // Log the user in by default on hitting Enter
@@ -42,10 +42,10 @@ $(document).ready(function(){
   
   $('#login_email').focus();
 
-  // Initializing Cloudmine library with App ID and API key
-  cloudmine.init({
-    app_id: app_id,
-    api_key: api_key
+  // Initializing Cloudmine library using App ID and API key
+  cm = new cloudmine.WebService({
+    appid: appid,
+    apikey: apikey
   });
 
 
@@ -73,7 +73,7 @@ $(document).ready(function(){
       $('#register_button').attr('value', 'Creating account...');
       $('#login_button, #or').hide();
 
-      cloudmine.createUser(input, function(response){ 
+      cm.createUser(input, function(response){ 
         todo.process_registration(response, input); 
       });        
     },
@@ -93,8 +93,8 @@ $(document).ready(function(){
       $('#login_button').attr('value', 'Logging in...');
       $('#register_button, #or').hide();
 
-      // Run the cloudmine.login
-      cloudmine.login(credentials, function(response){ 
+      // Run the cm.login
+      cm.login(credentials).on('success', function(response){ 
         todo.process_login(response, set_cookie); 
       });
     },
@@ -148,14 +148,14 @@ $(document).ready(function(){
       // If it's a unique key, it creates a new object. 
       // If it already exists, it updates the object under that key.
 
-      cloudmine.updateValue(unique_id, data, callback(data),
+      cm.update(unique_id, data, callback(data),
         // IMPORTANT: even when logged in, data doesn't save privately under the
         // user by default. Add a fourth opt argument with user: true to save privately
         { user: true });
     },
 
     get_items: function(){
-      cloudmine.getValues(null, function(response){
+      cm.get(null, function(response){
         // Save the response data
         todo.data = response;
 
@@ -188,7 +188,7 @@ $(document).ready(function(){
       key = [ key ]; // Cloudmine expects an array of keys, but since we're just doing one it's simpler to
                      // pass it by itself and just convert it to an array in side this function.
       $('span[item="' + key + '"]').remove();
-      cloudmine.deleteKeys(key, null, { user: true });
+      cm.destroy(key, null, { user: true });
     },
 
     draw_list: function(response){

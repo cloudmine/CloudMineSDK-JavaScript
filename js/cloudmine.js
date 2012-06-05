@@ -27,7 +27,7 @@
 
       return new APICall({
         action: 'text',
-        appkey: this.options.appkey,
+        appid: this.options.appid,
         apikey: this.options.apikey,
         type: 'GET',
         options: opts,
@@ -43,7 +43,7 @@
       return new APICall({
         action: 'text',
         type: 'POST',
-        appkey: this.options.appkey,
+        appid: this.options.appid,
         apikey: this.options.apikey,
         options: opts,
         query: server_params(opts),
@@ -59,7 +59,7 @@
       return new APICall({
         action: 'text',
         type: 'PUT',
-        appkey: this.options.appkey,
+        appid: this.options.appid,
         apikey: this.options.apikey,
         options: opts,
         query: server_params(opts),
@@ -75,7 +75,7 @@
       return new APICall({
         action: 'data',
         type: 'DELETE',
-        appkey: this.options.appkey,
+        appid: this.options.appid,
         apikey: this.options.apikey,
         options: opts,
         query: server_params(opts, keys)
@@ -89,7 +89,7 @@
       return new APICall({
         action: 'search',
         type: 'GET',
-        appkey: this.options.appkey,
+        appid: this.options.appid,
         apikey: this.options.apikey,
         query: server_params(opts, query),
         options: opts
@@ -114,7 +114,7 @@
             type: 'post',
             later: true,
             options: opts,
-            appkey: opts.appkey,
+            appid: opts.appid,
             apikey: opts.apikey
           });
 
@@ -140,7 +140,7 @@
         type: 'GET',
         later: true,
         options: opts,
-        appkey: opts.appkey,
+        appid: opts.appid,
         apikey: opts.apikey,
         processResponse: APICall.basicResponse
       });
@@ -156,7 +156,7 @@
       return new APICall({
         action: 'account/create',
         type: 'POST',
-        appkey: this.options.appkey,
+        appid: this.options.appid,
         apikey: this.options.apikey,
         options: opts,
         processResponse: APICall.basicResponse,
@@ -173,7 +173,7 @@
       return new APICall({
         action: 'account/password/change',
         type: 'POST',
-        appkey: this.options.appkey,
+        appid: this.options.appid,
         apikey: this.options.apikey,
         data: payload,
         options: opts,
@@ -193,7 +193,7 @@
       return new APICall({ 
         action: 'account/password/reset',
         type: 'POST',
-        appkey: this.options.appkey,
+        appid: this.options.appid,
         apikey: this.options.apikey,
         options: opts,
         processResponse: APICall.basicResponse,
@@ -210,7 +210,7 @@
       return new APICall({
         action: "account/password/reset/" + token,
         type: 'POST',
-        appkey: this.options.appkey,
+        appid: this.options.appid,
         apikey: this.options.apikey,
         data: payload,
         processResponse: APICall.basicResponse,
@@ -237,7 +237,7 @@
       return new APICall({
         action: 'account/login',
         type: 'POST',
-        appkey: this.options.appkey,
+        appid: this.options.appid,
         apikey: this.options.apikey,
         options: opts,
         headers: {
@@ -260,7 +260,7 @@
       return new APICall({
         action: 'account/logout',
         type: 'POST',
-        appkey: this.options.appkey,
+        appid: this.options.appid,
         apikey: this.options.apikey,
         headers: {
           'X-CloudMine-SessionToken': opts.session_token
@@ -283,7 +283,7 @@
       return new APICall({
         url: 'account',
         type: opts.method || 'POST',
-        appkey: this.options.appkey,
+        appid: this.options.appid,
         apikey: this.options.apikey,
         headers: {
           Authorization: "Basic " + (base64.encode(username + ":" + password))
@@ -319,7 +319,7 @@
    * 500: 'servererror'
    *
    * Example:
-   *    var cm = new cloudmine.WebService({appkey: "abcdef", apikey: "ghijkl"});
+   *    var cm = new cloudmine.WebService({appid: "abcdef", apikey: "ghijkl"});
    *    cm.get("MyObjectKey").on('success', function(data) {
    *      console.log("Value of MyObjectKey: %o", data["MyObjectKey"]);
    *    }).on('error', function(data, response, status) {
@@ -362,7 +362,7 @@
     
     // Build the URL
     var query = (config.query ? ("?" + stringify(config.query)) : "");
-    this.url = [cloudmine.API, "/v1/app/", config.appkey, (session ? "/user/" : "/"), config.action, query].join("");
+    this.url = [cloudmine.API, "/v1/app/", config.appid, (session ? "/user/" : "/"), config.action, query].join("");
     
     var self = this;
     config.complete = function(xhr) {
