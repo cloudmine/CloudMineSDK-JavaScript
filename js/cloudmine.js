@@ -371,7 +371,7 @@
       self.responseText = content;
       each(xhr.getAllResponseHeaders().split('\n'), function(item) {
         var fields = item.split(':');
-        self.responseHeaders[fields.shift()] = fields.join(':');
+        if (fields[0] != "") self.responseHeaders[fields.shift()] = fields.join(':');
       });
 
       // If we can parse the data as JSON or store the original data.
