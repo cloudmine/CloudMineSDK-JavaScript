@@ -56,7 +56,14 @@
     },
 
     set: function(key, value, opts) {
-      if (!isObject(key)) key = { key: key, value: value }
+      if (!isObject(key)){
+        var out = {};
+        out[key] = value;
+        key = out;
+      } 
+
+      opts = opts ? merge({}, this.options, opts) : this.options;
+
       else {
         var out = {};
         out[key] = value;
