@@ -8,7 +8,7 @@
 //                                      called by todo.draw_and_prepend_item
 
 // Cloudmine library functions in use in this sample app:
-//    login:        for logging in (email/password) and receiving a session_token which is saved in a cookie
+//    login / logout: Simple user management. Each user gets their own task list. Simple registration with auto-login.
 //    registerUser: for creating a new user account (email/password)
 //    updateValue:  for creating to-do items and marking them as done or deleting them
 
@@ -94,15 +94,14 @@ $(document).ready(function(){
 
     // Send Cloudmine request to register a new user  
     register_user: function(){
-      var input = {
-        username: $('#login_email').val(), 
-        password: $('#login_password').val()
-      };
+      var username = $('#login_email').val(),
+          password = $('#login_password').val();
+
       $('#register_button').attr('value', 'Creating account...');
       $('#login_button, #or').hide();
 
-      cm.createUser(input, function(response){ 
-        todo.process_registration(response, input); 
+      cm.createUser(username, password).on('success', function(response){ 
+        todo.process_registration(response, { username: username, password: password }); 
       });        
     },
     // Send Cloudmine request to login as existing user

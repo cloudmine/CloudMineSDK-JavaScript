@@ -155,10 +155,10 @@
       });
     },
 
-    createUser: function(username, password, opts) {
+    createUser: function(email, password, opts) {
       opts = opts ? merge({}, this.options, opts) : this.options;
       var payload = JSON.stringify({
-        username: username,
+        email: email,
         password: password
       });
 
