@@ -36,15 +36,14 @@
     },
 
     update: function(key, value, opts) {
-      if (!isObject(key)) key = { key: key, value: value }
-      else {
+      if (!isObject(key)){
         var out = {};
         out[key] = value;
         key = out;
-        opts = value;
-      }
-      opts = opts ? merge({}, this.options, opts) : this.options;
+      } 
 
+      opts = opts ? merge({}, this.options, opts) : this.options;
+     
       return new APICall({
         action: 'text',
         type: 'POST',
@@ -52,7 +51,7 @@
         apikey: this.options.apikey,
         options: opts,
         query: server_params(opts),
-        data: JSON.stringify(keys)
+        data: JSON.stringify(key)
       });
     },
 
@@ -80,7 +79,7 @@
     destroy: function(keys, opts) {
       opts = opts ? merge({}, this.options, opts) : this.options;
       if (keys == null) keys = {all: true};
-      else keys = {keys: (isArray(keys) ? keys.join(',') : keys)}; 
+      else keys = {key: 'keys', value: (isArray(keys) ? keys.join(',') : keys)}; 
 
       return new APICall({
         action: 'data',
@@ -88,7 +87,7 @@
         appid: this.options.appid,
         apikey: this.options.apikey,
         options: opts,
-        query: server_params(opts, keys)
+        query: server_params(opts, {'keys': keys})
       });
     },
 
@@ -262,10 +261,13 @@
     },
 
     logout: function(opts) {
-      opts = opts ? merge({}, this.options, opts) : this.options;
+      opts = opts ? merge({}, this.options, opts) : this.options,
+      token = this.options.session_token;
+
       this.options.username = null;
       this.options.password = null;
       this.options.session_token = null;
+
 
       return new APICall({
         action: 'account/logout',
@@ -273,7 +275,7 @@
         appid: this.options.appid,
         apikey: this.options.apikey,
         headers: {
-          'X-CloudMine-SessionToken': opts.session_token
+          'X-CloudMine-SessionToken': token
         },
         options: opts
       });
@@ -348,6 +350,7 @@
    *  processResponse: Pre-process result with function.  Default: APICall.textResponse (no processing: APICall.basicResponse)
    */
   function APICall(config) {
+
     config = merge({}, defaultConfig, config);
     this._events = {};
 
@@ -370,7 +373,7 @@
     var session = !config.applevel && config.options ? config.options.session_token : null;
     if (session) this.requestHeaders['X-CloudMine-SessionToken'] = session;
     config.headers = merge(this.requestHeaders, config.headers);
-    
+
     // Build the URL
     var query = (config.query ? ("?" + stringify(config.query)) : "");
     this.url = [cloudmine.API, "/v1/app/", config.appid, (session ? "/user/" : "/"), config.action, query].join("");
@@ -579,7 +582,7 @@
   // E.g. Binary response.
   APICall.basicResponse = function(data, xhr, response) {
     var out = {success: {}};
-    out.success[self.status] = data;
+    out.success = data;
     return out;
   };
 
@@ -699,7 +702,9 @@
   function stringify(map) {
     var out = [];
     for (var k in map) {
-      if (map[k] != null && !isFunction(map[k])) out.push(esc(k) + "=" + esc(map[k]));
+      if (map[k] != null && !isFunction(map[k])){
+        out.push(esc(map[k].key) + "=" + esc(map[k].value));
+      }
     }
     return out.join('&');
   }

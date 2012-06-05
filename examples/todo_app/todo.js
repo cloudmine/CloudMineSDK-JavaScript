@@ -15,9 +15,7 @@
 $(document).ready(function(){
   // Initializing the Cloudmine library requires your App ID and personal API key,
   // which you can find on your Dashboard on cloudmine.me
-  var appid = '84e5c4a381e7424b8df62e055f0b69db',
-      apikey = '84c8c3f1223b4710b180d181cd6fb1df',
-      login_user, register_user, cookie, _c;
+  var login_user, register_user, cookie, _c;
 
   // Binding event handlers to the login/registration buttons
   $('#login_button').click(function(){
@@ -30,7 +28,7 @@ $(document).ready(function(){
     todo.create_item();
   });
   $('#logout_button').click(function(){
-    cm.logout(todo.logout_user);
+    cm.logout().on('success', function(){ todo.logout_user(); });
   });
 
   // Log the user in by default on hitting Enter
@@ -42,12 +40,42 @@ $(document).ready(function(){
   
   $('#login_email').focus();
 
-  // Initializing Cloudmine library using App ID and API key
-  cm = new cloudmine.WebService({
-    appid: appid,
-    apikey: apikey
-  });
 
+  var check_for_session = function(){
+    cookies = document.cookie.split(';');
+    for (cookie in cookies){
+      _c = cookies[cookie].split('=');
+      if (_c[0] == 'cloudmineTodoSession' && _c[1] != 'none'){
+        $('#login').hide();
+        $('#restoring_session').show();
+        return _c[1];
+      }
+    }
+    return null
+  };
+
+  var init_cloudmine = function(){
+
+    init_vals = {
+      appid: '84e5c4a381e7424b8df62e055f0b69db',
+      apikey: '84c8c3f1223b4710b180d181cd6fb1df'
+    }
+
+    previous_session = check_for_session();
+
+    if (previous_session){
+      init_vals['session_token'] = previous_session;
+            
+    }
+
+    // Initializing Cloudmine library using App ID and API key
+    cm = new cloudmine.WebService(init_vals);
+
+    if (previous_session){
+      todo.get_items();
+    }
+
+  }
 
 
   // "todo" object wrapper for all app functions
@@ -95,7 +123,7 @@ $(document).ready(function(){
 
       // Run the cm.login
       cm.login(credentials).on('success', function(response){ 
-        todo.process_login(response, set_cookie); 
+        todo.process_login(response, set_cookie);
       });
     },
 
@@ -115,9 +143,7 @@ $(document).ready(function(){
 
     process_login: function(response, set_cookie){
       if (set_cookie){
-        var seven_days = new Date();
-        seven_days.setTime(seven_days.getTime() + 604800000);
-        document.cookie = 'cloudmineTodoSession=' + response.session_token + '; expires=' + seven_days.toUTCString() + '; path=/';
+        document.cookie = 'cloudmineTodoSession=' + response.session_token + '; expires=' + response.expires + '; path=/';
       }
       todo.get_items();
     },
@@ -126,7 +152,7 @@ $(document).ready(function(){
       todo.login_user(input);
     },
 
-    push_item: function(data, unique_id, callback){
+    push_item: function(data, unique_id){
       var d = new Date();
       if (unique_id == undefined){
         unique_id = d.getTime();
@@ -143,22 +169,24 @@ $(document).ready(function(){
           __id__: unique_id,
           done: false
         }
+        callback = function(response){ todo.draw_and_prepend_item(data) }
+      } else {
+        callback = function() {}
       }
+
+
       // updateValue(key, data, callback, opts) pushes data to the server. 
       // If it's a unique key, it creates a new object. 
       // If it already exists, it updates the object under that key.
-
-      cm.update(unique_id, data, callback(data),
+      cm.update(unique_id, data, { user: true }).on('success', callback);
         // IMPORTANT: even when logged in, data doesn't save privately under the
         // user by default. Add a fourth opt argument with user: true to save privately
-        { user: true });
     },
 
     get_items: function(){
-      cm.get(null, function(response){
+      cm.get(null).on('success', function(response){
         // Save the response data
         todo.data = response;
-
         $('#login').hide();
         $('#todo, #new').show(); 
         // Set up the "New..." button to do its job
@@ -181,14 +209,15 @@ $(document).ready(function(){
 
 
       $('#new_item').val('');
-      todo.push_item(data, undefined, todo.draw_and_prepend_item);
+      todo.push_item(data);
     },
 
     delete_item: function(key){
       key = [ key ]; // Cloudmine expects an array of keys, but since we're just doing one it's simpler to
                      // pass it by itself and just convert it to an array in side this function.
-      $('span[item="' + key + '"]').remove();
-      cm.destroy(key, null, { user: true });
+      cm.destroy(key, { user: true }).on('success', function(){ 
+        $('span[item="' + key + '"]').remove();
+      });
     },
 
     draw_list: function(response){
@@ -220,6 +249,8 @@ $(document).ready(function(){
       var todo_item, // Shortcut to the data for this todo item
           item_text, // The text that will display on the item
           todo_div, todo_checkbox, todo_delete; // DOM elements (main div, checkbox that indicates done-ness)
+
+      console.log(item_data);
 
       todo.data[item_data.__id__] = item_data;
       // Make DOM elements: list item div and checkbox for done/not done
@@ -364,18 +395,10 @@ $(document).ready(function(){
     });
   }
 
+  init_cloudmine();
+
   window.todo = todo;
 
-
-  // Read for session cookie
-  cookies = document.cookie.split(';');
-  for (cookie in cookies){
-    _c = cookies[cookie].split('=');
-    if (_c[0] == 'cloudmineTodoSession' && _c[1] != 'none'){
-      $('#login').hide();
-      $('#restoring_session').show();
-      todo.login_user( {'session_token': _c[1]}, false);
-    }
-  }
+  
 
 });
