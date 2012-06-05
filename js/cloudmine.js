@@ -367,9 +367,10 @@
     // Build the request headers
     this.requestHeaders = {
       'X-CloudMine-ApiKey': config.apikey,
+      'X-CloudMine-Agent': 'JS/0.2',
       'Content-Type': config.contentType
     };
-    var session = config.options ? config.options.session_token : null;
+    var session = !config.applevel && config.options ? config.options.session_token : null;
     if (session) this.requestHeaders['X-CloudMine-SessionToken'] = session;
     config.headers = merge(this.requestHeaders, config.headers);
 
