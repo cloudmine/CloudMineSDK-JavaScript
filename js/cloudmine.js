@@ -568,7 +568,6 @@
         out[error.code][k] = error;
       }
     }
-
     // Non-standard response. Just pass back the data we were given.
     if (isEmptyObject(out)) out = data;
 
@@ -699,7 +698,7 @@
   function isEmptyObject(item) {
     if (item) {
       for (var k in item) {
-        if (item.hasOwnProperty(k)) return true;
+        if (item.hasOwnProperty(k)) return false;
       }
     }
     return true;
