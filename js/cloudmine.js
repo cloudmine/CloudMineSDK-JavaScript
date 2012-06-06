@@ -405,8 +405,6 @@
         data.errors[self.status] = self.data;
       }
 
-      console.log(data);
-
       // Do not expose xhr object.
       self.xhr = undefined;
       delete self.xhr;
@@ -463,7 +461,6 @@
     on: function(eventType, callback, context) {
       if (isFunction(callback)) {
         context = context || this;
-        eventType += '';
         if (!this._events[eventType]) this._events[eventType] = [];
 
         // normal callback not called.
@@ -485,7 +482,6 @@
     trigger: function(event/*, arg1...*/) {
       var events = this._events[event];
       
-
       if (events != null) {
         args = slice(arguments, 1);
         each(events, function(event) {
