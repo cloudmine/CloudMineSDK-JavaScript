@@ -360,6 +360,7 @@
     this.additionalData = config.callbackData;
     this.contentType = config.contentType;
     this.data = null;
+    this.hasErrors = false;
     this.requestData = config.data;
     this.responseHeaders = {};
     this.responseText = null;
@@ -404,6 +405,9 @@
         data = {errors: {}};
         data.errors[self.status] = self.data;
       }
+
+      // Success results may have errors for certain keys
+      if (data.errors) self.hasErrors = true;
 
       // Do not expose xhr object.
       self.xhr = undefined;
