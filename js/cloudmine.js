@@ -277,10 +277,10 @@
     /**
      * Create a new user.
      * Use one of the two function signatures:
-     * @param {object} user An object with a username and password field.
+     * @param {object} user An object with a userid and password field.
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
      *   -OR-
-     * @param {string} user The username to login as.
+     * @param {string} user The userid to login as.
      * @param {string} password The password to login as.
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
      * @return An APICall instance for the web service request used to attach events.
@@ -291,11 +291,11 @@
      */
     createUser: function(user, password, options) {
       if (isObject(user)) options = password;
-      else user = {username: user, password: password};
+      else user = {userid: user, password: password};
       options = opts(this, options);
       options.applevel = true;
       var payload = JSON.stringify({
-        email: user.username,
+        email: user.userid,
         password: user.password
       });
       
@@ -313,10 +313,10 @@
     /**
      * Change a user's password
      * Use one of the two function signatures:
-     * @param {object} user An object with username, password, and oldpassword fields.
+     * @param {object} user An object with userid, password, and oldpassword fields.
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
      *   -OR-
-     * @param {string} user The username to change the password.
+     * @param {string} user The userid to change the password.
      * @param {string} oldpassword The existing password for the user.
      * @param {string} password The new password for the user.
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
@@ -327,7 +327,7 @@
      */
     changePassword: function(user, oldpassword, password, options) {
       if (isObject(user)) options = oldpassword;
-      else user = {username: user, oldpassword: oldpassword, password: password};
+      else user = {userid: user, oldpassword: oldpassword, password: password};
       options = opts(this, options);
       options.applevel = true;
 
@@ -344,25 +344,25 @@
         options: options,
         processResponse: APICall.basicResponse,
         headers: {
-          Authorization: "Basic " + (base64.encode(user.username + ":" + user.oldpassword))
+          Authorization: "Basic " + (base64.encode(user.userid + ":" + user.oldpassword))
         }
       });
     },
 
     /**
      * Initiate a password reset request.
-     * @param {string} username The username to send a reset password email to.
+     * @param {string} userid The userid to send a reset password email to.
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
      * @return An APICall instance for the web service request used to attach events.
      *
      * @function
      * @memberOf WebService
      */
-    resetPassword: function(username, options) {
+    resetPassword: function(userid, options) {
       options = opts(this, options);
       options.applevel = true;
       var payload = JSON.stringify({
-        email: username
+        email: userid
       });
 
       return new APICall({ 
@@ -407,7 +407,7 @@
     /**
      * Login as a user to access user-level data.
      * Use one of the two function signatures:
-     * @param {object} user An object hash with username and password fields.
+     * @param {object} user An object hash with userid and password fields.
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
      *   -OR-
      * @param {string} user The user to login as
@@ -420,10 +420,10 @@
      */
     login: function(user, password, options) {
       if (isObject(user)) options = password;
-      else user = {username: user, password: password};
+      else user = {userid: user, password: password};
 
       // Wipe out existing login information.
-      this.options.username = null;
+      this.options.userid = null;
       this.options.session_token = null;
       options = opts(this, options);
       options.applevel = true;
@@ -436,11 +436,11 @@
         apikey: this.options.apikey,
         options: options,
         headers: {
-          Authorization: "Basic " + (base64.encode("" + user.username + ":" + user.password))
+          Authorization: "Basic " + (base64.encode("" + user.userid + ":" + user.password))
         },
         processResponse: APICall.basicResponse
       }).on('success', function(data) {
-        self.options.username = data.username;
+        self.options.userid = data.userid;
         self.options.session_token = data.session_token;
       });
     },
@@ -458,7 +458,7 @@
       options.applevel = true;
 
       var token = this.options.session_token;
-      this.options.username = null;
+      this.options.userid = null;
       this.options.session_token = null;
 
       return new APICall({
@@ -475,24 +475,57 @@
     },
 
     /**
+     * Verify if the given userid and password is valid.
+     * Use one of the two function signatures:
+     * @param {object} user An object with userid and password fields.
+     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     *   -OR-
+     * @param {string} user The userid to login
+     * @param {string} password The password of the user to login
+     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @return An APICall instance for the web service request used to attach events.
+     *
+     * @function
+     * @memberOf WebService
+     */
+    verify: function(user, password, options) {
+      if (isObject(user)) opts = password;
+      else user = {userid: user, password: password};
+      options = opts(this, options);
+      options.applevel = true;
+      
+      return new APICall({
+        url: 'account',
+        type: options.method || 'POST',
+        appid: this.options.appid,
+        apikey: this.options.apikey,
+        processResponse: APICall.basicResponse,
+        headers: {
+          Authorization: "Basic " + (base64.encode(user.userid + ":" + user.password))
+        },
+        options: options
+      });
+    },
+
+    /**
      * Return true if the user is logged in, false otherwise.
      *
      * @function
      * @memberOf WebService
      */
-    loggedIn: function() {
+    isLoggedIn: function() {
       return !!this.options.session_token;
     },
 
     /**
-     * Get the current username
-     * @return The logged in username, if applicable.
+     * Get the current userid
+     * @return The logged in userid, if applicable.
      *
      * @function
      * @memberOf WebService
      */
-    getUserName: function() {
-      return this.options.username;
+    getUserID: function() {
+      return this.options.userid;
     },
 
     /**
@@ -507,35 +540,45 @@
     },
 
     /**
-     * Verify if the given username and password is valid.
-     * Use one of the two function signatures:
-     * @param {object} user An object with username and password fields.
-     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
-     *   -OR-
-     * @param {string} user The username to login
-     * @param {string} password The password of the user to login
-     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
-     * @return An APICall instance for the web service request used to attach events.
-     *
-     * @function
-     * @memberOf WebService
+     * Get a default option that is sent to the server.
+     * @param {string} option A default parameter to send to the server.
+     * @return The value of the default parameter.
      */
-    verify: function(user, password, options) {
-      if (isObject(user)) opts = password;
-      else user = {username: user, password: password};
-      options = opts(this, options);
-      options.applevel = true;
-      
-      return new APICall({
-        url: 'account',
-        type: options.method || 'POST',
-        appid: this.options.appid,
-        apikey: this.options.apikey,
-        headers: {
-          Authorization: "Basic " + (base64.encode(user.username + ":" + user.password))
-        },
-        options: options
-      });
+    getOption: function(option) {
+      return (valid_params[option] ? this.options[option] : null);
+    },
+    
+    /**
+     * Set a default option that is sent to the server
+     * @param {string} option A default parameter to send to the server.
+     * @param {string} value The value of the option to set.
+     * @return true if the option was set, false for invalid options.
+     */
+    setOption: function(option, value) {
+      if (valid_params[option]) {
+        this.options[option] = value;
+        return true;
+      }
+      return false;
+    },
+    
+    /**
+     * Set the application or user-level data mode for this store.
+     * @param {boolean|undefined} If true, this store will only operate in application data.
+     *                            If false, this store will only operate in user-level data.
+     *                            If null/undefined, this store will use user-level data if logged in,
+     *                            application data otherwise.
+     */
+    useApplicationData: function(state) {
+      this.options.applevel = (state === true || state === false) ? state : undefined;
+    },
+
+    /**
+     * Determine if this store is using application data.
+     * @return true if this store is using application data, false if is using user-level data.
+     */
+    isApplicationData: function() {
+      return this.options.applevel === true || (this.options.applevel !== false && this.options.session_token);
     }
   };
 
@@ -611,7 +654,7 @@
         data = config.processResponse.call(self, self.data, xhr, self);
       } else {
         data = {errors: {}};
-        data.errors[self.status] = { errors: [self.data] };
+        data.errors[self.status] = {errors: [ self.data ] };
       }
 
       // Success results may have errors for certain keys
@@ -793,7 +836,7 @@
       for (var k in data.errors) {
         var error = data.errors[k];
         if (!out.errors[error.code]) out.errors[error.code] = {}
-        out.errors[error.code][k] = { errors: [error] };
+        out.errors[error.code][k] = {errors: [ error ]};
       }
     }
     // Non-standard response. Just pass back the data we were given.

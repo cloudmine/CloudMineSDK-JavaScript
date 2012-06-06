@@ -33,7 +33,7 @@ $(document).ready(function(){
     };
     setTimeout(function(){
       cm.createUser(user.email, user.password).on('success', function(){
-        cm.login({username: user.email, password: user.password}).on('success', function(data){
+        cm.login({userid: user.email, password: user.password}).on('success', function(data){
           ok(data.hasOwnProperty('session_token'), 'Has session token');
           start();
         });
