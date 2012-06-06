@@ -158,7 +158,7 @@ $(document).ready(function(){
         .on('success', function(response){ 
           todo.process_login(response);
         })
-        .on('401', function(data){
+        .on('error', function(data){
           todo.error('login', data.errors[0]);
           $('#login_button').attr('value', 'Login');
           $('#register_button, #or').show();
@@ -255,7 +255,6 @@ $(document).ready(function(){
     */
     get_items: function(){
       cm.get(null).on('success', function(response){
-        debugger
         // Save the response data
         todo.data = response;
         $('#login').hide();
