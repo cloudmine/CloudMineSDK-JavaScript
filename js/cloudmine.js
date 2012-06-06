@@ -466,6 +466,7 @@
         type: 'POST',
         appid: this.options.appid,
         apikey: this.options.apikey,
+        processResponse: APICall.basicResponse,
         headers: {
           'X-CloudMine-SessionToken': token
         },
@@ -610,7 +611,7 @@
         data = config.processResponse.call(self, self.data, xhr, self);
       } else {
         data = {errors: {}};
-        data.errors[self.status] = self.data;
+        data.errors[self.status] = { errors: [self.data] };
       }
 
       // Success results may have errors for certain keys
@@ -792,7 +793,7 @@
       for (var k in data.errors) {
         var error = data.errors[k];
         if (!out.errors[error.code]) out.errors[error.code] = {}
-        out.errors[error.code][k] = error;
+        out.errors[error.code][k] = { errors: [error] };
       }
     }
     // Non-standard response. Just pass back the data we were given.
