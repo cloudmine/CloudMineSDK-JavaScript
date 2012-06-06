@@ -347,7 +347,7 @@
    *  contentType: content type for request               Default: "application/json"
    *  query: map of parameters to pass to the server      Default: null
    *  data: data to send to server                        Default: null
-   *  dataType: Data type being sent to the server        Default: 'json'
+   *  dataType: Data type being sent to the server        Default: 'text'
    *  processData: Convert data to query fields. Default: false
    *  processResponse: Pre-process result with function.  Default: APICall.textResponse (no processing: APICall.basicResponse)
    */
@@ -556,26 +556,21 @@
   // Use this for standard cloudmine text responses that have success/errors/meta/result fields.
   APICall.textResponse = function(data, xhr, response) {
     out = {};
-
-    // Attempt to detect a standard response.
-    if (data.errors || data.success || data.meta || data.result) {
-      out.success = data.success;
-      out.meta = data.meta;
-      out.result = data.result;
-      response.count = data.count;
-
-      if (data.errors) {
-        out.errors = {};
-        for (var k in data.errors) {
-          var error = data.errors[k];
-          if (!out[error.code]) out[error.code] = {}
-          out[error.code][k] = error;
-        }
+    if (data.count != null) response.count = data.count;
+    if (!isEmptyObject(data.success)) out.success = data.success;
+    if (!isEmptyObject(data.meta)) out.meta = data.meta;
+    if (!isEmptyObject(data.result)) out.result = data.result;
+    if (!isEmptyObject(data.errors)) {
+      out.errors = {};
+      for (var k in data.errors) {
+        var error = data.errors[k];
+        if (!out[error.code]) out[error.code] = {}
+        out[error.code][k] = error;
       }
-    } else {
-      // Code snippets may return a non-standard result, catch that case.
-      out.success = data;
     }
+
+    // Non-standard response. Just pass back the data we were given.
+    if (isEmptyObject(out)) out = data;
 
     return out;
   };
@@ -701,6 +696,15 @@
     return typeof item === 'function';
   }
   
+  function isEmptyObject(item) {
+    if (item) {
+      for (var k in item) {
+        if (item.hasOwnProperty(k)) return true;
+      }
+    }
+    return true;
+  }
+
   function stringify(map) {
     var out = [];
     for (var k in map) {
