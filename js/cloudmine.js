@@ -1,26 +1,63 @@
+/** @namespace cloudmine */ 
 (function() {
-  /*
-   * Constructor
+  /**
+   * Construct a new WebService instance
    *
-   * @param {Object} options Data which sets up the Cloudmine WebService object to communicate with your app through your api key. Takes the following:
-   *   apikey: Generated on the Cloudmine dashboard (https://cloudmine.me/dashboard/apps), an API key with specific permissions you set for your app
-   *   appid:  Your app's identifier, which you can find in the same place as the API key.
-   *   
+   * Each method on the WebService instance will return an APICall object which may be used to
+   * access the results of the method called. You can chain multiple events together, with the
+   * All events are at least guaranteed to have the callback signature: function(data, apicall).
+   * supported events:
+   *    200, 201, 400, 401, 404, 409, ok, created, badrequest, unauthorized, notfound, conflict,
+   *    success, error, complete, meta, result
+   * Event order: success callbacks, meta callbacks, result callbacks, error callbacks, complete
+   * callbacks 
    *
+   * Example:
+   * var ws = new cloudmine.WebService({appid: "abc", apikey: "abc"});
+   * ws.get("MyKey").on("success", function(data, apicall) {
+   *    console.log("MyKey value: %o", data["MyKey"]);
+   * }).on("error", function(data, apicall) {
+   *    console.log("Failed to get MyKey: %o", apicall.status);
+   * }).on("unauthorized", function(data, apicall) {
+   *    console.log("I'm not authorized to access 'appid'");
+   * }).on(404, function(data, apicall) {
+   *    console.log("Could not find 'MyKey'");
+   * }).on("complete", function(data, apicall) {
+   *    console.log("Finished get on 'MyKey':", data);
+   * });
+   *
+   * Refer to APICall's documentation for further information on events.
+   *
+   * @param {object} Default configuration for this WebService
+   * @config {string} [appid] The application id for requests (Required)
+   * @config {string} [apikey] The api key for requests (Required)
+   * @config {boolean} [applevel] If true, always send requests to application.
+   *                              If false, always send requests to user-level, trigger error if not logged in.
+   *                              Otherwise, send requests to user-level if logged in.
+   * @config {integer} [limit] Set the default result limit for requests
+   * @config {integer} [skip] Set the default number of results to skip for requests
+   * @config {boolean} [count] Return the count of results for request.
+   * @config {string} [snippet] Run the specified code snippet during the request.
+   * @config {string|object} [params] Parameters to give the code snippet (applies only for code snippets)
+   * @config {boolean} [dontwait] Don't wait for the result of the code snippet (applies only for code snippets)
+   * @config {boolean} [resultsonly] Only return results from the code snippet (applies only for code snippets)
+   * @constructor
    */
-
   function WebService(options) {
-    this.options = options || {};
+    this.options = opts(this, options);
   }
 
-  /*
-   * Get one, many given keys, or all keys from CloudMine.
-   * @param {String|String[]|null} keys If omitted get all keys, if a string, a single key, otherwise return many keys.
-   */
-
   WebService.prototype = {
-    get: function(keys, opts) {
-      opts = opts ? merge({}, this.options, opts) : this.options;
+    /**
+     * Get data from CloudMine.
+     * Results may be affected by defaults and/or by the options parameter.
+     * @param {string|string[]|null} If set, return the specified keys, otherwise return all keys. 
+     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @function
+     * @memberOf WebService
+     */
+    get: function(keys, options) {
+      options = opts(this, options);
       keys = {
         keys: isArray(keys) ? keys.join(',') : keys
       };
@@ -30,54 +67,96 @@
         appid: this.options.appid,
         apikey: this.options.apikey,
         type: 'GET',
-        options: opts,
-        query: server_params(opts, keys)
+        options: options,
+        query: server_params(options, keys)
       });
     },
 
-    update: function(key, value, opts) {
-      if (isObject(key)) opts = value;
+    /**
+     * Create new data, and merge existing data.
+     * The data must be convertable to JSON.
+     * Results may be affected by defaults and/or by the options parameter.
+     * Use one of the two function signatures:
+     * @param {object} key An object hash where the top level properties are the keys.
+     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     *    - OR -
+     * @param {string} key The key to affect
+     * @param {string|number|object} value The value of the object
+     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @return An APICall instance for the web service request used to attach events.
+     *
+     * @function
+     * @memberOf WebService
+     */
+    update: function(key, value, options) {
+      if (isObject(key)) options = value;
       else {
         var out = {};
         out[key] = value;
         key = out;
       }
-      opts = opts ? merge({}, this.options, opts) : this.options;
+      options = opts(this, options);
      
       return new APICall({
         action: 'text',
         type: 'POST',
         appid: this.options.appid,
         apikey: this.options.apikey,
-        options: opts,
-        query: server_params(opts),
+        options: options,
+        query: server_params(options),
         data: JSON.stringify(key)
       });
     },
 
-    set: function(key, value, opts) {
-      if (isObject(key)) opts = value;
+    /**
+     * Create or overwrite existing objects in CloudMine with the given key or keys.
+     * The data must be convertable to JSON.
+     * Results may be affected by defaults and/or by the options parameter.
+     * Use one of the two function signatures:
+     * @param {object} key An object hash where the top level properties are the keys.
+     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     *   -OR-
+     * @param {string} key The key to affect
+     * @param {string|number|object} The object to store. 
+     * @return An APICall instance for the web service request used to attach events.
+     *
+     * @function
+     * @memberOf WebService
+     */
+    set: function(key, value, options) {
+      if (isObject(key)) options = value;
       else {
         var out = {};
         out[key] = value;
         key = out;
       }
-      opts = opts ? merge({}, this.options, opts) : this.options;
+      options = opts(this, options);
 
       return new APICall({
         action: 'text',
         type: 'PUT',
         appid: this.options.appid,
         apikey: this.options.apikey,
-        options: opts,
-        query: server_params(opts),
+        options: options,
+        query: server_params(options),
         data: JSON.stringify(key)
       });
     },
 
-    destroy: function(keys, opts) {
-      opts = opts ? merge({}, this.options, opts) : this.options;
-      if (keys == null) keys = {all: true};
+    /**
+     * Destroy one or more keys on the server.
+     * If given null and options.all is true, delete all objects on the server.
+     * Results may be affected by defaults and/or by the options parameter.
+     * @param {string|string[]|null} keys The keys to delete on the server.
+     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @return An APICall instance for the web service request used to attach events.
+     *
+     * @function
+     * @memberOf WebService
+     */
+    destroy: function(keys, options) {
+      options = opts(this, options);
+      if (keys == null && options.all === true) keys = {all: true};
       else keys = {keys: (isArray(keys) ? keys.join(',') : keys)}
 
       return new APICall({
@@ -85,13 +164,23 @@
         type: 'DELETE',
         appid: this.options.appid,
         apikey: this.options.apikey,
-        options: opts,
-        query: server_params(opts, keys)
+        options: options,
+        query: server_params(options, keys)
       });
     },
 
-    search: function(query, opts) {
-      opts = opts ? merge({}, this.options, opts) : this.options;
+    /**
+     * Search CloudMine for text objects
+     * Results may be affected by defaults and/or by the options parameter.
+     * @param {string} query Query parameters to search for.
+     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @return An APICall instance for the web service request used to attach events.
+     *
+     * @function
+     * @memberOf WebService
+     */
+    search: function(query, options) {
+      options = opts(this, options);
       query = {q: query != null ? query : ""}
 
       return new APICall({
@@ -99,31 +188,52 @@
         type: 'GET',
         appid: this.options.appid,
         apikey: this.options.apikey,
-        query: server_params(opts, query),
-        options: opts
+        query: server_params(options, query),
+        options: options
       });
     },
 
-    searchFiles: function(query, opts) {
+    /**
+     * Search CloudMine explicitly querying for files.
+     * Results may be affected by defaults and/or by the options parameter.
+     * @param {string} query Additional query parameters to search for.
+     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @return An APICall instance for the web service request used to attach events.
+     *
+     * @function
+     * @memberOf WebService
+     */
+    searchFiles: function(query, options) {
       var term = '[__type__ = "file"]';
       query = query != null ? query + "." + term : term;
 
-      return this.search(query, opts);
+      return this.search(query, options);
     },
 
-    // EXPERIMENTAL.
+    /**
+     * Upload a file stored in CloudMine.
+     * WARNING: Experimental, behavior subject to change.
+     *
+     * @param {string} key The binary file's object key.
+     * @param {File} key A HTML5 FileAPI File object.
+     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @return An APICall instance for the web service request used to attach events.
+     *
+     * @function
+     * @memberOf WebService
+     */
     uploadFile: (function() {
       // FileAPI: IE 10+, Firefox 3.6+, Chrome 13+, Opera 11.1, Safari 5 (Mac)
       if (window.FileReader) {
-        return function(file, opts) {
-          opts = opts ? merge({}, this.options, opts) : this.options;
+        return function(key, file, options) {
+          options = opts(this, options);
           var apicall = new APICall({
-            action: 'binary',
+            action: 'binary/' + key,
             type: 'post',
             later: true,
-            options: opts,
-            appid: opts.appid,
-            apikey: opts.apikey
+            options: options,
+            appid: options.appid,
+            apikey: options.apikey
           });
 
           var reader = new FileReader();
@@ -139,43 +249,90 @@
       return NotSupported;
     })(),
 
-    // EXPERIMENTAL.
-    downloadFile: function(key, opts) {
-      opts = opts ? merge({}, this.options, opts) : this.options;
+    /**
+     * Download a file stored in CloudMine.
+     * WARNING: Experimental, behavior subject to change.
+     *
+     * @param {string} key The binary file's object key.
+     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @return An APICall instance for the web service request used to attach events.
+     *
+     * @function
+     * @memberOf WebService
+     */
+    downloadFile: function(key, options) {
+      options = opts(this, options);
       
       return new APICall({
-        action: 'binary',
+        action: 'binary/' + key,
         type: 'GET',
         later: true,
-        options: opts,
-        appid: opts.appid,
-        apikey: opts.apikey,
+        options: options,
+        appid: options.appid,
+        apikey: options.apikey,
         processResponse: APICall.basicResponse
       });
     },
 
-    createUser: function(email, password, opts) {
-      opts = opts ? merge({}, this.options, opts) : this.options;
+    /**
+     * Create a new user.
+     * Use one of the two function signatures:
+     * @param {object} user An object with a username and password field.
+     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     *   -OR-
+     * @param {string} user The username to login as.
+     * @param {string} password The password to login as.
+     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @return An APICall instance for the web service request used to attach events.
+     *
+     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @function
+     * @memberOf WebService
+     */
+    createUser: function(user, password, options) {
+      if (isObject(user)) options = password;
+      else user = {username: user, password: password};
+      options = opts(this, options);
+      options.applevel = true;
       var payload = JSON.stringify({
-        email: email,
-        password: password
+        email: user.username,
+        password: user.password
       });
-
+      
       return new APICall({
         action: 'account/create',
         type: 'POST',
         appid: this.options.appid,
         apikey: this.options.apikey,
-        options: opts,
+        options: options,
         processResponse: APICall.basicResponse,
         data: payload
       });
     },
 
-    changePassword: function(username, oldPassword, newPassword, opts) {
-      opts = opts ? merge({}, this.options, opts) : this.options;
+    /**
+     * Change a user's password
+     * Use one of the two function signatures:
+     * @param {object} user An object with username, password, and oldpassword fields.
+     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     *   -OR-
+     * @param {string} user The username to change the password.
+     * @param {string} oldpassword The existing password for the user.
+     * @param {string} password The new password for the user.
+     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @return An APICall instance for the web service request used to attach events.
+     *
+     * @function
+     * @memberOf WebService
+     */
+    changePassword: function(user, oldpassword, password, options) {
+      if (isObject(user)) options = oldpassword;
+      else user = {username: user, oldpassword: oldpassword, password: password};
+      options = opts(this, options);
+      options.applevel = true;
+
       var payload = JSON.stringify({
-        password: newPassword
+        password: user.password
       });
       
       return new APICall({
@@ -184,16 +341,26 @@
         appid: this.options.appid,
         apikey: this.options.apikey,
         data: payload,
-        options: opts,
+        options: options,
         processResponse: APICall.basicResponse,
         headers: {
-          Authorization: "Basic " + (base64.encode(username + ":" + oldPassword))
+          Authorization: "Basic " + (base64.encode(user.username + ":" + user.oldpassword))
         }
       });
     },
 
-    resetPassword: function(username, opts) {
-      opts = opts ? merge({}, this.options, opts) : this.options;
+    /**
+     * Initiate a password reset request.
+     * @param {string} username The username to send a reset password email to.
+     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @return An APICall instance for the web service request used to attach events.
+     *
+     * @function
+     * @memberOf WebService
+     */
+    resetPassword: function(username, options) {
+      options = opts(this, options);
+      options.applevel = true;
       var payload = JSON.stringify({
         email: username
       });
@@ -203,16 +370,27 @@
         type: 'POST',
         appid: this.options.appid,
         apikey: this.options.apikey,
-        options: opts,
+        options: options,
         processResponse: APICall.basicResponse,
         data: payload
       });
     },
 
-    confirmReset: function(username, password, token, opts) {
-      opts = opts ? merge({}, this.options, opts) : this.options;
+    /**
+     * Change the password for an account from the token received from password reset.
+     * @param {string} token The token for password reset. Usually received by email.
+     * @param {string} newPassword The password to assign to the user.
+     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @return An APICall instance for the web service request used to attach events.
+     *
+     * @function
+     * @memberOf WebService
+     */
+    confirmReset: function(token, newPassword, options) {
+      options = opts(this, options);
+      options.applevel = true;
       var payload = JSON.stringify({
-        password: password
+        password: newPassword
       });
 
       return new APICall({
@@ -222,27 +400,33 @@
         apikey: this.options.apikey,
         data: payload,
         processResponse: APICall.basicResponse,
-        options: opts
+        options: options
       });
     },
 
-    /*
-     * login
-     * @param {Object} user
-     *   username: {String} email address
-     *   password: {String} password
-     *     OR
-     *   session_token {String} session_token from previous login (retrieved from a cookie)
+    /**
+     * Login as a user to access user-level data.
+     * Use one of the two function signatures:
+     * @param {object} user An object hash with username and password fields.
+     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     *   -OR-
+     * @param {string} user The user to login as
+     * @param {string} password The password for the user
+     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @return An APICall instance for the web service request used to attach events.
+     *
+     * @function
+     * @memberOf WebService
      */
-    login: function(user, password, opts) {
-      if (isObject(user)) opts = password;
+    login: function(user, password, options) {
+      if (isObject(user)) options = password;
       else user = {username: user, password: password};
 
       // Wipe out existing login information.
       this.options.username = null;
-      this.options.password = null;
       this.options.session_token = null;
-      opts = opts ? merge({}, this.options, opts) : this.options;
+      options = opts(this, options);
+      options.applevel = true;
 
       var self = this;
       return new APICall({
@@ -250,26 +434,32 @@
         type: 'POST',
         appid: this.options.appid,
         apikey: this.options.apikey,
-        options: opts,
+        options: options,
         headers: {
           Authorization: "Basic " + (base64.encode("" + user.username + ":" + user.password))
         },
         processResponse: APICall.basicResponse
       }).on('success', function(data) {
         self.options.username = data.username;
-        self.options.password = data.password;
         self.options.session_token = data.session_token;
       });
     },
 
-    logout: function(opts) {
-      opts = opts ? merge({}, this.options, opts) : this.options,
-      token = this.options.session_token;
+    /**
+     * Logout the current user.
+     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @return An APICall instance for the web service request used to attach events.
+     *
+     * @function
+     * @memberOf WebService
+     */
+    logout: function(options) {
+      options = opts(this, options);
+      options.applevel = true;
 
+      var token = this.options.session_token;
       this.options.username = null;
-      this.options.password = null;
       this.options.session_token = null;
-
 
       return new APICall({
         action: 'account/logout',
@@ -279,30 +469,71 @@
         headers: {
           'X-CloudMine-SessionToken': token
         },
-        options: opts
+        options: options
       });
     },
 
-    /*
-     * Returns true if we are currently logged in, false otherwise.
+    /**
+     * Return true if the user is logged in, false otherwise.
+     *
+     * @function
+     * @memberOf WebService
      */
     loggedIn: function() {
       return !!this.options.session_token;
     },
 
-    verify: function(username, password, opts) {
-      opts = opts ? merge({}, this.options, opts) : this.options;
-      opts.session_token = null;
+    /**
+     * Get the current username
+     * @return The logged in username, if applicable.
+     *
+     * @function
+     * @memberOf WebService
+     */
+    getUserName: function() {
+      return this.options.username;
+    },
+
+    /**
+     * Get the current session token.
+     * @return The current session token, if logged in.
+     *
+     * @function
+     * @memberOf WebService
+     */
+    getSessionToken: function() {
+      return this.options.session_token;
+    },
+
+    /**
+     * Verify if the given username and password is valid.
+     * Use one of the two function signatures:
+     * @param {object} user An object with username and password fields.
+     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     *   -OR-
+     * @param {string} user The username to login
+     * @param {string} password The password of the user to login
+     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @return An APICall instance for the web service request used to attach events.
+     *
+     * @function
+     * @memberOf WebService
+     */
+    verify: function(user, password, options) {
+      if (isObject(user)) opts = password;
+      else user = {username: user, password: password};
+      options = opts(this, options);
+      options.applevel = true;
       
       return new APICall({
         url: 'account',
-        type: opts.method || 'POST',
+        type: options.method || 'POST',
         appid: this.options.appid,
         apikey: this.options.apikey,
         headers: {
-          Authorization: "Basic " + (base64.encode(username + ":" + password))
+          Authorization: "Basic " + (base64.encode(user.username + ":" + user.password))
         },
-        options: opts
+        options: options
       });
     }
   };
@@ -322,37 +553,12 @@
    *
    * Event callback signatures:
    *    HTTP Codes: function(keys, responseObject, statusCode)
-   *    'error': function(keys, responesObject, statusCode)
+   *    'error': function(keys, responesObject)
    *    'success': function(keys, responseObject)
    *    'meta': function(keys, responseObject)
    *    'result: function(keys, responseObject)
-   *
-   * Valid HTTP Codes:
-   * 200, 'ok',           201, 'created',  400: 'badrequest',
-   * 401: 'unauthorized', 404: 'notfound', 409: 'conflict',
-   * 500: 'servererror'
-   *
-   * Example:
-   *    var cm = new cloudmine.WebService({appid: "abcdef", apikey: "ghijkl"});
-   *    cm.get("MyObjectKey").on('success', function(data) {
-   *      console.log("Value of MyObjectKey: %o", data["MyObjectKey"]);
-   *    }).on('error', function(data, response, status) {
-   *      console.log("Oops, couldn't get Object! status=%o", status);
-   *    });
-   *
-   * config:
-   *  later: Fire the AJAX call later.                    Default: false
-   *  action: url fragment to API, e.g. "text"
-   *  callbackData: additional data to store on response  Default: null
-   *  contentType: content type for request               Default: "application/json"
-   *  query: map of parameters to pass to the server      Default: null
-   *  data: data to send to server                        Default: null
-   *  dataType: Data type being sent to the server        Default: 'text'
-   *  processData: Convert data to query fields. Default: false
-   *  processResponse: Pre-process result with function.  Default: APICall.textResponse (no processing: APICall.basicResponse)
    */
   function APICall(config) {
-
     config = merge({}, defaultConfig, config);
     this._events = {};
 
@@ -373,13 +579,14 @@
       /*'X-CloudMine-Agent': 'JS/0.2',*/
       'Content-Type': config.contentType
     };
-    var session = !config.applevel && config.options ? config.options.session_token : null;
+    var session = config.options.session_token;
+    if (session != null && config.applevel == true) session = null;
     if (session) this.requestHeaders['X-CloudMine-SessionToken'] = session;
     config.headers = merge(this.requestHeaders, config.headers);
 
     // Build the URL
     var query = (config.query ? ("?" + stringify(config.query)) : "");
-    this.url = [cloudmine.API, "/v1/app/", config.appid, (session ? "/user/" : "/"), config.action, query].join("");
+    this.url = [cloudmine.API, "/v1/app/", config.appid, ((session || config.applevel === false) ? "/user/" : "/"), config.action, query].join("");
     
     var self = this;
     config.complete = function(xhr) {
@@ -441,6 +648,9 @@
         // Callback signature: function(keys, response)
         self.trigger('error', data.errors, self);
       }
+
+      // Callback signature: function(responseData, response)
+      self.trigger('complete', data, self);
     }
 
     // Let script continue before triggering ajax call
@@ -461,6 +671,8 @@
      * @param callback {Function} Callback to call upon event trigger.
      * @param context {Object} Context to call the callback in.
      * @return The current APICall object
+     * @function
+     * @memberOf APICall
      */
     on: function(eventType, callback, context) {
       if (isFunction(callback)) {
@@ -482,6 +694,8 @@
      * @param event {String|number} The event to trigger.
      * @params All parameters following event will be sent to the event handlers.
      * @return The current APICall object
+     * @function
+     * @memberOf APICall
      */
     trigger: function(event/*, arg1...*/) {
       var events = this._events[event];
@@ -504,6 +718,8 @@
      * @param callback {function} The function that was used to create the callback.
      * @param context {Object} The context to call the callback in.
      * @return The current APICall object
+     * @function
+     * @memberOf APICall
      */
     off: function(eventType, callback, context) {
       if (eventType == null && callback == null && context == null) {
@@ -522,6 +738,8 @@
      * Aborts the current connection. This is ineffective for running synchronous calls or completed
      * calls. Synchronous calls can be achieved by setting async to false in WebService.
      * @return The current APICall object
+     * @function
+     * @memberOf APICall
      */
     abort: function() {
       if (!this._config && this.xhr) {
@@ -535,6 +753,8 @@
     /**
      * Set data to send to the server. This is ineffective for running ajax calls.
      * @return The current APICall object
+     * @function
+     * @memberOf APICall
      */
     setData: function(data) {
       if (!this.xhr && this._config) {
@@ -544,9 +764,11 @@
     },
 
     /**
-     * If a synchronous ajax call is done (via setting: opts.async = false), you must call this function
+     * If a synchronous ajax call is done (via setting: options.async = false), you must call this function
      * after you have attached all your event handlers. You should not attach event handlers after this
      * is called.
+     * @function
+     * @memberOf APICall
      */
     done: function() {
       if (!this.xhr && this._config) {
@@ -624,15 +846,20 @@
   // Utility functions.
   var esc = window.encodeURIComponent || escape;
 
-  function server_params(opts, map) {
+  function opts(scope, options) {
+    if (options) return merge({}, scope.options, options);
+    return scope.options || {};
+  }
+
+  function server_params(options, map) {
     var key, value;
     if (map == null) {
       map = {};
     }
     for (key in valid_params) {
       value = valid_params[key];
-      if (opts[key] != null) {
-        map[value] = opts[key];
+      if (options[key] != null) {
+        map[value] = options[key];
       }
     }
     return map;
