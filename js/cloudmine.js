@@ -405,6 +405,8 @@
         data.errors[self.status] = self.data;
       }
 
+      console.log(data);
+
       // Do not expose xhr object.
       self.xhr = undefined;
       delete self.xhr;
@@ -461,6 +463,7 @@
     on: function(eventType, callback, context) {
       if (isFunction(callback)) {
         context = context || this;
+        eventType += '';
         if (!this._events[eventType]) this._events[eventType] = [];
 
         // normal callback not called.
@@ -481,6 +484,8 @@
      */
     trigger: function(event/*, arg1...*/) {
       var events = this._events[event];
+      
+
       if (events != null) {
         args = slice(arguments, 1);
         each(events, function(event) {
@@ -564,8 +569,8 @@
       out.errors = {};
       for (var k in data.errors) {
         var error = data.errors[k];
-        if (!out[error.code]) out[error.code] = {}
-        out[error.code][k] = error;
+        if (!out.errors[error.code]) out.errors[error.code] = {}
+        out.errors[error.code][k] = error;
       }
     }
     // Non-standard response. Just pass back the data we were given.
