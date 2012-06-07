@@ -191,13 +191,75 @@ $(document).ready(function(){
       register_call();
     });
   });
-    
+
+  test('Verify query building for file search', function() {
+    stop();
+    // Need to temporarily hijack the search function.
+    var search = cm.search;
+    var query;
+    var expectedResult;
+    cm.search = function(term) {
+      ok(term == expectedResult, ['Query: ', query, ', Expecting: ', expectedResult, ', Received: ', term].join('')); 
+    };
+
+    query = null;
+    expectedResult = '[__type__ = "file"]';
+    cm.searchFiles(query);
+
+    query = "";
+    expectedResult = '[__type__ = "file"]';
+    cm.searchFiles(query);
+
+    query = 'location[blah = "blah"]';
+    expectedResult = '[__type__ = "file"].location[blah = "blah"]';
+    cm.searchFiles(query);
+
+    query = '[].location[blah = "blah"]';
+    expectedResult = '[__type__ = "file"].location[blah = "blah"]';
+    cm.searchFiles(query);
+
+    query = '[color = "red"]';
+    expectedResult = '[__type__ = "file", color = "red"]';
+    cm.searchFiles(query);
+
+    query = '[color = "red"].location[blah = "blah"]';
+    expectedResult = '[__type__ = "file", color = "red"].location[blah = "blah"]';
+    cm.searchFiles(query);
+
+    query = '[color = "red", bad = "good"].location[blah = "blah"]';
+    expectedResult = '[__type__ = "file", color = "red", bad = "good"].location[blah = "blah"]';
+    cm.searchFiles(query);
+
+    cm.search = search;
+    start();
+  });
+
+  test('Verify built queries for file search', function() {
+    stop();
+
+    var remaining = 7;
+    function performTest(query) {
+      cm.searchFiles(query).on('error', function() {
+        ok(false, "Query: " + query);
+        if (--remaining <= 0) start();
+      }).on('success', function() {
+        ok(true, "Query: " + query);
+        if (--remaining <= 0) start();
+      });
+    }
+
+    performTest(null);
+    performTest("");
+    performTest('location[blah = "blah"]');
+    performTest('[].location[blah = "blah"]');
+    performTest('[color = "red"]');
+    performTest('[color = "red"].location[blah = "blah"]');
+    performTest('[color = "red", bad = "good"].location[blah = "blah"]');
+ });
+
   // Note: I can't test the 400 error code for invalid JSON because 
   //   A) Steven parses it out before I can call it
   //   or
   //   B) Javascript bitches about it before I can call it
-
-  
-
 });
 

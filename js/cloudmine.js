@@ -182,7 +182,6 @@
     search: function(query, options) {
       options = opts(this, options);
       query = {q: query != null ? query : ""}
-
       return new APICall({
         action: 'search',
         type: 'GET',
@@ -195,6 +194,7 @@
 
     /**
      * Search CloudMine explicitly querying for files.
+     * Note: This does not search the contents of files.
      * Results may be affected by defaults and/or by the options parameter.
      * @param {string} query Additional query parameters to search for.
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
@@ -204,10 +204,18 @@
      * @memberOf WebService
      */
     searchFiles: function(query, options) {
-      var term = '[__type__ = "file"]';
-      query = query != null ? query + "." + term : term;
+      query = query || "";
+      var term = '[__type__ = "file"';
+      if (query.match(/^\[(.*?)\](.*)/)) {
+        var fields = RegExp.$1;
+        if (fields.length > 0) term += ", " + fields;
+        term += "]" + RegExp.$2;
+      } else {
+        if (query.length > 0) term += "]." + query;
+        else term += ']';
+      }
 
-      return this.search(query, options);
+      return this.search(term, options);
     },
 
     /**
@@ -828,20 +836,26 @@
   // Use this for standard cloudmine text responses that have success/errors/meta/result fields.
   APICall.textResponse = function(data, xhr, response) {
     out = {};
-    if (data.count != null) response.count = data.count;
-    if (!isEmptyObject(data.success)) out.success = data.success;
-    if (!isEmptyObject(data.meta)) out.meta = data.meta;
-    if (!isEmptyObject(data.result)) out.result = data.result;
-    if (!isEmptyObject(data.errors)) {
-      out.errors = {};
-      for (var k in data.errors) {
-        var error = data.errors[k];
-        if (!out.errors[error.code]) out.errors[error.code] = {}
-        out.errors[error.code][k] = {errors: [ error ]};
+    if (data.success || data.errors || data.meta || data.result) {
+      if (data.count != null) response.count = data.count;
+      if (!isEmptyObject(data.success)) out.success = data.success;
+      if (!isEmptyObject(data.meta)) out.meta = data.meta;
+      if (!isEmptyObject(data.result)) out.result = data.result;
+      if (!isEmptyObject(data.errors)) {
+        out.errors = {};
+        for (var k in data.errors) {
+          var error = data.errors[k];
+          if (!out.errors[error.code]) out.errors[error.code] = {}
+          out.errors[error.code][k] = {errors: [ error ]};
+        }
       }
+
+      // At least guarantee a success callback
+      if (isEmptyObject(out)) out.success = {};
+    } else {
+      // Non-standard response. Just pass back the data we were given.
+      out = {success: data};
     }
-    // Non-standard response. Just pass back the data we were given.
-    if (isEmptyObject(out)) out = data;
 
     return out;
   };
