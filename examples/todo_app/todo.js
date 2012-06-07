@@ -90,11 +90,6 @@ $(document).ready(function(){
 
     selected_priority: 1, // Default priority
 
-
-    /*
-      User Account Management:
-    */
-
     /*
       register_user
 
@@ -113,17 +108,13 @@ $(document).ready(function(){
         .on('success', function(response){ 
           todo.process_registration(response, { userid: userid, password: password }); 
         })
-        .on('error', function(data){
-          if (data['409'] !== undefined){
-            todo.error('login', data['409'].errors[0]);
-          }
-          else if (data['400'] !== undefined){
-            if (data['400'].errors.length > 1){
-              todo.error('login', data['400'].errors.join(' '));
-            } else {
-              todo.error('login', data['400'].errors[0]);
-            }
-          }
+        .on('conflict', function(data){
+            todo.error('login', data.errors[0]);
+        })
+        .on('badrequest', function(data){
+              todo.error('login', 'Please enter a valid email.');
+        })
+        .on('error', function(){
           $('#register_button').attr('value', 'Register');
           $('#login_button, #or').show();
         });
@@ -164,18 +155,13 @@ $(document).ready(function(){
 
       // Run Cloudmine login request.
       cm.login(credentials)
-        .on('success', function(response){ 
-          todo.process_login(response);
+        .on('success', function(data){ 
+          todo.process_login(data);
         })
-        .on('error', function(data){
-          if (data['401'] !== undefined){
-            todo.error('login', data['401'].errors[0]);
-          }
-          else if (data['404'] !== undefined){
-            todo.error('login', data['404'].errors[0]);
-          }
+        .on('unauthorized', function(data){
           $('#login_button').attr('value', 'Login');
           $('#register_button, #or').show();
+          todo.error('login', data.errors[0]);
         });
     },
     
@@ -249,16 +235,17 @@ $(document).ready(function(){
         callback = function() {}
       }
 
-      /*
-        Make the Cloudmine library call to send the data to the cloud, along with the unique_id
-
-        IMPORTANT: We need to set the third parameter, which is other options, to { user: true } in order to
-                   store this data privately to this user. 
-      */
-      cm.update(unique_id, data, { user: true })
-        .on('success', callback)
-        .on('error', function(){
-          todo.error('list', this.data);
+      // Make the Cloudmine library call to send the data to the cloud, along with the unique_id
+      
+      cm.update(unique_id, object_data)
+        .on('success', function(){
+          todo.draw_new_item(object_data);
+        })
+        .on('unauthorized', function(data){
+          todo.error('list', data.errors[0]);
+        })
+        .on('notfound', function(data){
+          todo.error('list', data.errors[0]);
         });
     },
 
@@ -276,9 +263,7 @@ $(document).ready(function(){
         $('#todo, #new').show(); 
         todo.setup_priority_buttons();
         todo.draw_list(data);
-
-        // IMPORTANT: Here we see the { user: true } flag again, because we're getting user-specific private data.
-      }, { user: true })
+      });
     },
 
     /*
@@ -308,7 +293,7 @@ $(document).ready(function(){
         key: The item's key in the Cloudmine db
     */
     delete_item: function(key){
-      cm.destroy(key, { user: true })
+      cm.destroy(key)
         .on('complete', function(){ 
           $('span[item="' + key + '"]').remove();
         })
@@ -476,7 +461,7 @@ $(document).ready(function(){
       is_empty_object
 
       Checks if an object is empty, because for some reason in Javascript      
-      empty objects are truthy while empty arrays valuate as false ,'>/
+      empty objects are truthy while empty arrays evaluate as false ,'>/
       Parameters:
         object: The object we're checking.
     */
