@@ -308,7 +308,6 @@
         email: user.userid,
         password: user.password
       });
-      
       return new APICall({
         action: 'account/create',
         type: 'POST',
@@ -431,7 +430,6 @@
     login: function(user, password, options) {
       if (isObject(user)) options = password;
       else user = {userid: user, password: password};
-
       // Wipe out existing login information.
       this.options.userid = null;
       this.options.session_token = null;
@@ -665,7 +663,10 @@
         data = config.processResponse.call(self, self.data, xhr, self);
       } else {
         data = {errors: {}};
-        data.errors[self.status] = {errors: [ self.data ] };
+        if (isString(self.data)){
+          self.data = { errors: [ self.data ] } // This way, we can rely on this structure data[statuscode].errors to always be an Array of one or more errors
+        }
+        data.errors[self.status] = self.data;
       }
 
       // Success results may have errors for certain keys
@@ -977,6 +978,10 @@
 
   function isObject(item) {
     return item && typeof item === "object"
+  }
+
+  function isString(item) {
+    return item && typeof item === "string"
   }
 
   function isArray(item) {

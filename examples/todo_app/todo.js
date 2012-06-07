@@ -8,7 +8,7 @@
    Global variables: - cloudmine:       instance of Cloudmine js library
                      - todo:            object of functions for this app
                      - priority_button: prototype for custom button that sets new todo item priority, 
-                                        called by todo.draw_and_prepend_item
+                                        called by todo.draw_item
 
    Cloudmine library functions implemented: login, logout, createUser, update, destroy
 */
@@ -18,7 +18,7 @@ $(document).ready(function(){
     todo will be an object of functions that makes our to-do list run
     cm will be an instance of the cloudmine.WebService library object
   */
-  var todo = {}/*, cm = {};*/
+  var todo = {}, cm = {};
 
   /*
     Binding UI events to buttons, and login on hitting Enter while in the password field. Focus on the email field automatically.
@@ -102,19 +102,28 @@ $(document).ready(function(){
       It uses cm.createUser to register a new user account using the info entered in 
     */
     register_user: function(){
-      var username = $('#login_email').val(),
+      var userid = $('#login_email').val(),
           password = $('#login_password').val();
 
       $('#register_button').attr('value', 'Creating account...');
       $('#login_button, #or').hide();
 
       // Run the Cloudmine createUser call and chain on success and error callbacks.
-      cm.createUser(username, password)
+      cm.createUser(userid, password)
         .on('success', function(response){ 
-          todo.process_registration(response, { username: username, password: password }); 
+          todo.process_registration(response, { userid: userid, password: password }); 
         })
         .on('error', function(data){
-          todo.error('login', data.errors[0]);
+          if (data['409'] !== undefined){
+            todo.error('login', data['409'].errors[0]);
+          }
+          else if (data['400'] !== undefined){
+            if (data['400'].errors.length > 1){
+              todo.error('login', data['400'].errors.join(' '));
+            } else {
+              todo.error('login', data['400'].errors[0]);
+            }
+          }
           $('#register_button').attr('value', 'Register');
           $('#login_button, #or').show();
         });
@@ -139,13 +148,13 @@ $(document).ready(function(){
     login_user: function(credentials){
       if (credentials == undefined){
         credentials = {
-          username: $('#login_email').val(),
+          userid: $('#login_email').val(),
           password: $('#login_password').val()
         };
       }
       
       // Don't actually run if one of the values is blank
-      if (!credentials.username || !credentials.password){
+      if (!credentials.userid || !credentials.password){
         return;
       }
 
@@ -159,7 +168,12 @@ $(document).ready(function(){
           todo.process_login(response);
         })
         .on('error', function(data){
-          todo.error('login', data.errors[0]);
+          if (data['401'] !== undefined){
+            todo.error('login', data['401'].errors[0]);
+          }
+          else if (data['404'] !== undefined){
+            todo.error('login', data['404'].errors[0]);
+          }
           $('#login_button').attr('value', 'Login');
           $('#register_button, #or').show();
         });
@@ -230,7 +244,7 @@ $(document).ready(function(){
           __id__: unique_id,
           done: false
         }
-        callback = function(response){ todo.draw_and_prepend_item(data) }
+        callback = function(response){ todo.draw_item(data) }
       } else {
         callback = function() {}
       }
@@ -251,21 +265,27 @@ $(document).ready(function(){
     /*
       get_items
 
-      Called by todo.process_login. Retrieves the user's to-do items from Cloudmine and calls todo.draw_list to build the elements that display the list.
+      Called by todo.process_login. Retrieves all the user's to-do items from Cloudmine and calls todo.draw_list to build the elements that display the list.
     */
     get_items: function(){
-      cm.get(null).on('success', function(response){
+      // Calling the Cloudmine get() function with the argument null retrieves all data available.
+      cm.get(null).on('success', function(data){
         // Save the response data
-        todo.data = response;
+        todo.data = data;
         $('#login').hide();
         $('#todo, #new').show(); 
         todo.setup_priority_buttons();
-        todo.draw_list(response);
+        todo.draw_list(data);
 
         // IMPORTANT: Here we see the { user: true } flag again, because we're getting user-specific private data.
       }, { user: true })
     },
 
+    /*
+      create_item
+      
+      Sets up and validates variables for a new to-do item, then passes the data to todo.push_item. Gets the data from the input elements in the DOM
+    */
     create_item: function(){
       var data = {
         title: $('#new_item').val(),
@@ -275,9 +295,8 @@ $(document).ready(function(){
       if (data.title == ''){
         return
       }
-
       $('#new_item').val('');
-      todo.push_item(data);
+      todo.push_item(data); // Push data to Cloudmine
     },
 
     /*
@@ -285,6 +304,8 @@ $(document).ready(function(){
 
       Called by Delete button click on an item. Removes the item from the cloud with cm.destroy and then removes it from the UI.
       The callback on this one 
+      Parameters:
+        key: The item's key in the Cloudmine db
     */
     delete_item: function(key){
       cm.destroy(key, { user: true })
@@ -296,75 +317,67 @@ $(document).ready(function(){
     /*
       draw_list
 
-      takes
+      Takes success data from get_items and draws the UI using todo.draw_item()
     */
-    draw_list: function(response){
-      var data; 
-
-      if (response.success){
-        response = response.success;
-      }
-
+    draw_list: function(data){
       $('#restoring_session').hide();
       $('#todo_header').show();
-       //
-      // Drawing the todo items
-     //
-      for (var key in response){
-      
-        // Omit the last object in CM's data response, it's not useful to this
-        if (key == 'forEach'){           
-          return 
-        }
-        // The variable holding the data we want for this item
-        data = response[key];
-        todo.draw_and_prepend_item(data);
+
+      if (!todo.is_empty_object(data)){
+        $('#empty_list').hide();
       }
 
+      for (var key in data){
+        var item = data[key];
+        todo.draw_item(item);
+      }
     },
 
-    draw_and_prepend_item: function(item_data){
-      var todo_item, // Shortcut to the data for this todo item
-          item_text, // The text that will display in the item
+    /*
+      draw_item
+
+      Creates the DOM elements that make up each item in the list, and binds a Click handler to it all which calls toggle_item on it.
+    */
+    draw_item: function(item_data){
+      var item_text, // The text that will display in the item
           todo_div, todo_checkbox, todo_delete, todo_wrapper; // DOM elements (main div, checkbox that indicates done-ness)
 
-      console.log(item_data);
-
       todo.data[item_data.__id__] = item_data;
-      // Make DOM elements: list item div and checkbox for done/not done
 
-      item_text = '';
+      item_text = ''; // By default, start with an empty string.
       
-      if (item_data.deadline.timestamp != null){
+      if (item_data.deadline.timestamp != null){ // Parse how much time is left to complete this task.
         parsed_deadline = todo.parse_remaining_time(item_data.deadline.timestamp); 
         if (parsed_deadline <= 0){
-          item_text += '<span class="overdue">Overdue</span>';
+          item_text += '<span class="overdue">Overdue</span>'; // If time is up, put a bold "Overdue" flag on the item.
         } else {
-        item_text += '<span class="due">Due in ' + parsed_deadline + ' hours.</span>';
+        item_text += '<span class="due">Due in ' + parsed_deadline + ' hours.</span>'; // Else, put a subtler flag indicating the hours left to complete the task. 
         }
       }
-
+      // Build the elements
       todo_wrapper = $('<span item="' + item_data.__id__ + '"><br></span>');
       todo_div = $('<div class="todo_item"><span class="value"></span>' + item_text + '</div>');
-      todo_div.find('.value').text(item_data.text);
+      todo_div.find('.value').text(item_data.text); // Use $.text() to prevent script injection
       todo_checkbox = $('<input type="checkbox" />'),
       todo_delete = $('<div class="delete_button"></div>');
 
-
-      // Styling for if the item is done
+      // Styling for if the item is done: "done" class crosses out text and makes it lighter. Check off the checkbox, too.
       if (item_data.done){
         todo_div.addClass('done');
         todo_checkbox.attr('checked', true);
       }
 
-      // Prepend the checkbox to the div element and give the whole thing
-      // a click function to toggle the listing's done status. 
-      // (just for UI's sake: easier to click than just the checkbox)
+      /*
+        Prepend the checkbox to the div element and give the whole thing
+        a click function to toggle the listing's done status. 
+        (This is just for UI's sake: it's easier to click the whole thing than ticking the checkbox itself. 
+        The CSS cursor: pointer on the item will make it clear that it's clickable)
+      */
       todo_div.prepend(todo_checkbox).click(function(){
         var item_data = todo.data[$(this).parent().attr('item')];
         todo.toggle_item(item_data);
       }).css({
-        background: todo.priority_colors[item_data.priority]
+        background: todo.priority_colors[item_data.priority] // Give the item the color corresponding to its priority level.
       });
 
       // Bind click event to the delete button
@@ -375,28 +388,42 @@ $(document).ready(function(){
 
       // Commit the element to the page.
       $(todo_div).append(todo_delete);
-      $(todo_wrapper).prepend(todo_div); // Prepend to keep the linebreak at the end.
+      $(todo_wrapper).prepend(todo_div);
       $('#todo').prepend(todo_wrapper);
-    },
 
+      // In case this is the first item added, hide the "You haven't added any items yet" message.
+      $('#empty_list').hide();
+    },
+    
+    /*
+      setup_priority_buttons
+
+      Called by todo.get_items. Sets up the three traffic-light buttons used to select a priority level when creating a new item.
+    */
     setup_priority_buttons: function(){
       var _i, pb, all_pbs = [ ];
       for (_i = 3; _i > 0; _i --){
-        pb = new priority_button(_i);
+        pb = new todo.priority_button(_i);
         $('#priority_buttons').append(pb.button);
         all_pbs.push(pb);
         if (_i == 3){
-          pb.select();
+          pb.select(); // Select lower priority by default
         }
       }
       todo.all_pbs = all_pbs;
     },
 
+    /*
+      toggle_item
+
+      Called by a Click handler defined in todo.draw_item. 
+      Toggles an item between done and not done, both in the UI and the Cloudmine db.
+      Parameters:
+        data: Item data, from which this function gets its done status and its id.
+    */
     toggle_item: function(data){
-      // Find the elements we want to alter
       var todo_div = $('span[item="' + data.__id__ + '"]').find('div'), 
           todo_checkbox = $('span[item="' + data.__id__ + '"]').find('input[type="checkbox"]');
-      // UI changes: if checked off as done, set undone. And vice-versa.
       if (data.done){
         data.done = false;
         todo_div.removeClass('done');
@@ -411,7 +438,13 @@ $(document).ready(function(){
         done: data.done
       }, data.__id__, function(){ });
     },
+    
+    /*
+      create_deadline
 
+      Called by todo.create_item. Converts a simple user input of hours into seconds from the moment it's being made
+      to give its deadline a proper timestamp we can store and read later in todo.parse_remaining_time.
+    */
     create_deadline: function(hours){
       var deadline;
       if (hours == ''){
@@ -423,6 +456,11 @@ $(document).ready(function(){
       return deadline.getTime() / 1000;
     },
 
+    /*
+      parse_remaining_time
+
+      Called by draw_item. This parses the hours remaining to finish a task given its deadline timestamp created by create_deadline.
+    */
     parse_remaining_time: function(seconds){
       var now, deadline;
       now = new Date();
@@ -433,7 +471,32 @@ $(document).ready(function(){
 
       return parseInt( deadline.getTime() / 3600000 - now.getTime() / 3600000);
     },
+  
+    /*
+      is_empty_object
 
+      Checks if an object is empty, because for some reason in Javascript      
+      empty objects are truthy while empty arrays valuate as false ,'>/
+      Parameters:
+        object: The object we're checking.
+    */
+    is_empty_object: function(item) { 
+      if (item) {
+        for (var k in item) {
+          if (item.hasOwnProperty(k)) return false;
+        }
+      }
+      return true;
+    },
+    
+    /*
+      error
+
+      Flashes a red error message.
+      Parameters:
+        view: 'login' or 'list': which view is the user on? Determines which DOM element is used to show the error.
+        message: The message to display, pulled straight from the Cloudmine server response.
+    */
     error: function(view, message){
       $('#error_' + view).css({display: 'inline-block'}).text('Error! ' + message);
       setTimeout(function(){
@@ -442,51 +505,61 @@ $(document).ready(function(){
     }
   }
 
-  priority_button = function(value){
-    var _this = this;
+  /*
+    priority_button
+
+    Constructor for the traffic-light-style buttons used to select the new item's priority.
+  */
+  var priority_button = function(value){
+    var self = this;
     this.value = value;
     this.button = $('<div class="priority"></div>');
     this.selected = false;
     this.color = todo.priority_colors[value]
     // Bind the action the button
     $(this.button).click(function(){
-      _this.select();
+      self.select();
     }).css({
       'background-image': 'url("priority_' + value + '.png")'
     });
     return this
   }
 
-  priority_button.prototype.select = function(){
-    var _this = this;
-    todo.selected_priority = this.value;
-    $(todo.all_pbs).each(function(i, pb){
-      if (pb != _this){
-        pb.deselect();
-      }
-    });
-    this.selected = true;
-    $(this.button).css({
-      'background-position': '0px -50px'
-    });
-    $('#new_item').css({
-      'background-color': _this.color
-    });
+  priority_button.prototype = { // Give the priority button a couple methods for selection/deselection (works much like a radio button)
+    select: function(){
+      var self = this;
+      todo.selected_priority = this.value;
+      $(todo.all_pbs).each(function(i, pb){
+        if (pb != self){
+          pb.deselect();
+        }
+      });
+      this.selected = true;
+      $(this.button).css({
+        'background-position': '0px -50px'
+      });
+      $('#new_item').css({
+        'background-color': self.color
+      });
+    },
+
+    deselect: function(){
+      this.selected = false;
+      $(this.button).css({
+        'background-position': '' // Set to empty string rather than 0px 0px to keep the :hover action working.
+      });
+    }
   }
 
-  priority_button.prototype.deselect = function(){
-    this.selected = false;
-    $(this.button).css({
-      'background-position': ''
-    });
-  }
+  todo.priority_button = priority_button // Attach the priority button object to the todo object
 
   /* 
-    After everything is defined, initialize Cloudmine.
+    After everything is defined, finally initialize Cloudmine.
   */
 
   init_cloudmine();
 
-  window.todo = todo;
+// Uncomment the next line to make the todo object available globally (for testing/playing around)
+//  window.todo = todo;
 
 });
