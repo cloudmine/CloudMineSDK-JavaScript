@@ -18,7 +18,7 @@ $(document).ready(function(){
     todo will be an object of functions that makes our to-do list run
     cm will be an instance of the cloudmine.WebService library object
   */
-  var todo = {}/*, cm = {};*/
+  var todo = {}, cm = {};
 
   /*
     Binding UI events to buttons, and login on hitting Enter while in the password field. Focus on the email field automatically.
