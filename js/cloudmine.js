@@ -1,4 +1,5 @@
-/** @namespace cloudmine */ 
+/* CloudMine JavaScript Library v0.2 cloudmine.me | cloudmine.me/license */ 
+
 (function() {
   /**
    * Construct a new WebService instance
@@ -41,6 +42,7 @@
    * @config {string|object} [params] Parameters to give the code snippet (applies only for code snippets)
    * @config {boolean} [dontwait] Don't wait for the result of the code snippet (applies only for code snippets)
    * @config {boolean} [resultsonly] Only return results from the code snippet (applies only for code snippets)
+   * @namespace cloudmine
    * @constructor
    */
   function WebService(options) {
@@ -306,7 +308,7 @@
         email: user.userid,
         password: user.password
       });
-      return new APICall({
+     return new APICall({
         action: 'account/create',
         type: 'POST',
         appid: this.options.appid,
@@ -584,7 +586,8 @@
      * @return true if this store is using application data, false if is using user-level data.
      */
     isApplicationData: function() {
-      return this.options.applevel === true || (this.options.applevel !== false && this.options.session_token);
+      if (this.options.applevel === true || this.options.applevel === false) return this.options.applevel;
+      return this.options.session_token == null;
     }
   };
 
@@ -618,25 +621,25 @@
     this.data = null;
     this.hasErrors = false;
     this.requestData = config.data;
+    this.requestHeaders = {
+      'X-CloudMine-ApiKey': config.apikey,
+      'X-CloudMine-Agent': 'JS/0.2',
+      'Content-Type': config.contentType
+    };
     this.responseHeaders = {};
     this.responseText = null;
     this.status = null;
     this.type = config.type || 'GET';
-
-    // Build the request headers
-    this.requestHeaders = {
-      'X-CloudMine-ApiKey': config.apikey,
-      /*'X-CloudMine-Agent': 'JS/0.2',*/
-      'Content-Type': config.contentType
-    };
-    var session = config.options.session_token;
-    if (session != null && config.applevel == true) session = null;
-    if (session) this.requestHeaders['X-CloudMine-SessionToken'] = session;
-    config.headers = merge(this.requestHeaders, config.headers);
-
-    // Build the URL
+    
+    // Build the URL and headers
     var query = (config.query ? ("?" + stringify(config.query)) : "");
-    this.url = [cloudmine.API, "/v1/app/", config.appid, ((session || config.applevel === false) ? "/user/" : "/"), config.action, query].join("");
+    var root = '/', session = config.options.session_token, applevel = config.options.applevel;
+    if (applevel === false || (applevel !== true && session != null)) {
+      root = '/user/';
+      if (session != null) this.requestHeaders['X-CloudMine-SessionToken'] = session;
+    }
+    config.headers = merge(this.requestHeaders, config.headers);
+    this.url = [cloudmine.API, "/v1/app/", config.appid, root, config.action, query].join("");
     
     var self = this;
     config.complete = function(xhr) {
@@ -754,7 +757,7 @@
       var events = this._events[event];
       
       if (events != null) {
-        args = slice(arguments, 1);
+        var args = slice(arguments, 1);
         each(events, function(event) {
           event[2].apply(event[1], args);
         });
@@ -835,7 +838,7 @@
 
   // Use this for standard cloudmine text responses that have success/errors/meta/result fields.
   APICall.textResponse = function(data, xhr, response) {
-    out = {};
+    var out = {};
     if (data.success || data.errors || data.meta || data.result) {
       if (data.count != null) response.count = data.count;
       if (!isEmptyObject(data.success)) out.success = data.success;
@@ -906,8 +909,7 @@
   var esc = window.encodeURIComponent || escape;
 
   function opts(scope, options) {
-    if (options) return merge({}, scope.options, options);
-    return scope.options || {};
+    return merge({}, scope.options, options);
   }
 
   function server_params(options, map) {
@@ -1035,6 +1037,7 @@
   if (!this.cloudmine.API) this.cloudmine.API = "https://api.cloudmine.me";
   setAJAX();
   
+  // Base64 Library from http://www.webtoolkit.info
   var base64 = {_keyStr:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",encode:function(a){var b="";var c,d,e,f,g,h,i;var j=0;a=base64._utf8_encode(a);while(j<a.length){c=a.charCodeAt(j++);d=a.charCodeAt(j++);e=a.charCodeAt(j++);f=c>>2;g=(c&3)<<4|d>>4;h=(d&15)<<2|e>>6;i=e&63;if(isNaN(d)){h=i=64}else if(isNaN(e)){i=64}b=b+this._keyStr.charAt(f)+this._keyStr.charAt(g)+this._keyStr.charAt(h)+this._keyStr.charAt(i)}return b},decode:function(a){var b="";var c,d,e;var f,g,h,i;var j=0;a=a.replace(/[^A-Za-z0-9\+\/\=]/g,"");while(j<a.length){f=this._keyStr.indexOf(a.charAt(j++));g=this._keyStr.indexOf(a.charAt(j++));h=this._keyStr.indexOf(a.charAt(j++));i=this._keyStr.indexOf(a.charAt(j++));c=f<<2|g>>4;d=(g&15)<<4|h>>2;e=(h&3)<<6|i;b=b+String.fromCharCode(c);if(h!=64){b=b+String.fromCharCode(d)}if(i!=64){b=b+String.fromCharCode(e)}}b=base64._utf8_decode(b);return b},_utf8_encode:function(a){a=a.replace(/\r\n/g,"\n");var b="";for(var c=0;c<a.length;c++){var d=a.charCodeAt(c);if(d<128){b+=String.fromCharCode(d)}else if(d>127&&d<2048){b+=String.fromCharCode(d>>6|192);b+=String.fromCharCode(d&63|128)}else{b+=String.fromCharCode(d>>12|224);b+=String.fromCharCode(d>>6&63|128);b+=String.fromCharCode(d&63|128)}}return b},_utf8_decode:function(a){var b="";var c=0;var d=c1=c2=0;while(c<a.length){d=a.charCodeAt(c);if(d<128){b+=String.fromCharCode(d);c++}else if(d>191&&d<224){c2=a.charCodeAt(c+1);b+=String.fromCharCode((d&31)<<6|c2&63);c+=2}else{c2=a.charCodeAt(c+1);c3=a.charCodeAt(c+2);b+=String.fromCharCode((d&15)<<12|(c2&63)<<6|c3&63);c+=3}}return b}};
 
   if (this.exports) {
