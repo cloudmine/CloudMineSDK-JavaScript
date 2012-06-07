@@ -308,7 +308,7 @@
         email: user.userid,
         password: user.password
       });
-      return new APICall({
+     return new APICall({
         action: 'account/create',
         type: 'POST',
         appid: this.options.appid,
@@ -757,7 +757,7 @@
       var events = this._events[event];
       
       if (events != null) {
-        args = slice(arguments, 1);
+        var args = slice(arguments, 1);
         each(events, function(event) {
           event[2].apply(event[1], args);
         });
@@ -838,7 +838,7 @@
 
   // Use this for standard cloudmine text responses that have success/errors/meta/result fields.
   APICall.textResponse = function(data, xhr, response) {
-    out = {};
+    var out = {};
     if (data.success || data.errors || data.meta || data.result) {
       if (data.count != null) response.count = data.count;
       if (!isEmptyObject(data.success)) out.success = data.success;
