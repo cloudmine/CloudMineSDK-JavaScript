@@ -98,7 +98,7 @@
         key = out;
       }
       options = opts(this, options);
-     
+      
       return new APICall({
         action: 'text',
         type: 'POST',
@@ -234,7 +234,7 @@
      */
     uploadFile: (function() {
       // FileAPI: IE 10+, Firefox 3.6+, Chrome 13+, Opera 11.1, Safari 5 (Mac)
-      if (window.FileReader) {
+      if (this.FileReader) {
         return function(key, file, options) {
           options = opts(this, options);
           var apicall = new APICall({
@@ -308,7 +308,7 @@
         email: user.userid,
         password: user.password
       });
-     return new APICall({
+      return new APICall({
         action: 'account/create',
         type: 'POST',
         appid: this.options.appid,
@@ -598,6 +598,10 @@
    *
    * You may chain event creation.
    *
+   * Note: It is recommended to avoid referring directly to the ajax implementation used by this
+   *       function. Depending on environment, features on it may vary since this library only
+   *       requires a small subset of jQuery-like AJAX functionality.
+   *
    * Event firing order:
    *    Successes: HTTP Code String, HTTP Code Number, 'success'
    *    Meta: 'meta' - This is for operations that can write meta data.
@@ -639,7 +643,7 @@
       if (session != null) this.requestHeaders['X-CloudMine-SessionToken'] = session;
     }
     config.headers = merge(this.requestHeaders, config.headers);
-    this.url = [cloudmine.API, "/v1/app/", config.appid, root, config.action, query].join("");
+    this.url = [apiroot, "/v1/app/", config.appid, root, config.action, query].join("");
     
     var self = this;
     config.complete = function(xhr) {
@@ -647,8 +651,8 @@
       self.status = xhr.status;
       self.responseText = content;
       each(xhr.getAllResponseHeaders().split('\n'), function(item) {
-        var fields = item.split(':');
-        if (fields[0] != "") self.responseHeaders[fields.shift()] = fields.join(':');
+        var index = (item.indexOf(':'));
+        if (index > 0) self.responseHeaders[item.substring(0, index)] = item.substring(index + 2);
       });
 
       // If we can parse the data as JSON or store the original data.
@@ -680,7 +684,7 @@
       // Event firing order: http status (e.g. ok, created), http status (e.g. 200, 201), success, meta, result, error.
       if (data.success) {
         // Callback signature: function(keys, response, statusCode)
-        if (http[self.status]) self.trigger(http[self.status], data.success, self, self.status);
+        if (httpcode[self.status]) self.trigger(httpcode[self.status], data.success, self, self.status);
         self.trigger(self.status, data.success, self, self.status);
 
         // Callback signature: function(keys, response);
@@ -697,7 +701,7 @@
       if (data.errors) {
         // Callback signature: function(keys, reponse, statusCode)
         for (var k in data.errors) {
-          if (http[k]) self.trigger(http[k], data.errors[k], self, k);
+          if (httpcode[k]) self.trigger(httpcode[k], data.errors[k], self, k);
           self.trigger(k, data.errors[k], self, k);
         }
 
@@ -871,6 +875,98 @@
     return out;
   };
 
+  /**
+   * Internal minimal Node.js jQuery.ajax adapter.
+   */
+  
+  function NodeAJAX(uri, config) {
+    config = config || {};
+    this.status = 400;
+    this.responseText = [];
+    this._headers = {};
+
+    // disable connection pooling
+    // disable chunked transfer-encoding which nginx doesn't support
+    var opts = url.parse(uri);
+    opts.agent = false;
+    opts.method = config.type;
+    opts.headers = config.headers || {};
+
+    // Preprocess data if it is JSON data.
+    if (isObject(config.data) && config.processData) {
+      config.data = JSON.stringify(config.data);
+    }
+
+    // Attach a content-length
+    if (isArray(config.data)) opts.headers['content-length'] = Buffer.byteLength(config.data);
+    else if (isString(config.data)) opts.headers['content-length'] = config.data.length;
+    
+    // Fire request.
+    var self = this, cbContext = config.context || this;
+    this._request = (opts.protocol === "http:" ? http : https).request(opts, function(response) {
+      response.setEncoding('utf8');
+
+      response.on('data', function(chunk) {
+        self.responseText.push(chunk);
+      });
+
+      response.on('close', function() {
+        response.emit('end');
+      });
+
+      response.on('end', function() {
+        self._headers = stringify(response.headers);
+        self.status = response.statusCode;
+        var textStatus = null;
+
+        // Process data if necessary.
+        var data = self.responseText = self.responseText.join('');
+        if (config.dataType == 'json' || (config.dataType != 'text' && response.headers['content-type'].match(/\bapplication\/json\b/i))) {
+          try {
+            data = JSON.parse(data);
+          } catch (e) {
+            textStatus = 'parsererror';
+          }
+        }
+
+        
+        if (self.status >= 200 && self.status < 300) {
+          if (config.success) config.success.call(cbContext, data, 'success', self);
+        } else if (config.error) {
+          config.error.call(cbContext, self, 'error', self.responseText);
+        }
+        if (config.complete) config.complete.call(cbContext, self, self.status);
+      });
+    });
+
+    this._request.on('error', function(e) {
+      self.status = e.status;
+      self.responseText = e.message;
+      if (config.error) config.error.call(cbContext, self, 'error', e.message);
+      if (config.complete) config.complete.call(cbContext, self, 'error');
+    });
+
+    this._request.end(config.data);
+  }
+
+  NodeAJAX.prototype = {
+    getResponseHeader: function(header) {
+      return this._headers[header];
+    },
+    
+    getAllResponseHeaders: function() {
+      return stringify(this._headers, ': ', '\n');
+    },
+
+    abort: function() {
+      if (this._request) {
+        this._request.abort();
+        this._request = undefined;
+        delete this._request;
+      }
+    }
+  };
+  
   // Remap some of the CloudMine API query parameters.
   var valid_params = {
     limit: 'limit',
@@ -895,7 +991,7 @@
   };
 
   // Map HTTP codes that could come from CloudMine
-  var http = {
+  var httpcode = {
     200: 'ok',
     201: 'created',
     400: 'badrequest',
@@ -906,7 +1002,7 @@
   };
 
   // Utility functions.
-  var esc = window.encodeURIComponent || escape;
+  var esc = this.encodeURIComponent || escape;
 
   function opts(scope, options) {
     return merge({}, scope.options, options);
@@ -1001,14 +1097,16 @@
     return true;
   }
 
-  function stringify(map) {
+  function stringify(map, sep, eol, ignore) {
     var out = [];
+    sep = sep || '=';
+    var escape = ignore ? function(s) { return s; } : esc;
     for (var k in map) {
       if (map[k] != null && !isFunction(map[k])){
-        out.push(esc(k) + "=" + esc(map[k]));
+        out.push(escape(k) + sep + escape(map[k]));
       }
     }
-    return out.join('&');
+    return out.join(eol || '&');
   }
 
   function merge(obj/*, in...*/) {
@@ -1020,34 +1118,28 @@
     return obj;
   }
 
-  function setAJAX(func) {
-    if (func) ajax = func;
-    else if (($ = this.jQuery || this.Zepto) != null) ajax = $.ajax;
-    else throw "Missing jQuery-compatible ajax implementation";
-    return ajax;
-  }  
-
   function NotSupported() {
     throw "Operation Not Supported";
   }
 
-  // Export CloudMine objects. Node will see additional methods to set the ajax implementation and API call.
-  this.cloudmine = this.cloudmine || {};
-  this.cloudmine.WebService = WebService;
-  if (!this.cloudmine.API) this.cloudmine.API = "https://api.cloudmine.me";
-  setAJAX();
-  
+  // Export CloudMine objects.
+  var http, https, ajax, url, apiroot = "https://api.cloudmine.me";
+  if (!this.window) {
+    ajax = function(url, config) { return new NodeAJAX(url, config); };
+    url = require('url');
+    http = require('http');
+    https = require('https');
+    module.exports = WebService;
+  } else {
+    window.cloudmine = window.cloudmine || {};
+    window.cloudmine.WebService = WebService;
+    if (window.cloudmine.API) apiroot = window.cloudmine.API;
+    if (($ = this.jQuery || this.Zepto) != null) ajax = $.ajax;
+    else throw "Missing jQuery-compatible ajax implementation";
+  }
+
   // Base64 Library from http://www.webtoolkit.info
   var base64 = {_keyStr:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",encode:function(a){var b="";var c,d,e,f,g,h,i;var j=0;a=base64._utf8_encode(a);while(j<a.length){c=a.charCodeAt(j++);d=a.charCodeAt(j++);e=a.charCodeAt(j++);f=c>>2;g=(c&3)<<4|d>>4;h=(d&15)<<2|e>>6;i=e&63;if(isNaN(d)){h=i=64}else if(isNaN(e)){i=64}b=b+this._keyStr.charAt(f)+this._keyStr.charAt(g)+this._keyStr.charAt(h)+this._keyStr.charAt(i)}return b},decode:function(a){var b="";var c,d,e;var f,g,h,i;var j=0;a=a.replace(/[^A-Za-z0-9\+\/\=]/g,"");while(j<a.length){f=this._keyStr.indexOf(a.charAt(j++));g=this._keyStr.indexOf(a.charAt(j++));h=this._keyStr.indexOf(a.charAt(j++));i=this._keyStr.indexOf(a.charAt(j++));c=f<<2|g>>4;d=(g&15)<<4|h>>2;e=(h&3)<<6|i;b=b+String.fromCharCode(c);if(h!=64){b=b+String.fromCharCode(d)}if(i!=64){b=b+String.fromCharCode(e)}}b=base64._utf8_decode(b);return b},_utf8_encode:function(a){a=a.replace(/\r\n/g,"\n");var b="";for(var c=0;c<a.length;c++){var d=a.charCodeAt(c);if(d<128){b+=String.fromCharCode(d)}else if(d>127&&d<2048){b+=String.fromCharCode(d>>6|192);b+=String.fromCharCode(d&63|128)}else{b+=String.fromCharCode(d>>12|224);b+=String.fromCharCode(d>>6&63|128);b+=String.fromCharCode(d&63|128)}}return b},_utf8_decode:function(a){var b="";var c=0;var d=c1=c2=0;while(c<a.length){d=a.charCodeAt(c);if(d<128){b+=String.fromCharCode(d);c++}else if(d>191&&d<224){c2=a.charCodeAt(c+1);b+=String.fromCharCode((d&31)<<6|c2&63);c+=2}else{c2=a.charCodeAt(c+1);c3=a.charCodeAt(c+2);b+=String.fromCharCode((d&15)<<12|(c2&63)<<6|c3&63);c+=3}}return b}};
 
-  if (this.exports) {
-    this.exports = {
-      WebService: WebService,
-      setAJAX: setAJAX,
-      setAPI: function setAPI(host) {
-        this.cloudmine.API = host;
-      }
-    };
-  }
 })();
 

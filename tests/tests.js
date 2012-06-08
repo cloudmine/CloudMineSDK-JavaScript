@@ -1,4 +1,11 @@
-$(document).ready(function(){
+// QUnit for Node: Redefine a few things.
+if (!this.window) {
+  function $(func) { func(); }
+  cloudmine = {WebService: module.require('../js/cloudmine.js')};
+  module = QUnit.module;
+ }
+
+$(function() {
   module('JSON Objects');
 
   var cm = new cloudmine.WebService({
@@ -626,4 +633,3 @@ $(document).ready(function(){
     stop();
   });
 });
-
