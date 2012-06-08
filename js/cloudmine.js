@@ -82,7 +82,7 @@
      * @param {object} key An object hash where the top level properties are the keys.
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
      *    - OR -
-     * @param {string} key The key to affect
+     * @param {string|null} key The key to affect. If given null, a random key will be assigned.
      * @param {string|number|object} value The value of the object
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
      * @return An APICall instance for the web service request used to attach events.
@@ -93,6 +93,7 @@
     update: function(key, value, options) {
       if (isObject(key)) options = value;
       else {
+        if (!key) key = uuid();
         var out = {};
         out[key] = value;
         key = out;
@@ -118,7 +119,7 @@
      * @param {object} key An object hash where the top level properties are the keys.
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
      *   -OR-
-     * @param {string} key The key to affect
+     * @param {string|null} key The key to affect. If given null, a random key will be assigned.
      * @param {string|number|object} The object to store. 
      * @return An APICall instance for the web service request used to attach events.
      *
@@ -128,6 +129,7 @@
     set: function(key, value, options) {
       if (isObject(key)) options = value;
       else {
+        if (!key) key = uuid();
         var out = {};
         out[key] = value;
         key = out;
@@ -222,42 +224,50 @@
 
     /**
      * Upload a file stored in CloudMine.
-     * WARNING: Experimental, behavior subject to change.
+     * Compatibility: IE 10+, Firefox 3.6+, Chrome 13+, Opera 11.1, Safari 5 (Mac), Node.js
      *
      * @param {string} key The binary file's object key.
-     * @param {File} key A HTML5 FileAPI File object.
+     * @param {File|string} file FileAPI: A HTML5 FileAPI File object, Node.js: The filename to upload.
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @config {string} [mode] Force upload behavior, even if the client doesn't support it. "fileapi", "node"
      * @return An APICall instance for the web service request used to attach events.
      *
      * @function
      * @memberOf WebService
      */
-    uploadFile: (function() {
-      // FileAPI: IE 10+, Firefox 3.6+, Chrome 13+, Opera 11.1, Safari 5 (Mac)
-      if (this.FileReader) {
-        return function(key, file, options) {
-          options = opts(this, options);
-          var apicall = new APICall({
-            action: 'binary/' + key,
-            type: 'post',
-            later: true,
-            options: options,
-            appid: options.appid,
-            apikey: options.apikey
-          });
+    upload: function(key, file, options) {
+      options = opts(this, options);
+      if (!key) key = uuid();
 
-          var reader = new FileReader();
-          reader.onload = function(e) {
-            apicall.setData(e.target.result).done();
-          };
-          reader.readAsBinaryString(file);
-          return this;
-        }
+      // Warning: may not necessarily use ajax to perform upload.
+      var apicall = new APICall({
+        action: 'binary/' + key,
+        type: 'post',
+        later: true,
+        options: options,
+        appid: options.appid,
+        apikey: options.apikey,
+        processResponse: APICall.basicResponse
+      });
+
+      if (options.mode == 'fileapi' || FileReader) {
+        // TODO: Add support for canvas data, more FileAPI objects, primitive arrays.
+        // IE 10+, Firefox 3.6+, Chrome 13+, Opera 11.1, Safari 5 (Mac)
+        var reader = new FileReader();
+        reader.onload = function(e) {
+          apicall.setData(e.target.result).done();
+        };
+        reader.readAsBinaryString(file);
+      } else if (options.mode == 'node' || ajax == NodeAJAX) {
+        // TODO: Read in Buffer, file handles, or a filename.
+        // Pass upload through apicall since it supports it.
+        // If mime magic is present, use it to determine content-type if its not already there.
+      } else if (options.mode == 'swfupload' || swfupload) {
+        // TODO: Convince swfupload to upload file based on string.
       }
 
-      // TODO: Add flash uploader for older browsers.
-      return NotSupported;
-    })(),
+      return apicall;
+    },
 
     /**
      * Download a file stored in CloudMine.
@@ -270,9 +280,12 @@
      * @function
      * @memberOf WebService
      */
-    downloadFile: function(key, options) {
+    download:  function(key, options) {
+      // TODO:
+      // target file api directly.
+      // have a 'raw' mode for access to raw data that was sent back.
+      // add node support
       options = opts(this, options);
-      
       return new APICall({
         action: 'binary/' + key,
         type: 'GET',
@@ -590,7 +603,7 @@
       return this.options.session_token == null;
     }
   };
-
+  
   /**
    * WebService will return an instance of this class that should be used to interact with
    * the API. Upon completion of the AJAX call, this object will fire the event handlers based on
@@ -647,9 +660,9 @@
     
     var self = this;
     config.complete = function(xhr) {
-      var data, content = xhr.responseText;
+      var data = xhr.responseText;
       self.status = xhr.status;
-      self.responseText = content;
+      self.responseText = data;
       each(xhr.getAllResponseHeaders().split('\n'), function(item) {
         var index = (item.indexOf(':'));
         if (index > 0) self.responseHeaders[item.substring(0, index)] = item.substring(index + 2);
@@ -657,10 +670,11 @@
 
       // If we can parse the data as JSON or store the original data.
       try {
-        self.data = JSON.parse(content || "{}");
+        self.data = JSON.parse(data || "{}");
       } catch (e) {
-        self.data = content;
+        self.data = data;
       }
+
       // Parse the response only if a safe status
       if (self.status >= 200 && self.status < 300) {
         // Preprocess data coming in to hash-hash: [success/errors].[httpcode]
@@ -673,44 +687,8 @@
         data.errors[self.status] = self.data;
       }
 
-      // Success results may have errors for certain keys
-      if (data.errors) self.hasErrors = true;
-
-      // Do not expose xhr object.
-      self.xhr = undefined;
-      delete self.xhr;
-
-      // Data has been processed by this point and should exist in success, errors, meta, or results hashes.
-      // Event firing order: http status (e.g. ok, created), http status (e.g. 200, 201), success, meta, result, error.
-      if (data.success) {
-        // Callback signature: function(keys, response, statusCode)
-        if (httpcode[self.status]) self.trigger(httpcode[self.status], data.success, self, self.status);
-        self.trigger(self.status, data.success, self, self.status);
-
-        // Callback signature: function(keys, response);
-        self.trigger('success', data.success, self);
-      }
-
-      // Callback signature: function(keys, response)
-      if (data.meta) self.trigger('meta', data.meta, self);
-
-      // Callback signature: function(keys, response)
-      if (data.result) self.trigger('result', data.result, self);
-
-      // Errors needs to fire groups of errors depending on code result.
-      if (data.errors) {
-        // Callback signature: function(keys, reponse, statusCode)
-        for (var k in data.errors) {
-          if (httpcode[k]) self.trigger(httpcode[k], data.errors[k], self, k);
-          self.trigger(k, data.errors[k], self, k);
-        }
-
-        // Callback signature: function(keys, response)
-        self.trigger('error', data.errors, self);
-      }
-
-      // Callback signature: function(responseData, response)
-      self.trigger('complete', data, self);
+      // Trigger events from static context.
+      APICall.complete(self, data);
     }
 
     // Let script continue before triggering ajax call
@@ -839,6 +817,54 @@
       return this;
     }
   };
+
+  // Complete the API Call.
+  APICall.complete = function(apicall, data) {
+    // Success results may have errors for certain keys
+    if (data.errors) apicall.hasErrors = true;
+
+    // Clean up temporary state.
+    if (apicall._config) {
+      apicall._config = undefined;
+      delete apicall._config;
+    }
+    if (apicall.xhr) {
+      apicall.xhr = undefined;
+      delete apicall.xhr;
+    }
+
+    // Data has been processed by this point and should exist in success, errors, meta, or results hashes.
+    // Event firing order: http status (e.g. ok, created), http status (e.g. 200, 201), success, meta, result, error.
+    if (data.success) {
+      // Callback signature: function(keys, response, statusCode)
+      if (httpcode[apicall.status]) apicall.trigger(httpcode[apicall.status], data.success, apicall, apicall.status);
+      apicall.trigger(apicall.status, data.success, apicall, apicall.status);
+
+      // Callback signature: function(keys, response);
+      apicall.trigger('success', data.success, apicall);
+    }
+
+    // Callback signature: function(keys, response)
+    if (data.meta) apicall.trigger('meta', data.meta, apicall);
+
+    // Callback signature: function(keys, response)
+    if (data.result) apicall.trigger('result', data.result, apicall);
+
+    // Errors needs to fire groups of errors depending on code result.
+    if (data.errors) {
+      // Callback signature: function(keys, reponse, statusCode)
+      for (var k in data.errors) {
+        if (httpcode[k]) apicall.trigger(httpcode[k], data.errors[k], apicall, k);
+        apicall.trigger(k, data.errors[k], apicall, k);
+      }
+
+      // Callback signature: function(keys, response)
+      apicall.trigger('error', data.errors, apicall);
+    }
+
+    // Callback signature: function(responseData, response)
+    apicall.trigger('complete', data, apicall);      
+  }
 
   // Use this for standard cloudmine text responses that have success/errors/meta/result fields.
   APICall.textResponse = function(data, xhr, response) {
@@ -1003,6 +1029,19 @@
 
   // Utility functions.
   var esc = this.encodeURIComponent || escape;
+  var FileReader = this.FileReader;
+  var File = this.File;
+
+  function hex() { return Math.round(Math.random() * 16).toString(16); }
+  function uuid() {
+    var out = Array(32), i;
+    out[14] = 4;
+    out[19] = ((Math.round(Math.random() * 16) & 3) | 8).toString(16);
+    for (i = 0; i < 14; ++i) { out[i] = hex(); }
+    for (i = 15; i < 19; ++i) { out[i] = hex(); }
+    for (i = 20; i < 32; ++i) { out[i] = hex(); }
+    return out.join('');
+  }
 
   function opts(scope, options) {
     return merge({}, scope.options, options);
@@ -1116,10 +1155,6 @@
       });
     }
     return obj;
-  }
-
-  function NotSupported() {
-    throw "Operation Not Supported";
   }
 
   // Export CloudMine objects.
