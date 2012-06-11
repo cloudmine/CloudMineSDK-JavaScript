@@ -224,12 +224,11 @@
 
     /**
      * Upload a file stored in CloudMine.
-     * Compatibility: IE 10+, Firefox 3.6+, Chrome 13+, Opera 11.1, Safari 5 (Mac), Node.js
      *
      * @param {string} key The binary file's object key.
      * @param {File|string} file FileAPI: A HTML5 FileAPI File object, Node.js: The filename to upload.
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
-     * @config {string} [mode] Force upload behavior, even if the client doesn't support it. "fileapi", "node"
+     * @config {string} [mode] Force upload behavior, even if the client doesn't support it. "fileapi", "node", "swf"
      * @return An APICall instance for the web service request used to attach events.
      *
      * @function
@@ -239,6 +238,7 @@
       options = opts(this, options);
       if (!key) key = uuid();
 
+      
       // Warning: may not necessarily use ajax to perform upload.
       var apicall = new APICall({
         action: 'binary/' + key,
@@ -250,20 +250,30 @@
         processResponse: APICall.basicResponse
       });
 
-      if (options.mode == 'fileapi' || FileReader) {
-        // TODO: Add support for canvas data, more FileAPI objects, primitive arrays.
-        // IE 10+, Firefox 3.6+, Chrome 13+, Opera 11.1, Safari 5 (Mac)
+      // Prepare given data.
+      // TODO:
+      //   FileAPI: Support Blob, File, FileReader.
+      //   Primitive Arrays: Support arrays like UInt32Array, etc.
+      //   Canvas: Need to get at the binary data from it and support it.
+      //   Node.JS: Support Buffers, Arrays, Specify by file name.
+
+      // Extract the data from the file first before uploading.
+      if (file instanceof File) {
         var reader = new FileReader();
         reader.onload = function(e) {
           apicall.setData(e.target.result).done();
         };
         reader.readAsBinaryString(file);
-      } else if (options.mode == 'node' || ajax == NodeAJAX) {
-        // TODO: Read in Buffer, file handles, or a filename.
-        // Pass upload through apicall since it supports it.
-        // If mime magic is present, use it to determine content-type if its not already there.
-      } else if (options.mode == 'swfupload' || swfupload) {
-        // TODO: Convince swfupload to upload file based on string.
+      } else if (file instanceof Blob) {
+        // Blob Builder!
+      } else if (file instanceof ArrayBufferView) {
+        // Handle the primitive array types (Uint32Array, Int32Array, Float32Array, etc).
+      } else {
+        // Use the CanvasImageData instead.
+        if (file instanceof CanvasRenderingContext2D) file = file.getImageData();
+
+        if (file instanceof CanvasImageData) {
+        }
       }
 
       return apicall;
@@ -275,17 +285,21 @@
      *
      * @param {string} key The binary file's object key.
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @config {string} [mode] Force download behavior, even if the client doesn't support it. "node", "iframe", "raw"
      * @return An APICall instance for the web service request used to attach events.
      *
      * @function
      * @memberOf WebService
      */
-    download:  function(key, options) {
-      // TODO:
-      // target file api directly.
-      // have a 'raw' mode for access to raw data that was sent back.
-      // add node support
+    download: function(key, options) {
+
+      // If we aren't given a mode, download the file directly to the user's computer.
+      var processor = (ajax == NodeAJAX ? APICall.nodeDownload : APICall.iframeDownload);
+      if (options.mode === 'node') processor = APICall.nodeDownload;
+      else if (options.mode === 'raw') processor = APICall.basicResponse;
+
       options = opts(this, options);
+      options.query = {force_download: true};
       return new APICall({
         action: 'binary/' + key,
         type: 'GET',
@@ -293,9 +307,11 @@
         options: options,
         appid: options.appid,
         apikey: options.apikey,
-        processResponse: APICall.basicResponse
+        key: key,
+        processResponse: processor
       });
     },
+
 
     /**
      * Create a new user.
@@ -810,7 +826,7 @@
      */
     done: function() {
       if (!this.xhr && this._config) {
-        this.xhr = ajax(self.url, this._config);
+        this.xhr = ajax(this.url, this._config);
         this._config = undefined;
         delete this._config;
       }
@@ -900,6 +916,20 @@
     out.success = data;
     return out;
   };
+
+  APICall.nodeDownload = function(data, xhr, config) {
+    var out = {success: {}};
+    // TODO: Write file out to file system.
+    // out.success[config.key] = filehandle;
+    return out;
+  }
+
+  APICall.iframeDownload = function(data, xhr, config) {
+    var out = {success: {}};
+    // TODO: Add a hidden iframe to document, download file, remove iframe.
+    // out.success[config.key] = iframe
+    return out;
+  }
 
   /**
    * Internal minimal Node.js jQuery.ajax adapter.
@@ -1027,11 +1057,18 @@
     500: 'servererror'
   };
 
-  // Utility functions.
+  // Scope external dependencies, if necessary.
   var esc = this.encodeURIComponent || escape;
   var FileReader = this.FileReader;
+  var BlobBuilder = this.BlobBuilder || this.WebKitBlobBuilder || this.MozBlobBuilder || this.MSBlobBuilder;
+  var ArrayBuffer = this.ArrayBuffer;
+  var CanvasRenderingContext2D = this.CanvasRenderingContext2D;
+  var CanvasImageData = this.CanvasImageData;
+  var ArrayBufferView = this.ArrayBufferView;
   var File = this.File;
+  var swfupload = this.swfupload;
 
+  // Utility functions.
   function hex() { return Math.round(Math.random() * 16).toString(16); }
   function uuid() {
     var out = Array(32), i;
