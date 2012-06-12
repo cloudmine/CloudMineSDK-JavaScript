@@ -83,7 +83,7 @@
      * @param {object} key An object hash where the top level properties are the keys.
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
      *    - OR -
-     * @param {string} key The key to affect
+     * @param {string|null} key The key to affect. If given null, a random key will be assigned.
      * @param {string|number|object} value The value of the object
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
      * @return An APICall instance for the web service request used to attach events.
@@ -94,12 +94,13 @@
     update: function(key, value, options) {
       if (isObject(key)) options = value;
       else {
+        if (!key) key = uuid();
         var out = {};
         out[key] = value;
         key = out;
       }
       options = opts(this, options);
-     
+      
       return new APICall({
         action: 'text',
         type: 'POST',
@@ -119,7 +120,7 @@
      * @param {object} key An object hash where the top level properties are the keys.
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
      *   -OR-
-     * @param {string} key The key to affect
+     * @param {string|null} key The key to affect. If given null, a random key will be assigned.
      * @param {string|number|object} The object to store. 
      * @return An APICall instance for the web service request used to attach events.
      *
@@ -129,6 +130,7 @@
     set: function(key, value, options) {
       if (isObject(key)) options = value;
       else {
+        if (!key) key = uuid();
         var out = {};
         out[key] = value;
         key = out;
@@ -223,42 +225,60 @@
 
     /**
      * Upload a file stored in CloudMine.
-     * WARNING: Experimental, behavior subject to change.
      *
      * @param {string} key The binary file's object key.
-     * @param {File} key A HTML5 FileAPI File object.
+     * @param {File|string} file FileAPI: A HTML5 FileAPI File object, Node.js: The filename to upload.
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @config {string} [mode] Force upload behavior, even if the client doesn't support it. "fileapi", "node", "swf"
      * @return An APICall instance for the web service request used to attach events.
      *
      * @function
      * @memberOf WebService.prototype
      */
-    uploadFile: (function() {
-      // FileAPI: IE 10+, Firefox 3.6+, Chrome 13+, Opera 11.1, Safari 5 (Mac)
-      if (window.FileReader) {
-        return function(key, file, options) {
-          options = opts(this, options);
-          var apicall = new APICall({
-            action: 'binary/' + key,
-            type: 'post',
-            later: true,
-            options: options,
-            appid: options.appid,
-            apikey: options.apikey
-          });
+    upload: function(key, file, options) {
+      options = opts(this, options);
+      if (!key) key = uuid();
 
-          var reader = new FileReader();
-          reader.onload = function(e) {
-            apicall.setData(e.target.result).done();
-          };
-          reader.readAsBinaryString(file);
-          return this;
+      
+      // Warning: may not necessarily use ajax to perform upload.
+      var apicall = new APICall({
+        action: 'binary/' + key,
+        type: 'post',
+        later: true,
+        options: options,
+        appid: options.appid,
+        apikey: options.apikey,
+        processResponse: APICall.basicResponse
+      });
+
+      // Prepare given data.
+      // TODO:
+      //   FileAPI: Support Blob, File, FileReader.
+      //   Primitive Arrays: Support arrays like UInt32Array, etc.
+      //   Canvas: Need to get at the binary data from it and support it.
+      //   Node.JS: Support Buffers, Arrays, Specify by file name.
+
+      // Extract the data from the file first before uploading.
+      if (file instanceof File) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+          apicall.setData(e.target.result).done();
+        };
+        reader.readAsBinaryString(file);
+      } else if (file instanceof Blob) {
+        // Blob Builder!
+      } else if (file instanceof ArrayBufferView) {
+        // Handle the primitive array types (Uint32Array, Int32Array, Float32Array, etc).
+      } else {
+        // Use the CanvasImageData instead.
+        if (file instanceof CanvasRenderingContext2D) file = file.getImageData();
+
+        if (file instanceof CanvasImageData) {
         }
       }
 
-      // TODO: Add flash uploader for older browsers.
-      return NotSupported;
-    })(),
+      return apicall;
+    },
 
     /**
      * Download a file stored in CloudMine.
@@ -266,14 +286,21 @@
      *
      * @param {string} key The binary file's object key.
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @config {string} [mode] Force download behavior, even if the client doesn't support it. "node", "iframe", "raw"
      * @return An APICall instance for the web service request used to attach events.
      *
      * @function
      * @memberOf WebService.prototype
      */
-    downloadFile: function(key, options) {
+    download: function(key, options) {
+
+      // If we aren't given a mode, download the file directly to the user's computer.
+      var processor = (ajax == NodeAJAX ? APICall.nodeDownload : APICall.iframeDownload);
+      if (options.mode === 'node') processor = APICall.nodeDownload;
+      else if (options.mode === 'raw') processor = APICall.basicResponse;
+
       options = opts(this, options);
-      
+      options.query = {force_download: true};
       return new APICall({
         action: 'binary/' + key,
         type: 'GET',
@@ -281,9 +308,11 @@
         options: options,
         appid: options.appid,
         apikey: options.apikey,
-        processResponse: APICall.basicResponse
+        key: key,
+        processResponse: processor
       });
     },
+
 
     /**
      * Create a new user.
@@ -309,7 +338,7 @@
         email: user.userid,
         password: user.password
       });
-     return new APICall({
+      return new APICall({
         action: 'account/create',
         type: 'POST',
         appid: this.options.appid,
@@ -591,13 +620,17 @@
       return this.options.session_token == null;
     }
   };
-
+  
   /**
    * WebService will return an instance of this class that should be used to interact with
    * the API. Upon completion of the AJAX call, this object will fire the event handlers based on
    * what were attached.
    *
    * You may chain event creation.
+   *
+   * Note: It is recommended to avoid referring directly to the ajax implementation used by this
+   *       function. Depending on environment, features on it may vary since this library only
+   *       requires a small subset of jQuery-like AJAX functionality.
    *
    * Event firing order:
    *    Successes: HTTP Code String, HTTP Code Number, 'success'
@@ -642,24 +675,25 @@
       if (session != null) this.requestHeaders['X-CloudMine-SessionToken'] = session;
     }
     config.headers = merge(this.requestHeaders, config.headers);
-    this.url = [cloudmine.API, "/v1/app/", config.appid, root, config.action, query].join("");
+    this.url = [apiroot, "/v1/app/", config.appid, root, config.action, query].join("");
     
     var self = this;
     config.complete = function(xhr) {
-      var data, content = xhr.responseText;
+      var data = xhr.responseText;
       self.status = xhr.status;
-      self.responseText = content;
+      self.responseText = data;
       each(xhr.getAllResponseHeaders().split('\n'), function(item) {
-        var fields = item.split(':');
-        if (fields[0] != "") self.responseHeaders[fields.shift()] = fields.join(':');
+        var index = (item.indexOf(':'));
+        if (index > 0) self.responseHeaders[item.substring(0, index)] = item.substring(index + 2);
       });
 
       // If we can parse the data as JSON or store the original data.
       try {
-        self.data = JSON.parse(content || "{}");
+        self.data = JSON.parse(data || "{}");
       } catch (e) {
-        self.data = content;
+        self.data = data;
       }
+
       // Parse the response only if a safe status
       if (self.status >= 200 && self.status < 300) {
         // Preprocess data coming in to hash-hash: [success/errors].[httpcode]
@@ -672,44 +706,8 @@
         data.errors[self.status] = self.data;
       }
 
-      // Success results may have errors for certain keys
-      if (data.errors) self.hasErrors = true;
-
-      // Do not expose xhr object.
-      self.xhr = undefined;
-      delete self.xhr;
-
-      // Data has been processed by this point and should exist in success, errors, meta, or results hashes.
-      // Event firing order: http status (e.g. ok, created), http status (e.g. 200, 201), success, meta, result, error.
-      if (data.success) {
-        // Callback signature: function(keys, response, statusCode)
-        if (http[self.status]) self.trigger(http[self.status], data.success, self, self.status);
-        self.trigger(self.status, data.success, self, self.status);
-
-        // Callback signature: function(keys, response);
-        self.trigger('success', data.success, self);
-      }
-
-      // Callback signature: function(keys, response)
-      if (data.meta) self.trigger('meta', data.meta, self);
-
-      // Callback signature: function(keys, response)
-      if (data.result) self.trigger('result', data.result, self);
-
-      // Errors needs to fire groups of errors depending on code result.
-      if (data.errors) {
-        // Callback signature: function(keys, reponse, statusCode)
-        for (var k in data.errors) {
-          if (http[k]) self.trigger(http[k], data.errors[k], self, k);
-          self.trigger(k, data.errors[k], self, k);
-        }
-
-        // Callback signature: function(keys, response)
-        self.trigger('error', data.errors, self);
-      }
-
-      // Callback signature: function(responseData, response)
-      self.trigger('complete', data, self);
+      // Trigger events from static context.
+      APICall.complete(self, data);
     }
 
     // Let script continue before triggering ajax call
@@ -831,13 +829,61 @@
      */
     done: function() {
       if (!this.xhr && this._config) {
-        this.xhr = ajax(self.url, this._config);
+        this.xhr = ajax(this.url, this._config);
         this._config = undefined;
         delete this._config;
       }
       return this;
     }
   };
+
+  // Complete the API Call.
+  APICall.complete = function(apicall, data) {
+    // Success results may have errors for certain keys
+    if (data.errors) apicall.hasErrors = true;
+
+    // Clean up temporary state.
+    if (apicall._config) {
+      apicall._config = undefined;
+      delete apicall._config;
+    }
+    if (apicall.xhr) {
+      apicall.xhr = undefined;
+      delete apicall.xhr;
+    }
+
+    // Data has been processed by this point and should exist in success, errors, meta, or results hashes.
+    // Event firing order: http status (e.g. ok, created), http status (e.g. 200, 201), success, meta, result, error.
+    if (data.success) {
+      // Callback signature: function(keys, response, statusCode)
+      if (httpcode[apicall.status]) apicall.trigger(httpcode[apicall.status], data.success, apicall, apicall.status);
+      apicall.trigger(apicall.status, data.success, apicall, apicall.status);
+
+      // Callback signature: function(keys, response);
+      apicall.trigger('success', data.success, apicall);
+    }
+
+    // Callback signature: function(keys, response)
+    if (data.meta) apicall.trigger('meta', data.meta, apicall);
+
+    // Callback signature: function(keys, response)
+    if (data.result) apicall.trigger('result', data.result, apicall);
+
+    // Errors needs to fire groups of errors depending on code result.
+    if (data.errors) {
+      // Callback signature: function(keys, reponse, statusCode)
+      for (var k in data.errors) {
+        if (httpcode[k]) apicall.trigger(httpcode[k], data.errors[k], apicall, k);
+        apicall.trigger(k, data.errors[k], apicall, k);
+      }
+
+      // Callback signature: function(keys, response)
+      apicall.trigger('error', data.errors, apicall);
+    }
+
+    // Callback signature: function(responseData, response)
+    apicall.trigger('complete', data, apicall);      
+  }
 
   // Use this for standard cloudmine text responses that have success/errors/meta/result fields.
   APICall.textResponse = function(data, xhr, response) {
@@ -874,6 +920,115 @@
     return out;
   };
 
+  APICall.nodeDownload = function(data, xhr, config) {
+    var out = {success: {}};
+    // TODO: Write file out to file system.
+    // out.success[config.key] = filehandle;
+    return out;
+  }
+
+  APICall.iframeDownload = function(data, xhr, config) {
+    var out = {success: {}};
+    // TODO: Add a hidden iframe to document, download file, remove iframe.
+    // out.success[config.key] = iframe
+    return out;
+  }
+
+  /**
+   * Internal minimal Node.js jQuery.ajax adapter.
+   * @function
+   * @private
+   * @param {String} uri 
+   */
+  
+  function NodeAJAX(uri, config) {
+    config = config || {};
+    this.status = 400;
+    this.responseText = [];
+    this._headers = {};
+
+    // disable connection pooling
+    // disable chunked transfer-encoding which nginx doesn't support
+    var opts = url.parse(uri);
+    opts.agent = false;
+    opts.method = config.type;
+    opts.headers = config.headers || {};
+
+    // Preprocess data if it is JSON data.
+    if (isObject(config.data) && config.processData) {
+      config.data = JSON.stringify(config.data);
+    }
+
+    // Attach a content-length
+    if (isArray(config.data)) opts.headers['content-length'] = Buffer.byteLength(config.data);
+    else if (isString(config.data)) opts.headers['content-length'] = config.data.length;
+    
+    // Fire request.
+    var self = this, cbContext = config.context || this;
+    this._request = (opts.protocol === "http:" ? http : https).request(opts, function(response) {
+      response.setEncoding('utf8');
+
+      response.on('data', function(chunk) {
+        self.responseText.push(chunk);
+      });
+
+      response.on('close', function() {
+        response.emit('end');
+      });
+
+      response.on('end', function() {
+        self._headers = stringify(response.headers);
+        self.status = response.statusCode;
+        var textStatus = null;
+
+        // Process data if necessary.
+        var data = self.responseText = self.responseText.join('');
+        if (config.dataType == 'json' || (config.dataType != 'text' && response.headers['content-type'].match(/\bapplication\/json\b/i))) {
+          try {
+            data = JSON.parse(data);
+          } catch (e) {
+            textStatus = 'parsererror';
+          }
+        }
+
+        
+        if (self.status >= 200 && self.status < 300) {
+          if (config.success) config.success.call(cbContext, data, 'success', self);
+        } else if (config.error) {
+          config.error.call(cbContext, self, 'error', self.responseText);
+        }
+        if (config.complete) config.complete.call(cbContext, self, self.status);
+      });
+    });
+
+    this._request.on('error', function(e) {
+      self.status = e.status;
+      self.responseText = e.message;
+      if (config.error) config.error.call(cbContext, self, 'error', e.message);
+      if (config.complete) config.complete.call(cbContext, self, 'error');
+    });
+
+    this._request.end(config.data);
+  }
+
+  NodeAJAX.prototype = {
+    getResponseHeader: function(header) {
+      return this._headers[header];
+    },
+    
+    getAllResponseHeaders: function() {
+      return stringify(this._headers, ': ', '\n');
+    },
+
+    abort: function() {
+      if (this._request) {
+        this._request.abort();
+        this._request = undefined;
+        delete this._request;
+      }
+    }
+  };
+  
   // Remap some of the CloudMine API query parameters.
   var valid_params = {
     limit: 'limit',
@@ -898,7 +1053,7 @@
   };
 
   // Map HTTP codes that could come from CloudMine
-  var http = {
+  var httpcode = {
     200: 'ok',
     201: 'created',
     400: 'badrequest',
@@ -908,8 +1063,28 @@
     500: 'servererror'
   };
 
+  // Scope external dependencies, if necessary.
+  var esc = this.encodeURIComponent || escape;
+  var FileReader = this.FileReader;
+  var BlobBuilder = this.BlobBuilder || this.WebKitBlobBuilder || this.MozBlobBuilder || this.MSBlobBuilder;
+  var ArrayBuffer = this.ArrayBuffer;
+  var CanvasRenderingContext2D = this.CanvasRenderingContext2D;
+  var CanvasImageData = this.CanvasImageData;
+  var ArrayBufferView = this.ArrayBufferView;
+  var File = this.File;
+  var swfupload = this.swfupload;
+
   // Utility functions.
-  var esc = window.encodeURIComponent || escape;
+  function hex() { return Math.round(Math.random() * 16).toString(16); }
+  function uuid() {
+    var out = Array(32), i;
+    out[14] = 4;
+    out[19] = ((Math.round(Math.random() * 16) & 3) | 8).toString(16);
+    for (i = 0; i < 14; ++i) { out[i] = hex(); }
+    for (i = 15; i < 19; ++i) { out[i] = hex(); }
+    for (i = 20; i < 32; ++i) { out[i] = hex(); }
+    return out.join('');
+  }
 
   function opts(scope, options) {
     return merge({}, scope.options, options);
@@ -1004,14 +1179,16 @@
     return true;
   }
 
-  function stringify(map) {
+  function stringify(map, sep, eol, ignore) {
     var out = [];
+    sep = sep || '=';
+    var escape = ignore ? function(s) { return s; } : esc;
     for (var k in map) {
       if (map[k] != null && !isFunction(map[k])){
-        out.push(esc(k) + "=" + esc(map[k]));
+        out.push(escape(k) + sep + escape(map[k]));
       }
     }
-    return out.join('&');
+    return out.join(eol || '&');
   }
 
   function merge(obj/*, in...*/) {
@@ -1023,27 +1200,24 @@
     return obj;
   }
 
-  function NotSupported() {
-    throw "Operation Not Supported";
+  // Export CloudMine objects.
+  var http, https, ajax, url, apiroot = "https://api.cloudmine.me";
+  if (!this.window) {
+    ajax = function(url, config) { return new NodeAJAX(url, config); };
+    url = require('url');
+    http = require('http');
+    https = require('https');
+    module.exports = WebService;
+  } else {
+    window.cloudmine = window.cloudmine || {};
+    window.cloudmine.WebService = WebService;
+    if (window.cloudmine.API) apiroot = window.cloudmine.API;
+    if (($ = this.jQuery || this.Zepto) != null) ajax = $.ajax;
+    else throw "Missing jQuery-compatible ajax implementation";
   }
-
-  // Export CloudMine objects. Node will see additional methods to set the ajax implementation and API call.
-  this.cloudmine = this.cloudmine || {};
-  this.cloudmine.WebService = WebService;
-  if (!this.cloudmine.API) this.cloudmine.API = "https://api.cloudmine.me";
-
-  // Assigns AJAX implementation
-  if (func) ajax = func;
-  else if (($ = this.jQuery || this.Zepto) != null) ajax = $.ajax;
-  else throw "Missing jQuery-compatible ajax implementation";
 
   // Base64 Library from http://www.webtoolkit.info
   var base64 = {_keyStr:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",encode:function(a){var b="";var c,d,e,f,g,h,i;var j=0;a=base64._utf8_encode(a);while(j<a.length){c=a.charCodeAt(j++);d=a.charCodeAt(j++);e=a.charCodeAt(j++);f=c>>2;g=(c&3)<<4|d>>4;h=(d&15)<<2|e>>6;i=e&63;if(isNaN(d)){h=i=64}else if(isNaN(e)){i=64}b=b+this._keyStr.charAt(f)+this._keyStr.charAt(g)+this._keyStr.charAt(h)+this._keyStr.charAt(i)}return b},decode:function(a){var b="";var c,d,e;var f,g,h,i;var j=0;a=a.replace(/[^A-Za-z0-9\+\/\=]/g,"");while(j<a.length){f=this._keyStr.indexOf(a.charAt(j++));g=this._keyStr.indexOf(a.charAt(j++));h=this._keyStr.indexOf(a.charAt(j++));i=this._keyStr.indexOf(a.charAt(j++));c=f<<2|g>>4;d=(g&15)<<4|h>>2;e=(h&3)<<6|i;b=b+String.fromCharCode(c);if(h!=64){b=b+String.fromCharCode(d)}if(i!=64){b=b+String.fromCharCode(e)}}b=base64._utf8_decode(b);return b},_utf8_encode:function(a){a=a.replace(/\r\n/g,"\n");var b="";for(var c=0;c<a.length;c++){var d=a.charCodeAt(c);if(d<128){b+=String.fromCharCode(d)}else if(d>127&&d<2048){b+=String.fromCharCode(d>>6|192);b+=String.fromCharCode(d&63|128)}else{b+=String.fromCharCode(d>>12|224);b+=String.fromCharCode(d>>6&63|128);b+=String.fromCharCode(d&63|128)}}return b},_utf8_decode:function(a){var b="";var c=0;var d=c1=c2=0;while(c<a.length){d=a.charCodeAt(c);if(d<128){b+=String.fromCharCode(d);c++}else if(d>191&&d<224){c2=a.charCodeAt(c+1);b+=String.fromCharCode((d&31)<<6|c2&63);c+=2}else{c2=a.charCodeAt(c+1);c3=a.charCodeAt(c+2);b+=String.fromCharCode((d&15)<<12|(c2&63)<<6|c3&63);c+=3}}return b}};
-  
-  if (this.exports) {
-    this.exports = {
-      WebService: WebService
-     };
-  }
+
 })();
 
