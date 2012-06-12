@@ -942,15 +942,22 @@
 
   APICall.nodeDownload = function(data, xhr, config) {
     var out = {success: {}};
-    // TODO: Write file out to file system.
-    // out.success[config.key] = filehandle;
+    var nodeFileSystem = require('fs');
+    var filename = options.filename || key;
+    var filehandle = fs.writeFileSync(filename, data);
+    out.success[config.key] = filehandle;
     return out;
   }
 
   APICall.iframeDownload = function(data, xhr, config) {
     var out = {success: {}};
-    // TODO: Add a hidden iframe to document, download file, remove iframe.
-    // out.success[config.key] = iframe
+    var iframe = document.createElement('iframe');
+    iframe.id = 'downloader';
+    iframe.style.visibility = 'hidden';
+    document.body.appendChild(iframe);
+    iframe.src = this.url;
+    out.success[config.key] = iframe;
+    window.setTimeout(function(){document.removeChild(iframe)}, 1000*60);
     return out;
   }
 
