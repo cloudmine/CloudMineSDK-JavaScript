@@ -1,4 +1,4 @@
-/* CloudMine JavaScript Library v0.2 cloudmine.me | cloudmine.me/license */ 
+/* CloudMine JavaScript Library v1.0 cloudmine.me | cloudmine.me/license */ 
 
 (function() {
   /**
@@ -9,7 +9,7 @@
    * All events are at least guaranteed to have the callback signature: function(data, apicall).
    * supported events:
    *    200, 201, 400, 401, 404, 409, ok, created, badrequest, unauthorized, notfound, conflict,
-   *    success, error, complete, meta, result
+   *    success, error, complete, meta, result, abort
    * Event order: success callbacks, meta callbacks, result callbacks, error callbacks, complete
    * callbacks 
    *
@@ -238,7 +238,6 @@
       options = opts(this, options);
       if (!key) key = uuid();
 
-      
       // Warning: may not necessarily use ajax to perform upload.
       var apicall = new APICall({
         action: 'binary/' + key,
@@ -250,31 +249,47 @@
         processResponse: APICall.basicResponse
       });
 
+      var contentType = options.contentType;
+      var filename = options.filename || key;
+
       // Prepare given data.
-      // TODO:
-      //   FileAPI: Support Blob, File, FileReader.
-      //   Primitive Arrays: Support arrays like UInt32Array, etc.
-      //   Canvas: Need to get at the binary data from it and support it.
-      //   Node.JS: Support Buffers, Arrays, Specify by file name.
+      if (isString(file)) {
+        // Handle file names being passed.
+        if (ajax == NodeAJAX) {
+          console.log("Upload: Node string filename");
+          APICall.binaryUpload(apicall, require('fs').readFileSync(file), filename, contentType).done();
+        } else if (swfupload) {
+          console.log("Upload: swfupload filename"); 
+          // Try to upload using swfupload.
+        } else NotSupported();
+      } else if (File && file instanceof File) {
+        console.log("Upload: FileAPI File");
+        // Try to upload FileAPI File objects
+        if (!options.contentType) apicall.setContentType(file.type);
 
-      // Extract the data from the file first before uploading.
-      if (file instanceof File) {
         var reader = new FileReader();
-        reader.onload = function(e) {
-          apicall.setData(e.target.result).done();
-        };
-        reader.readAsBinaryString(file);
-      } else if (file instanceof Blob) {
-        // Blob Builder!
-      } else if (file instanceof ArrayBufferView) {
-        // Handle the primitive array types (Uint32Array, Int32Array, Float32Array, etc).
-      } else {
-        // Use the CanvasImageData instead.
-        if (file instanceof CanvasRenderingContext2D) file = file.getImageData();
-
-        if (file instanceof CanvasImageData) {
+        reader.onabort = function(e) {
+          apicall.setData("FileReader aborted").abort();
         }
-      }
+
+        reader.onerror = function(e) {
+          apicall.setData(e.target.error).abort();
+        }
+
+        reader.onload = function(e) {
+          APICall.binaryUpload(apicall, e.target.result, filename, contentType).done();
+        };
+
+        reader.readAsDataURL(file);
+      } else if (isBinary(file)) {
+        console.log("Upload: FileAPI Binary");
+        // Try to upload Binary blobs from WebGL
+        var blob = getBlob(file);
+        APICall.binaryUpload(apicall, blob, filename, contentType).done();
+      } else if (CanvasImageData && file instanceof CanvasImageData) {
+        console.log("Upload: Canvas Data");
+        APICall.binaryUpload(apicall, file, filename, contentType).done();
+      } else NotSupported();
 
       return apicall;
     },
@@ -292,7 +307,6 @@
      * @memberOf WebService
      */
     download: function(key, options) {
-
       // If we aren't given a mode, download the file directly to the user's computer.
       var processor = (ajax == NodeAJAX ? APICall.nodeDownload : APICall.iframeDownload);
       if (options.mode === 'node') processor = APICall.nodeDownload;
@@ -645,75 +659,79 @@
    *    'result: function(keys, responseObject)
    */
   function APICall(config) {
-    config = merge({}, defaultConfig, config);
+    this.config = merge({}, defaultConfig, config);
     this._events = {};
 
     // Fields that are available at the completion of the api call.
-    this.additionalData = config.callbackData;
-    this.contentType = config.contentType;
+    this.additionalData = this.config.callbackData;
     this.data = null;
     this.hasErrors = false;
-    this.requestData = config.data;
+    this.requestData = this.config.data;
     this.requestHeaders = {
-      'X-CloudMine-ApiKey': config.apikey,
-      'X-CloudMine-Agent': 'JS/0.2',
-      'Content-Type': config.contentType
+      'X-CloudMine-ApiKey': this.config.apikey,
+      'X-CloudMine-Agent': 'JS/1.0',
     };
     this.responseHeaders = {};
     this.responseText = null;
     this.status = null;
-    this.type = config.type || 'GET';
+    this.type = this.config.type || 'GET';
     
     // Build the URL and headers
-    var query = (config.query ? ("?" + stringify(config.query)) : "");
-    var root = '/', session = config.options.session_token, applevel = config.options.applevel;
+    var query = (this.config.query ? ("?" + stringify(this.config.query)) : "");
+    var root = '/', session = this.config.options.session_token, applevel = this.config.options.applevel;
     if (applevel === false || (applevel !== true && session != null)) {
       root = '/user/';
       if (session != null) this.requestHeaders['X-CloudMine-SessionToken'] = session;
     }
-    config.headers = merge(this.requestHeaders, config.headers);
-    this.url = [apiroot, "/v1/app/", config.appid, root, config.action, query].join("");
-    
-    var self = this;
-    config.complete = function(xhr) {
-      var data = xhr.responseText;
-      self.status = xhr.status;
-      self.responseText = data;
-      each(xhr.getAllResponseHeaders().split('\n'), function(item) {
-        var index = (item.indexOf(':'));
-        if (index > 0) self.responseHeaders[item.substring(0, index)] = item.substring(index + 2);
-      });
+    this.config.headers = merge(this.requestHeaders, this.config.headers);
+    this.setContentType(config.contentType || 'application/json');
+    this.url = [apiroot, "/v1/app/", this.config.appid, root, this.config.action, query].join("");
 
-      // If we can parse the data as JSON or store the original data.
-      try {
-        self.data = JSON.parse(data || "{}");
-      } catch (e) {
-        self.data = data;
+    var self = this, sConfig = this.config;
+    this.config.complete = function(xhr, status) {
+      var data;
+      if (xhr) {
+        data = xhr.responseText
+        self.status = xhr.status;
+        self.responseText = data;
+        each(xhr.getAllResponseHeaders().split('\n'), function(item) {
+          var index = (item.indexOf(':'));
+          if (index > 0) self.responseHeaders[item.substring(0, index)] = item.substring(index + 2);
+        });
+
+        // If we can parse the data as JSON or store the original data.
+        try {
+          self.data = JSON.parse(data || "{}");
+        } catch (e) {
+          self.data = data;
+        }
+      } else {
+        self.status = 'abort';
+        self.data = [ sConfig.data ];
       }
 
       // Parse the response only if a safe status
-      if (self.status >= 200 && self.status < 300) {
+      if (status == 'success' && self.status >= 200 && self.status < 300) {
         // Preprocess data coming in to hash-hash: [success/errors].[httpcode]
-        data = config.processResponse.call(self, self.data, xhr, self);
+        data = sConfig.processResponse.call(self, self.data, xhr, self);
       } else {
         data = {errors: {}};
-        if (isString(self.data)){
+        if (isString(self.data)) {
           self.data = { errors: [ self.data ] } // This way, we can rely on this structure data[statuscode].errors to always be an Array of one or more errors
         }
         data.errors[self.status] = self.data;
       }
 
-      // Trigger events from static context.
-      APICall.complete(self, data);
+      setTimeout(function() {
+        APICall.complete(self, data);
+      }, 1);
     }
 
     // Let script continue before triggering ajax call
-    if (!config.later && config.async) {
+    if (!this.config.later && this.config.async) {
       setTimeout(function() {
-        self.xhr = ajax(self.url, config);
+        self.xhr = ajax(self.url, sConfig);
       }, 1);
-    } else {
-      this._config = config;
     }
   }
 
@@ -789,6 +807,24 @@
     },
 
     /**
+     * Set the content-type for a waiting APICall.
+     * Note: this has no effect if the APICall has completed.
+     * @param {string} type The content-type to set. If not specified, this will use 'application/octet-stream'.
+     * @return The current APICall object
+     * @function
+     * @memberOf APICall
+     */
+    setContentType: function(type) {
+      type = type || 'application/octet-stream';
+      if (this.config) {
+        this.config.contentType = type;
+        this.requestHeaders['content-type'] = type;
+        this.config.headers['content-type'] = type;
+      }
+      return this;
+    },
+
+    /**
      * Aborts the current connection. This is ineffective for running synchronous calls or completed
      * calls. Synchronous calls can be achieved by setting async to false in WebService.
      * @return The current APICall object
@@ -796,10 +832,14 @@
      * @memberOf APICall
      */
     abort: function() {
-      if (!this._config && this.xhr) {
+      if (this.xhr) {
         this.xhr.abort();
         this.xhr = undefined;
         delete this.xhr;
+      } else if (this.config) {
+        this.config.complete.call(this, this.xhr, 'abort');
+        this.config = undefined;
+        delete this.config;
       }
       return this;
     },
@@ -811,8 +851,8 @@
      * @memberOf APICall
      */
     setData: function(data) {
-      if (!this.xhr && this._config) {
-        this._config.data = data;
+      if (!this.xhr && this.config) {
+        this.config.data = data;
       }
       return this;
     },
@@ -825,10 +865,10 @@
      * @memberOf APICall
      */
     done: function() {
-      if (!this.xhr && this._config) {
-        this.xhr = ajax(this.url, this._config);
-        this._config = undefined;
-        delete this._config;
+      if (!this.xhr && this.config) {
+        this.xhr = ajax(this.url, this.config);
+        this.config = undefined;
+        delete this.config;
       }
       return this;
     }
@@ -907,7 +947,7 @@
     }
 
     return out;
-  };
+  }
 
   // Use this if you know the response is not a standard cloudmine text response.
   // E.g. Binary response.
@@ -915,7 +955,26 @@
     var out = {success: {}};
     out.success = data;
     return out;
-  };
+  }
+
+  APICall.binaryUpload = function(apicall, data, filename, contentType) {
+    var boundary = uuid();
+    if (data.toDataURL) {
+      data = data.toDataURL(contentType);
+      if (!contentType) contentType = RegExp.$1;
+    } else if (!contentType) contentType = 'application/octet-stream';
+    data = data.replace(/^data:(.+?);base64,/, '');
+    apicall.setContentType('multipart/form-data; boundary=' + boundary);
+    return apicall.setData([
+      '--' + boundary,
+      'Content-Disposition: form-data; name="file"; filename="' + filename + '"',
+      'Content-Type: ' + contentType,
+      'Content-Transfer-Encoding: base64',
+      '',
+      data,
+      '--' + boundary + '--'
+    ].join('\r\n'));
+  }
 
   APICall.nodeDownload = function(data, xhr, config) {
     var out = {success: {}};
@@ -931,11 +990,7 @@
     return out;
   }
 
-  /**
-   * Internal minimal Node.js jQuery.ajax adapter.
-   */
-  
-  function NodeAJAX(uri, config) {
+  function HttpRequest(uri, config) {
     config = config || {};
     this.status = 400;
     this.responseText = [];
@@ -959,6 +1014,7 @@
     
     // Fire request.
     var self = this, cbContext = config.context || this;
+    this._textStatus = 'success';
     this._request = (opts.protocol === "http:" ? http : https).request(opts, function(response) {
       response.setEncoding('utf8');
 
@@ -973,7 +1029,6 @@
       response.on('end', function() {
         self._headers = stringify(response.headers);
         self.status = response.statusCode;
-        var textStatus = null;
 
         // Process data if necessary.
         var data = self.responseText = self.responseText.join('');
@@ -981,23 +1036,24 @@
           try {
             data = JSON.parse(data);
           } catch (e) {
-            textStatus = 'parsererror';
+            self._textStatus = 'parsererror';
           }
         }
 
         
-        if (self.status >= 200 && self.status < 300) {
+        if (self._textStatus == 'success' && self.status >= 200 && self.status < 300) {
           if (config.success) config.success.call(cbContext, data, 'success', self);
         } else if (config.error) {
           config.error.call(cbContext, self, 'error', self.responseText);
         }
-        if (config.complete) config.complete.call(cbContext, self, self.status);
+        if (config.complete) config.complete.call(cbContext, self, self._textStatus);
       });
     });
 
     this._request.on('error', function(e) {
       self.status = e.status;
       self.responseText = e.message;
+      self._textStatus = 'error';
       if (config.error) config.error.call(cbContext, self, 'error', e.message);
       if (config.complete) config.complete.call(cbContext, self, 'error');
     });
@@ -1005,7 +1061,7 @@
     this._request.end(config.data);
   }
 
-  NodeAJAX.prototype = {
+  HttpRequest.prototype = {
     getResponseHeader: function(header) {
       return this._headers[header];
     },
@@ -1016,6 +1072,7 @@
 
     abort: function() {
       if (this._request) {
+        this._textStatus = 'abort';
         this._request.abort();
         this._request = undefined;
         delete this._request;
@@ -1038,7 +1095,6 @@
   var defaultConfig = {
     async: true,
     later: false,
-    contentType: 'application/json',
     processData: false,
     dataType: 'text',
     processResponse: APICall.textResponse,
@@ -1064,7 +1120,7 @@
   var ArrayBuffer = this.ArrayBuffer;
   var CanvasRenderingContext2D = this.CanvasRenderingContext2D;
   var CanvasImageData = this.CanvasImageData;
-  var ArrayBufferView = this.ArrayBufferView;
+  var BinaryClasses = [ this.ArrayBuffer, this.Uint8Array, this.Uint8ClampedArray, this.Uint16Array, this.Uint32Array, this.Int8Array, this.Int16Array, this.Int32Array, this.Float32Array, this.Float64Array ];
   var File = this.File;
   var swfupload = this.swfupload;
 
@@ -1156,6 +1212,13 @@
     return item && typeof item === "string"
   }
 
+  function isBinary(item) {
+    if (isObject(item)) {
+      return BinaryClasses.indexOf(item.__proto__.constructor) > -1
+    }
+    return false;
+  }
+
   function isArray(item) {
     return isObject(item) && item.length != null
   }
@@ -1171,6 +1234,19 @@
       }
     }
     return true;
+  }
+
+  function getBlob(data) {
+    var blob;
+    try {
+      // Binary in javascript is such a nightmare.
+      blob = new Blob(file, {type: contentType});
+    } catch (e) {
+      var builder = new BlobBuilder();
+      builder.append(file);
+      blob = builder.getBlob(contentType);
+    }
+    return blob;
   }
 
   function stringify(map, sep, eol, ignore) {
@@ -1193,11 +1269,19 @@
     }
     return obj;
   }
+  
+  function NotSupported() {
+    throw new Error("Unsupported operation", "cloudmine.js");
+  }
+
+  function NodeAJAX(url, config) {
+    return new HttpRequest(url, config);
+  }
 
   // Export CloudMine objects.
   var http, https, ajax, url, apiroot = "https://api.cloudmine.me";
   if (!this.window) {
-    ajax = function(url, config) { return new NodeAJAX(url, config); };
+    ajax = NodeAJAX;
     url = require('url');
     http = require('http');
     https = require('https');
@@ -1207,7 +1291,7 @@
     window.cloudmine.WebService = WebService;
     if (window.cloudmine.API) apiroot = window.cloudmine.API;
     if (($ = this.jQuery || this.Zepto) != null) ajax = $.ajax;
-    else throw "Missing jQuery-compatible ajax implementation";
+    else throw new Error("Missing jQuery-compatible ajax implementation", "cloudmine.js");
   }
 
   // Base64 Library from http://www.webtoolkit.info

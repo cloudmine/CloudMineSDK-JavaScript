@@ -1,8 +1,10 @@
 // QUnit for Node: Redefine a few things.
+var inBrowser = true;
 if (!this.window) {
   function $(func) { func(); }
   cloudmine = {WebService: module.require('../js/cloudmine.js')};
   module = QUnit.module;
+  inBrowser = false;
 }
 
 
@@ -621,13 +623,13 @@ $(function() {
 
   var uploadKey = 'test_obj_' + noise(8);
 
-  // Test 12: Verify that we can upload files via Node.JS
+  // Test 12 (Node.JS): Verify that we can upload files
   asyncTest('Verify upload capability', function() {
-    if (!this.exports) {
+    if (inBrowser) {
       ok(true, 'Test skipped.');
       start();
     } else {
-      cm.upload(uploadKey, '../js/cloudmine.js', {contentType: 'text/cloudmine_test'}).on('error', function() {
+      cm.upload(uploadKey, '../js/cloudmine.js', {contentType: 'text/cloudminetest'}).on('error', function() {
         ok(false, 'Upload cloudmine.js as ' + uploadKey);
       }).on('success', function() {
         ok(true, 'Upload cloudmine.js as ' + uploadKey);
@@ -638,15 +640,15 @@ $(function() {
           ok(false, 'File was not uploaded.');
         }).on('success', function(data) {
           ok(data[key].name === 'cloudmine.js', 'File name is cloudmine.js');
-          ok(data[key].content_type === 'text/javascript', 'Content-type is text/cloudmine_test');
+          ok(data[key].content_type === 'text/cloudminetest', 'Content-type is text/cloudminetest');
         }).on('complete', start);
       }
     }
   });
 
-  // Test 13: Verify that we can download files and the file we uploaded did not get corrupted.
+  // Test 13 (Node.JS): Verify that we can download files and the file we uploaded did not get corrupted.
   asyncTest('Verify download capability', function() {
-    if (!this.exports) {
+    if (inBrowser) {
       ok(true, 'Test skipped.');
       start();
     } else {
@@ -669,12 +671,9 @@ $(function() {
     }
   });
 
-  
   // Test 14: Verify that we can upload files through the browser.
-  // This should test the method closest to what the browser supports (FileAPI or swfupload)
-  // This will have to be an interactive test.
   asyncTest('DND verify upload capability', function() {
-    if (this.exports) {
+    if (!inBrowser) {
       ok(true, 'Test skipped.');
       start();
     } else {
@@ -694,33 +693,37 @@ $(function() {
           e.preventDefault();
         }
 
-
         function waitForDrag() {
           if (dragContents) {
             clearInterval(waitForDrag.interval);
             elem.style.display = 'none';
             uploadContents();
           }
-        };
+        }
 
         function uploadContents() {
           if (dragContents === true) {
             ok(false, "Skipped uploading file.");
             start();
           } else {
-            cm.upload(uploadKey, dragContents).on('error', function() {
-              ok(false, "User specified file uploaded to server");
+            var aborted = false;
+            // FileReader may cause upload to abort.
+            cm.upload(uploadKey, dragContents, {contentType: 'text/cloudminetest'}).on('abort', function() {
+              aborted = true;
+              ok(false, "File reader aborted. If you are using chrome make sure you started with flags: --allow-file-access --allow-file-access-from-files");
+            }).on('error', function(data) {
+              if (!aborted) ok(false, "User specified file uploaded to server");
             }).on('success', function() {
               ok(true, "User specified file uploaded to server");
-            }).on('success', verifyUpload);
+            }).on('complete', verifyUpload);
           }
         }
         
         function verifyUpload() {
           cm.get(uploadKey).on('error', function() {
-            ok(false, "File exists on server");
+            ok(false, "File was uploaded to server");
           }).on('success', function() {
-            ok(true, "File exists on server");
+            ok(true, "File was uploaded to server");
           }).on('complete', start);
         }
 
@@ -737,10 +740,9 @@ $(function() {
     }
   });
 
-  // This should test the method closest to what the browser supports.
-  // This will have to be an interactive test.
+  // Test 15: Verify that we can download a file.
   asyncTest('DND verify download capability', function() {
-    if (this.exports) {
+    if (!inBrowser) {
       ok(true, 'Test skipped.');
       start();
     } else {
@@ -749,6 +751,7 @@ $(function() {
     }
   });
 
+  // Test 16: Verify that the file we uploaded is deleted.
   asyncTest('Delete file capability', function() {
     cm.destroy(uploadKey).on('error', function() {
       ok(false, 'File does not exist on server');
