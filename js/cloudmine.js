@@ -265,14 +265,34 @@
         };
         reader.readAsBinaryString(file);
       } else if (file instanceof Blob) {
-        // Blob Builder!
+        var reader = new FileReader();
+        reader.onload = function(e) {
+          apicall.setData(e.target.result).done();
+        }
       } else if (file instanceof ArrayBufferView) {
-        // Handle the primitive array types (Uint32Array, Int32Array, Float32Array, etc).
+        var newBlob = new Blob(file);
+        var reader = new FileReader();
+        reader.onload = function(e) {
+          apicall.setData(e.target.result).done();
+        }
+        reader.readAsBinaryString(newBlob);
       } else {
         // Use the CanvasImageData instead.
         if (file instanceof CanvasRenderingContext2D) file = file.getImageData();
 
         if (file instanceof CanvasImageData) {
+          var canvasImageLength = file.length;
+          var byteArray = new Uint8Array(canvasImageLength);
+          for (var i = 0; i < canvasImageLength; i++)
+          {
+            byteArray[i] = file[i];
+          }
+          var newBlob = new Blob(byteArray);
+          var reader = new FileReader();
+          reader.onload = function(e) {
+            apicall.setData(e.target.result).done();
+          }
+          reader.readAsBinaryString(newBlob);
         }
       }
 
