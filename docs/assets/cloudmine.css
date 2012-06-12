@@ -59,7 +59,7 @@ code.code {
   -webkit-box-shadow: inset 0px 0px 2px rgba(0, 0, 0, 0.2);
   background: url("grain.gif");
   display: block;
-  padding: 10px;
+  padding: 0px;
   word-wrap: break-word;
   color: #111111;
   margin-bottom: 10px;
@@ -112,19 +112,6 @@ form.formtastic input[type='submit'] {
   -moz-border-radius: 10px;
   -ms-border-radius: 10px;
   -webkit-border-radius: 10px;
-  background-image: linear-gradient(90deg, #0e87be, #85c2de);
-  background-image: -webkit-linear-gradient(90deg, #0e87be, #85c2de);
-  background-image: -moz-linear-gradient(90deg, #0e87be, #85c2de);
-  background-image: -ms-linear-gradient(90deg, #0e87be, #85c2de);
-  -ms-filter: "filter:progid:DXImageTransform.Microsoft.Gradient(Enabled='true', GradientType=0, StartColorStr=#85c2de, EndColorStr=#0e87be)";
-  filter: "filter:progid:DXImageTransform.Microsoft.Gradient(Enabled='true', GradientType=0, StartColorStr=#85c2de, EndColorStr=#0e87be)";
-  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
-  -moz-box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
-  -webkit-box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
-  text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.4);
-  -moz-text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.4);
-  -webkit-text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.4);
-  -ms-text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.4);
   border: none;
   font-family: Arial, Helvetica, Geneva, sans-serif;
   font-size: 13px;
@@ -311,6 +298,59 @@ form.formtastic input[type='submit'].important[disabled]:active:focus {
   -moz-box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.2);
   -webkit-box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.2);
 }
+button.download {
+  box-shadow: 0px 0px 2px #2877a4, inset 0px 6px 20px #cbedf4;
+  -moz-box-shadow: 0px 0px 2px #2877a4, inset 0px 6px 20px #cbedf4;
+  -webkit-box-shadow: 0px 0px 2px #2877a4, inset 0px 6px 20px #cbedf4;
+  border-radius: 5px;
+  -moz-border-radius: 5px;
+  -ms-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  padding: 20px 20px 20px 60px;
+  color: #000;
+  font-size: 16px;
+  cursor: pointer;
+  background: url("grain-accent.gif");
+  position: relative;
+}
+button.download:hover {
+  background-image: linear-gradient(90deg, #0981bb, #1090ce);
+  background-image: -webkit-linear-gradient(90deg, #0981bb, #1090ce);
+  background-image: -moz-linear-gradient(90deg, #0981bb, #1090ce);
+  background-image: -ms-linear-gradient(90deg, #0981bb, #1090ce);
+  -ms-filter: "filter:progid:DXImageTransform.Microsoft.Gradient(Enabled='true', GradientType=0, StartColorStr=#1090ce, EndColorStr=#0981bb)";
+  filter: "filter:progid:DXImageTransform.Microsoft.Gradient(Enabled='true', GradientType=0, StartColorStr=#1090ce, EndColorStr=#0981bb)";
+  box-shadow: 0px 0px 2px #2877a4;
+  -moz-box-shadow: 0px 0px 2px #2877a4;
+  -webkit-box-shadow: 0px 0px 2px #2877a4;
+  color: #FFF;
+}
+button.download:before {
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  border-top-left-radius: 5px;
+  border-bottom-left-radius: 5px;
+  -moz-border-top-left-radius: 5px;
+  -moz-border-bottom-left-radius: 5px;
+  -ms-bottom-left-border-radius: 5px;
+  -ms-top-left-border-radius: 5px;
+  -webkit-border-top-left-radius: 5px;
+  -webkit-border-bottom-left-radius: 5px;
+  padding: 11px 14px 11px 11px;
+  background-image: linear-gradient(90deg, #0981bb, #1090ce);
+  background-image: -webkit-linear-gradient(90deg, #0981bb, #1090ce);
+  background-image: -moz-linear-gradient(90deg, #0981bb, #1090ce);
+  background-image: -ms-linear-gradient(90deg, #0981bb, #1090ce);
+  -ms-filter: "filter:progid:DXImageTransform.Microsoft.Gradient(Enabled='true', GradientType=0, StartColorStr=#1090ce, EndColorStr=#0981bb)";
+  filter: "filter:progid:DXImageTransform.Microsoft.Gradient(Enabled='true', GradientType=0, StartColorStr=#1090ce, EndColorStr=#0981bb)";
+}
+button.download.min:before {
+  content: asset-url('file-icon-js-min.png');
+}
+button.download.js:before {
+  content: asset-url('file-icon-js.png');
+}
 span.ui-icon,
 a.ui-icon {
   display: inline-block;
@@ -322,9 +362,6 @@ p {
 input,
 textarea,
 form.formtastic input {
-  box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.2);
-  -moz-box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.2);
-  -webkit-box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.2);
   border: 1px solid;
   border-color: rgba(24, 158, 223, 0.5) rgba(9, 129, 187, 0.5) rgba(9, 129, 187, 0.5) rgba(24, 158, 223, 0.5);
   border-radius: 3px;
@@ -348,58 +385,46 @@ div.clear {
 div.clear > * {
   display: none;
 }
-.cloudmine-list,
 .cloudmine-listview {
   list-style: none;
   padding: 0px;
   margin: 0px;
 }
-.cloudmine-list.moving,
 .cloudmine-listview.moving {
   position: absolute !important;
   width: 100%;
 }
-.cloudmine-list li,
 .cloudmine-listview li {
   margin: 0px;
   font-size: 11.700000000000001px;
   padding: 0px 0px 0px 10px;
 }
-.cloudmine-list li[disabled],
 .cloudmine-listview li[disabled] {
   opacity: 0.5;
 }
-.cloudmine-list li[disabled] h1,
 .cloudmine-listview li[disabled] h1,
-.cloudmine-list li[disabled] a,
 .cloudmine-listview li[disabled] a {
   cursor: default !important;
   background: transparent !important;
   color: #111111 !important;
 }
-.cloudmine-list li.collapsible > h1 > a,
 .cloudmine-listview li.collapsible > h1 > a {
   background-image: url("expander-open.png");
   background-position: 10px 12px;
 }
-.cloudmine-list li.collapsible.collapsed > h1 > a,
 .cloudmine-listview li.collapsible.collapsed > h1 > a {
   background-image: url("expander-closed.png");
   background-position: 10px 10px;
 }
-.cloudmine-list li.collapsible > a,
 .cloudmine-listview li.collapsible > a {
   background-image: url("expander-open.png");
   background-position: 10px 8px;
 }
-.cloudmine-list li.collapsible.collapsed > a,
 .cloudmine-listview li.collapsible.collapsed > a {
   background-image: url("expander-closed.png");
   background-position: 10px 6px;
 }
-.cloudmine-list li.selected h1,
 .cloudmine-listview li.selected h1,
-.cloudmine-list li.active h1,
 .cloudmine-listview li.active h1 {
   background-image: linear-gradient(90deg, #0981bb, #1090ce);
   background-image: -webkit-linear-gradient(90deg, #0981bb, #1090ce);
@@ -409,9 +434,7 @@ div.clear > * {
   filter: "filter:progid:DXImageTransform.Microsoft.Gradient(Enabled='true', GradientType=0, StartColorStr=#1090ce, EndColorStr=#0981bb)";
   color: #fefefe;
 }
-.cloudmine-list li.selected > a,
 .cloudmine-listview li.selected > a,
-.cloudmine-list li.active > a,
 .cloudmine-listview li.active > a {
   border-radius: 5px;
   -moz-border-radius: 5px;
@@ -420,9 +443,7 @@ div.clear > * {
   background-color: #1090ce;
   color: #fefefe;
 }
-.cloudmine-list li h1,
 .cloudmine-listview li h1,
-.cloudmine-list li h2,
 .cloudmine-listview li h2 {
   border-radius: 5px;
   -moz-border-radius: 5px;
@@ -444,40 +465,26 @@ div.clear > * {
   color: #111111;
   padding: 0px;
 }
-.cloudmine-list li h1 a,
 .cloudmine-listview li h1 a,
-.cloudmine-list li h2 a,
 .cloudmine-listview li h2 a,
-.cloudmine-list li h1 a:hover,
 .cloudmine-listview li h1 a:hover,
-.cloudmine-list li h2 a:hover,
 .cloudmine-listview li h2 a:hover {
   padding-top: 5px;
   padding-bottom: 5px;
 }
-.cloudmine-list li h1 a.back,
 .cloudmine-listview li h1 a.back,
-.cloudmine-list li h2 a.back,
 .cloudmine-listview li h2 a.back,
-.cloudmine-list li h1 a:hover.back,
 .cloudmine-listview li h1 a:hover.back,
-.cloudmine-list li h2 a:hover.back,
 .cloudmine-listview li h2 a:hover.back {
   background-position: 3% 9px;
 }
-.cloudmine-list li h1 a.next,
 .cloudmine-listview li h1 a.next,
-.cloudmine-list li h2 a.next,
 .cloudmine-listview li h2 a.next,
-.cloudmine-list li h1 a:hover.next,
 .cloudmine-listview li h1 a:hover.next,
-.cloudmine-list li h2 a:hover.next,
 .cloudmine-listview li h2 a:hover.next {
   background-position: 97% 9px;
 }
-.cloudmine-list li h1:hover,
 .cloudmine-listview li h1:hover,
-.cloudmine-list li h2:hover,
 .cloudmine-listview li h2:hover {
   background-image: linear-gradient(90deg, #0981bb, #1090ce);
   background-image: -webkit-linear-gradient(90deg, #0981bb, #1090ce);
@@ -487,21 +494,16 @@ div.clear > * {
   filter: "filter:progid:DXImageTransform.Microsoft.Gradient(Enabled='true', GradientType=0, StartColorStr=#1090ce, EndColorStr=#0981bb)";
   color: #fefefe;
 }
-.cloudmine-list li h1:hover a,
 .cloudmine-listview li h1:hover a,
-.cloudmine-list li h2:hover a,
 .cloudmine-listview li h2:hover a {
   background-color: transparent;
   color: #fefefe;
 }
-.cloudmine-list li h2,
 .cloudmine-listview li h2 {
   font-size: 15.6px;
   line-height: 19.5px;
 }
-.cloudmine-list li a,
 .cloudmine-listview li a,
-.cloudmine-list li a:visited,
 .cloudmine-listview li a:visited {
   user-select: none;
   -webkit-user-select: none;
@@ -517,65 +519,41 @@ div.clear > * {
   text-overflow: ellipsis;
   overflow: hidden;
 }
-.cloudmine-list li a:hover,
 .cloudmine-listview li a:hover,
-.cloudmine-list li a:visited:hover,
 .cloudmine-listview li a:visited:hover,
-.cloudmine-list li a:focus,
 .cloudmine-listview li a:focus,
-.cloudmine-list li a:visited:focus,
 .cloudmine-listview li a:visited:focus,
-.cloudmine-list li a:active,
 .cloudmine-listview li a:active,
-.cloudmine-list li a:visited:active,
 .cloudmine-listview li a:visited:active {
   color: #fefefe;
   text-decoration: none;
 }
-.cloudmine-list li a:hover:hover,
 .cloudmine-listview li a:hover:hover,
-.cloudmine-list li a:visited:hover:hover,
 .cloudmine-listview li a:visited:hover:hover,
-.cloudmine-list li a:focus:hover,
 .cloudmine-listview li a:focus:hover,
-.cloudmine-list li a:visited:focus:hover,
 .cloudmine-listview li a:visited:focus:hover,
-.cloudmine-list li a:active:hover,
 .cloudmine-listview li a:active:hover,
-.cloudmine-list li a:visited:active:hover,
 .cloudmine-listview li a:visited:active:hover,
-.cloudmine-list li a:hover:focus,
 .cloudmine-listview li a:hover:focus,
-.cloudmine-list li a:visited:hover:focus,
 .cloudmine-listview li a:visited:hover:focus,
-.cloudmine-list li a:focus:focus,
 .cloudmine-listview li a:focus:focus,
-.cloudmine-list li a:visited:focus:focus,
 .cloudmine-listview li a:visited:focus:focus,
-.cloudmine-list li a:active:focus,
 .cloudmine-listview li a:active:focus,
-.cloudmine-list li a:visited:active:focus,
 .cloudmine-listview li a:visited:active:focus {
   color: #fefefe;
   text-decoration: none;
 }
-.cloudmine-list li a.back,
 .cloudmine-listview li a.back,
-.cloudmine-list li a:visited.back,
 .cloudmine-listview li a:visited.back {
   background-position: 3% 4px;
   background-image: url("expander-prev.png");
 }
-.cloudmine-list li a.next,
 .cloudmine-listview li a.next,
-.cloudmine-list li a:visited.next,
 .cloudmine-listview li a:visited.next {
   background-position: 97% 4px;
   background-image: url("expander-next.png");
 }
-.cloudmine-list li a:hover,
 .cloudmine-listview li a:hover,
-.cloudmine-list li a:visited:hover,
 .cloudmine-listview li a:visited:hover {
   border-radius: 5px;
   -moz-border-radius: 5px;
@@ -622,35 +600,61 @@ div.clear > * {
   background: #65b7df;
   color: #f5f5f5;
 }
-.cloudmine-docs-list {
+.cloudmine-list {
   list-style: none;
   padding-left: 14px;
 }
-.cloudmine-docs-list ul {
+.cloudmine-list ul {
   padding-left: 25px;
+  list-style: none;
 }
-.cloudmine-docs-list a:hover > li,
-.cloudmine-docs-list a.selected > li {
-  box-shadow: 0px 0px 2px rgba(0, 0, 0, 0.2);
-  -moz-box-shadow: 0px 0px 2px rgba(0, 0, 0, 0.2);
-  -webkit-box-shadow: 0px 0px 2px rgba(0, 0, 0, 0.2);
-  background-image: linear-gradient(90deg, #0981bb, #1090ce);
-  background-image: -webkit-linear-gradient(90deg, #0981bb, #1090ce);
-  background-image: -moz-linear-gradient(90deg, #0981bb, #1090ce);
-  background-image: -ms-linear-gradient(90deg, #0981bb, #1090ce);
-  -ms-filter: "filter:progid:DXImageTransform.Microsoft.Gradient(Enabled='true', GradientType=0, StartColorStr=#1090ce, EndColorStr=#0981bb)";
-  filter: "filter:progid:DXImageTransform.Microsoft.Gradient(Enabled='true', GradientType=0, StartColorStr=#1090ce, EndColorStr=#0981bb)";
-  color: #FFF;
+.cloudmine-list > li {
+  margin: 0px 0px 10px 0px;
+  width: 217px;
 }
-.cloudmine-docs-list a,
-.cloudmine-docs-list a:visited {
+.cloudmine-list > li > ul {
+  margin-top: 15px;
+}
+.cloudmine-list > li > ul a,
+.cloudmine-list > li > ul a:active {
   color: #1090ce;
+  text-decoration: none;
+  cursor: pointer;
+}
+.cloudmine-list > li > ul a:hover,
+.cloudmine-list > li > ul a:active:hover,
+.cloudmine-list > li > ul a:focus,
+.cloudmine-list > li > ul a:active:focus {
+  color: #1090ce;
+  text-decoration: none;
+}
+.cloudmine-list > li > ul a:visited,
+.cloudmine-list > li > ul a:active:visited {
+  color: #1090ce;
+  text-decoration: none;
+}
+.cloudmine-list > li > ul a:visited:hover,
+.cloudmine-list > li > ul a:active:visited:hover,
+.cloudmine-list > li > ul a:visited:focus,
+.cloudmine-list > li > ul a:active:visited:focus {
+  color: #65b7df;
+  text-decoration: none;
+}
+.cloudmine-list > li > ul a,
+.cloudmine-list > li > ul a:visited {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
   font-size: 16px;
 }
-.cloudmine-docs-list a:hover {
-  color: #23acee;
+.cloudmine-list > li > ul a:hover {
+  color: #65b7df;
 }
-.cloudmine-docs-list a > li {
+.cloudmine-list > li > a,
+.cloudmine-list > li > a:visited {
+  color: #1090ce;
+  font-size: 16px;
   padding: 7px 12px;
   font-size: 16px;
   box-shadow: 0px 0px 2px rgba(0, 0, 0, 0.2), inset 0px -14px 20px #ffffff;
@@ -663,6 +667,97 @@ div.clear > * {
   color: #000;
   font-family: Arial, Helvetica, Geneva, sans-serif;
   font-weight: normal;
+  display: block;
+  width: 100%;
+}
+.cloudmine-list > li > a a,
+.cloudmine-list > li > a:visited a,
+.cloudmine-list > li > a a:active,
+.cloudmine-list > li > a:visited a:active {
+  color: #000000;
+  text-decoration: none;
+  cursor: pointer;
+}
+.cloudmine-list > li > a a:hover,
+.cloudmine-list > li > a:visited a:hover,
+.cloudmine-list > li > a a:active:hover,
+.cloudmine-list > li > a:visited a:active:hover,
+.cloudmine-list > li > a a:focus,
+.cloudmine-list > li > a:visited a:focus,
+.cloudmine-list > li > a a:active:focus,
+.cloudmine-list > li > a:visited a:active:focus {
+  color: #000000;
+  text-decoration: none;
+}
+.cloudmine-list > li > a a:visited,
+.cloudmine-list > li > a:visited a:visited,
+.cloudmine-list > li > a a:active:visited,
+.cloudmine-list > li > a:visited a:active:visited {
+  color: #000000;
+  text-decoration: none;
+}
+.cloudmine-list > li > a a:visited:hover,
+.cloudmine-list > li > a:visited a:visited:hover,
+.cloudmine-list > li > a a:active:visited:hover,
+.cloudmine-list > li > a:visited a:active:visited:hover,
+.cloudmine-list > li > a a:visited:focus,
+.cloudmine-list > li > a:visited a:visited:focus,
+.cloudmine-list > li > a a:active:visited:focus,
+.cloudmine-list > li > a:visited a:active:visited:focus {
+  color: #ffffff;
+  text-decoration: none;
+}
+.cloudmine-list > li > a:hover,
+.cloudmine-list > li > a.selected {
+  box-shadow: 0px 0px 2px rgba(0, 0, 0, 0.2);
+  -moz-box-shadow: 0px 0px 2px rgba(0, 0, 0, 0.2);
+  -webkit-box-shadow: 0px 0px 2px rgba(0, 0, 0, 0.2);
+  background-image: linear-gradient(90deg, #0981bb, #1090ce);
+  background-image: -webkit-linear-gradient(90deg, #0981bb, #1090ce);
+  background-image: -moz-linear-gradient(90deg, #0981bb, #1090ce);
+  background-image: -ms-linear-gradient(90deg, #0981bb, #1090ce);
+  -ms-filter: "filter:progid:DXImageTransform.Microsoft.Gradient(Enabled='true', GradientType=0, StartColorStr=#1090ce, EndColorStr=#0981bb)";
+  filter: "filter:progid:DXImageTransform.Microsoft.Gradient(Enabled='true', GradientType=0, StartColorStr=#1090ce, EndColorStr=#0981bb)";
+  color: #FFF;
+}
+.cloudmine-list li[disabled] {
+  opacity: 0.5;
+}
+.cloudmine-list li[disabled] a,
+.cloudmine-list li[disabled] a:active {
+  color: #000000;
+  text-decoration: none;
+  cursor: pointer;
+}
+.cloudmine-list li[disabled] a:hover,
+.cloudmine-list li[disabled] a:active:hover,
+.cloudmine-list li[disabled] a:focus,
+.cloudmine-list li[disabled] a:active:focus {
+  color: #000000;
+  text-decoration: none;
+}
+.cloudmine-list li[disabled] a:visited,
+.cloudmine-list li[disabled] a:active:visited {
+  color: #000000;
+  text-decoration: none;
+}
+.cloudmine-list li[disabled] a:visited:hover,
+.cloudmine-list li[disabled] a:active:visited:hover,
+.cloudmine-list li[disabled] a:visited:focus,
+.cloudmine-list li[disabled] a:active:visited:focus {
+  color: #000000;
+  text-decoration: none;
+}
+.cloudmine-list li[disabled] a:hover {
+  cursor: default;
+  box-shadow: 0px 0px 2px rgba(0, 0, 0, 0.2), inset 0px -14px 20px #ffffff;
+  -moz-box-shadow: 0px 0px 2px rgba(0, 0, 0, 0.2), inset 0px -14px 20px #ffffff;
+  -webkit-box-shadow: 0px 0px 2px rgba(0, 0, 0, 0.2), inset 0px -14px 20px #ffffff;
+  background-image: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 tr.dragging {
   opacity: 0.6;
@@ -689,6 +784,8 @@ table th,
   line-height: 14.625000000000002px;
   padding: 5px 10px;
   margin: 0px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  text-align: left;
 }
 table th + th,
 .cloudmine-table th + th {
@@ -764,6 +861,11 @@ table tfoot,
 table tfoot td.pagination,
 .cloudmine-table tfoot td.pagination {
   text-align: right;
+}
+.cloudmine-table {
+  box-shadow: inset 0px 0px 2px rgba(0, 0, 0, 0.2);
+  -moz-box-shadow: inset 0px 0px 2px rgba(0, 0, 0, 0.2);
+  -webkit-box-shadow: inset 0px 0px 2px rgba(0, 0, 0, 0.2);
 }
 .cloudmine-backbonetable {
   width: 100%;
@@ -968,180 +1070,162 @@ body div.page-content > nav {
 }
 body div.page-content > nav .cloudmine-listview ul {
   list-style: none;
-  padding: 0px;
-  margin: 0px;
+  padding-left: 14px;
 }
-body div.page-content > nav .cloudmine-listview ul.moving {
-  position: absolute !important;
-  width: 100%;
+body div.page-content > nav .cloudmine-listview ul ul {
+  padding-left: 25px;
+  list-style: none;
 }
-body div.page-content > nav .cloudmine-listview ul li {
-  margin: 0px;
-  font-size: 11.700000000000001px;
-  padding: 0px 0px 0px 10px;
+body div.page-content > nav .cloudmine-listview ul > li {
+  margin: 0px 0px 10px 0px;
+  width: 217px;
 }
-body div.page-content > nav .cloudmine-listview ul li[disabled] {
-  opacity: 0.5;
+body div.page-content > nav .cloudmine-listview ul > li > ul {
+  margin-top: 15px;
 }
-body div.page-content > nav .cloudmine-listview ul li[disabled] h1,
-body div.page-content > nav .cloudmine-listview ul li[disabled] a {
-  cursor: default !important;
-  background: transparent !important;
-  color: #111111 !important;
+body div.page-content > nav .cloudmine-listview ul > li > ul a,
+body div.page-content > nav .cloudmine-listview ul > li > ul a:active {
+  color: #1090ce;
+  text-decoration: none;
+  cursor: pointer;
 }
-body div.page-content > nav .cloudmine-listview ul li.collapsible > h1 > a {
-  background-image: url("expander-open.png");
-  background-position: 10px 12px;
+body div.page-content > nav .cloudmine-listview ul > li > ul a:hover,
+body div.page-content > nav .cloudmine-listview ul > li > ul a:active:hover,
+body div.page-content > nav .cloudmine-listview ul > li > ul a:focus,
+body div.page-content > nav .cloudmine-listview ul > li > ul a:active:focus {
+  color: #1090ce;
+  text-decoration: none;
 }
-body div.page-content > nav .cloudmine-listview ul li.collapsible.collapsed > h1 > a {
-  background-image: url("expander-closed.png");
-  background-position: 10px 10px;
+body div.page-content > nav .cloudmine-listview ul > li > ul a:visited,
+body div.page-content > nav .cloudmine-listview ul > li > ul a:active:visited {
+  color: #1090ce;
+  text-decoration: none;
 }
-body div.page-content > nav .cloudmine-listview ul li.collapsible > a {
-  background-image: url("expander-open.png");
-  background-position: 10px 8px;
+body div.page-content > nav .cloudmine-listview ul > li > ul a:visited:hover,
+body div.page-content > nav .cloudmine-listview ul > li > ul a:active:visited:hover,
+body div.page-content > nav .cloudmine-listview ul > li > ul a:visited:focus,
+body div.page-content > nav .cloudmine-listview ul > li > ul a:active:visited:focus {
+  color: #65b7df;
+  text-decoration: none;
 }
-body div.page-content > nav .cloudmine-listview ul li.collapsible.collapsed > a {
-  background-image: url("expander-closed.png");
-  background-position: 10px 6px;
-}
-body div.page-content > nav .cloudmine-listview ul li.selected h1,
-body div.page-content > nav .cloudmine-listview ul li.active h1 {
-  background-image: linear-gradient(90deg, #0981bb, #1090ce);
-  background-image: -webkit-linear-gradient(90deg, #0981bb, #1090ce);
-  background-image: -moz-linear-gradient(90deg, #0981bb, #1090ce);
-  background-image: -ms-linear-gradient(90deg, #0981bb, #1090ce);
-  -ms-filter: "filter:progid:DXImageTransform.Microsoft.Gradient(Enabled='true', GradientType=0, StartColorStr=#1090ce, EndColorStr=#0981bb)";
-  filter: "filter:progid:DXImageTransform.Microsoft.Gradient(Enabled='true', GradientType=0, StartColorStr=#1090ce, EndColorStr=#0981bb)";
-  color: #fefefe;
-}
-body div.page-content > nav .cloudmine-listview ul li.selected > a,
-body div.page-content > nav .cloudmine-listview ul li.active > a {
-  border-radius: 5px;
-  -moz-border-radius: 5px;
-  -ms-border-radius: 5px;
-  -webkit-border-radius: 5px;
-  background-color: #1090ce;
-  color: #fefefe;
-}
-body div.page-content > nav .cloudmine-listview ul li h1,
-body div.page-content > nav .cloudmine-listview ul li h2 {
-  border-radius: 5px;
-  -moz-border-radius: 5px;
-  -ms-border-radius: 5px;
-  -webkit-border-radius: 5px;
-  background-image: linear-gradient(90deg, #ffffff, #ffffff);
-  background-image: -webkit-linear-gradient(90deg, #ffffff, #ffffff);
-  background-image: -moz-linear-gradient(90deg, #ffffff, #ffffff);
-  background-image: -ms-linear-gradient(90deg, #ffffff, #ffffff);
-  -ms-filter: "filter:progid:DXImageTransform.Microsoft.Gradient(Enabled='true', GradientType=0, StartColorStr=#ffffff, EndColorStr=#ffffff)";
-  filter: "filter:progid:DXImageTransform.Microsoft.Gradient(Enabled='true', GradientType=0, StartColorStr=#ffffff, EndColorStr=#ffffff)";
-  box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.4);
-  -moz-box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.4);
-  -webkit-box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.4);
-  margin: 0px 0px 5px 0px;
-  font-size: 18.2px;
-  line-height: 22.75px;
-  font-weight: normal;
-  color: #111111;
-  padding: 0px;
-}
-body div.page-content > nav .cloudmine-listview ul li h1 a,
-body div.page-content > nav .cloudmine-listview ul li h2 a,
-body div.page-content > nav .cloudmine-listview ul li h1 a:hover,
-body div.page-content > nav .cloudmine-listview ul li h2 a:hover {
-  padding-top: 5px;
-  padding-bottom: 5px;
-}
-body div.page-content > nav .cloudmine-listview ul li h1 a.back,
-body div.page-content > nav .cloudmine-listview ul li h2 a.back,
-body div.page-content > nav .cloudmine-listview ul li h1 a:hover.back,
-body div.page-content > nav .cloudmine-listview ul li h2 a:hover.back {
-  background-position: 3% 9px;
-}
-body div.page-content > nav .cloudmine-listview ul li h1 a.next,
-body div.page-content > nav .cloudmine-listview ul li h2 a.next,
-body div.page-content > nav .cloudmine-listview ul li h1 a:hover.next,
-body div.page-content > nav .cloudmine-listview ul li h2 a:hover.next {
-  background-position: 97% 9px;
-}
-body div.page-content > nav .cloudmine-listview ul li h1:hover,
-body div.page-content > nav .cloudmine-listview ul li h2:hover {
-  background-image: linear-gradient(90deg, #0981bb, #1090ce);
-  background-image: -webkit-linear-gradient(90deg, #0981bb, #1090ce);
-  background-image: -moz-linear-gradient(90deg, #0981bb, #1090ce);
-  background-image: -ms-linear-gradient(90deg, #0981bb, #1090ce);
-  -ms-filter: "filter:progid:DXImageTransform.Microsoft.Gradient(Enabled='true', GradientType=0, StartColorStr=#1090ce, EndColorStr=#0981bb)";
-  filter: "filter:progid:DXImageTransform.Microsoft.Gradient(Enabled='true', GradientType=0, StartColorStr=#1090ce, EndColorStr=#0981bb)";
-  color: #fefefe;
-}
-body div.page-content > nav .cloudmine-listview ul li h1:hover a,
-body div.page-content > nav .cloudmine-listview ul li h2:hover a {
-  background-color: transparent;
-  color: #fefefe;
-}
-body div.page-content > nav .cloudmine-listview ul li h2 {
-  font-size: 15.6px;
-  line-height: 19.5px;
-}
-body div.page-content > nav .cloudmine-listview ul li a,
-body div.page-content > nav .cloudmine-listview ul li a:visited {
+body div.page-content > nav .cloudmine-listview ul > li > ul a,
+body div.page-content > nav .cloudmine-listview ul > li > ul a:visited {
   user-select: none;
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
-  color: inherit;
-  text-decoration: none;
-  background: transparent no-repeat;
-  display: block;
-  padding: 5px 26px;
-  cursor: pointer;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  overflow: hidden;
+  font-size: 16px;
 }
-body div.page-content > nav .cloudmine-listview ul li a:hover,
-body div.page-content > nav .cloudmine-listview ul li a:visited:hover,
-body div.page-content > nav .cloudmine-listview ul li a:focus,
-body div.page-content > nav .cloudmine-listview ul li a:visited:focus,
-body div.page-content > nav .cloudmine-listview ul li a:active,
-body div.page-content > nav .cloudmine-listview ul li a:visited:active {
-  color: #fefefe;
-  text-decoration: none;
+body div.page-content > nav .cloudmine-listview ul > li > ul a:hover {
+  color: #65b7df;
 }
-body div.page-content > nav .cloudmine-listview ul li a:hover:hover,
-body div.page-content > nav .cloudmine-listview ul li a:visited:hover:hover,
-body div.page-content > nav .cloudmine-listview ul li a:focus:hover,
-body div.page-content > nav .cloudmine-listview ul li a:visited:focus:hover,
-body div.page-content > nav .cloudmine-listview ul li a:active:hover,
-body div.page-content > nav .cloudmine-listview ul li a:visited:active:hover,
-body div.page-content > nav .cloudmine-listview ul li a:hover:focus,
-body div.page-content > nav .cloudmine-listview ul li a:visited:hover:focus,
-body div.page-content > nav .cloudmine-listview ul li a:focus:focus,
-body div.page-content > nav .cloudmine-listview ul li a:visited:focus:focus,
-body div.page-content > nav .cloudmine-listview ul li a:active:focus,
-body div.page-content > nav .cloudmine-listview ul li a:visited:active:focus {
-  color: #fefefe;
-  text-decoration: none;
-}
-body div.page-content > nav .cloudmine-listview ul li a.back,
-body div.page-content > nav .cloudmine-listview ul li a:visited.back {
-  background-position: 3% 4px;
-  background-image: url("expander-prev.png");
-}
-body div.page-content > nav .cloudmine-listview ul li a.next,
-body div.page-content > nav .cloudmine-listview ul li a:visited.next {
-  background-position: 97% 4px;
-  background-image: url("expander-next.png");
-}
-body div.page-content > nav .cloudmine-listview ul li a:hover,
-body div.page-content > nav .cloudmine-listview ul li a:visited:hover {
+body div.page-content > nav .cloudmine-listview ul > li > a,
+body div.page-content > nav .cloudmine-listview ul > li > a:visited {
+  color: #1090ce;
+  font-size: 16px;
+  padding: 7px 12px;
+  font-size: 16px;
+  box-shadow: 0px 0px 2px rgba(0, 0, 0, 0.2), inset 0px -14px 20px #ffffff;
+  -moz-box-shadow: 0px 0px 2px rgba(0, 0, 0, 0.2), inset 0px -14px 20px #ffffff;
+  -webkit-box-shadow: 0px 0px 2px rgba(0, 0, 0, 0.2), inset 0px -14px 20px #ffffff;
   border-radius: 5px;
   -moz-border-radius: 5px;
   -ms-border-radius: 5px;
   -webkit-border-radius: 5px;
-  background-color: #65b7df;
-  color: #fefefe;
+  color: #000;
+  font-family: Arial, Helvetica, Geneva, sans-serif;
+  font-weight: normal;
+  display: block;
+  width: 100%;
+}
+body div.page-content > nav .cloudmine-listview ul > li > a a,
+body div.page-content > nav .cloudmine-listview ul > li > a:visited a,
+body div.page-content > nav .cloudmine-listview ul > li > a a:active,
+body div.page-content > nav .cloudmine-listview ul > li > a:visited a:active {
+  color: #000000;
+  text-decoration: none;
+  cursor: pointer;
+}
+body div.page-content > nav .cloudmine-listview ul > li > a a:hover,
+body div.page-content > nav .cloudmine-listview ul > li > a:visited a:hover,
+body div.page-content > nav .cloudmine-listview ul > li > a a:active:hover,
+body div.page-content > nav .cloudmine-listview ul > li > a:visited a:active:hover,
+body div.page-content > nav .cloudmine-listview ul > li > a a:focus,
+body div.page-content > nav .cloudmine-listview ul > li > a:visited a:focus,
+body div.page-content > nav .cloudmine-listview ul > li > a a:active:focus,
+body div.page-content > nav .cloudmine-listview ul > li > a:visited a:active:focus {
+  color: #000000;
+  text-decoration: none;
+}
+body div.page-content > nav .cloudmine-listview ul > li > a a:visited,
+body div.page-content > nav .cloudmine-listview ul > li > a:visited a:visited,
+body div.page-content > nav .cloudmine-listview ul > li > a a:active:visited,
+body div.page-content > nav .cloudmine-listview ul > li > a:visited a:active:visited {
+  color: #000000;
+  text-decoration: none;
+}
+body div.page-content > nav .cloudmine-listview ul > li > a a:visited:hover,
+body div.page-content > nav .cloudmine-listview ul > li > a:visited a:visited:hover,
+body div.page-content > nav .cloudmine-listview ul > li > a a:active:visited:hover,
+body div.page-content > nav .cloudmine-listview ul > li > a:visited a:active:visited:hover,
+body div.page-content > nav .cloudmine-listview ul > li > a a:visited:focus,
+body div.page-content > nav .cloudmine-listview ul > li > a:visited a:visited:focus,
+body div.page-content > nav .cloudmine-listview ul > li > a a:active:visited:focus,
+body div.page-content > nav .cloudmine-listview ul > li > a:visited a:active:visited:focus {
+  color: #ffffff;
+  text-decoration: none;
+}
+body div.page-content > nav .cloudmine-listview ul > li > a:hover,
+body div.page-content > nav .cloudmine-listview ul > li > a.selected {
+  box-shadow: 0px 0px 2px rgba(0, 0, 0, 0.2);
+  -moz-box-shadow: 0px 0px 2px rgba(0, 0, 0, 0.2);
+  -webkit-box-shadow: 0px 0px 2px rgba(0, 0, 0, 0.2);
+  background-image: linear-gradient(90deg, #0981bb, #1090ce);
+  background-image: -webkit-linear-gradient(90deg, #0981bb, #1090ce);
+  background-image: -moz-linear-gradient(90deg, #0981bb, #1090ce);
+  background-image: -ms-linear-gradient(90deg, #0981bb, #1090ce);
+  -ms-filter: "filter:progid:DXImageTransform.Microsoft.Gradient(Enabled='true', GradientType=0, StartColorStr=#1090ce, EndColorStr=#0981bb)";
+  filter: "filter:progid:DXImageTransform.Microsoft.Gradient(Enabled='true', GradientType=0, StartColorStr=#1090ce, EndColorStr=#0981bb)";
+  color: #FFF;
+}
+body div.page-content > nav .cloudmine-listview ul li[disabled] {
+  opacity: 0.5;
+}
+body div.page-content > nav .cloudmine-listview ul li[disabled] a,
+body div.page-content > nav .cloudmine-listview ul li[disabled] a:active {
+  color: #000000;
+  text-decoration: none;
+  cursor: pointer;
+}
+body div.page-content > nav .cloudmine-listview ul li[disabled] a:hover,
+body div.page-content > nav .cloudmine-listview ul li[disabled] a:active:hover,
+body div.page-content > nav .cloudmine-listview ul li[disabled] a:focus,
+body div.page-content > nav .cloudmine-listview ul li[disabled] a:active:focus {
+  color: #000000;
+  text-decoration: none;
+}
+body div.page-content > nav .cloudmine-listview ul li[disabled] a:visited,
+body div.page-content > nav .cloudmine-listview ul li[disabled] a:active:visited {
+  color: #000000;
+  text-decoration: none;
+}
+body div.page-content > nav .cloudmine-listview ul li[disabled] a:visited:hover,
+body div.page-content > nav .cloudmine-listview ul li[disabled] a:active:visited:hover,
+body div.page-content > nav .cloudmine-listview ul li[disabled] a:visited:focus,
+body div.page-content > nav .cloudmine-listview ul li[disabled] a:active:visited:focus {
+  color: #000000;
+  text-decoration: none;
+}
+body div.page-content > nav .cloudmine-listview ul li[disabled] a:hover {
+  cursor: default;
+  box-shadow: 0px 0px 2px rgba(0, 0, 0, 0.2), inset 0px -14px 20px #ffffff;
+  -moz-box-shadow: 0px 0px 2px rgba(0, 0, 0, 0.2), inset 0px -14px 20px #ffffff;
+  -webkit-box-shadow: 0px 0px 2px rgba(0, 0, 0, 0.2), inset 0px -14px 20px #ffffff;
+  background-image: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 body div.page-content > nav h3 {
   margin-left: 10px;

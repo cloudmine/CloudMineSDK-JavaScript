@@ -32,14 +32,25 @@
 			  {+publish.classesIndex+}
       </nav>
       <section class="content">
-        <h1 class="classTitle">Class Index</h1>
-			  <for each="thisClass" in="data">
-			    <div>
-				    <h2>{+(new Link().toSymbol(thisClass.alias))+}</h2>
-				    {+resolveLinks(summarize(thisClass.classDesc))+}
-			    </div>
-			    <hr />
-			  </for>
+        <header>
+          <h1 class="classTitle">List of JavaScript Classes</h1>
+        </header>
+        <table class="cloudmine-table">
+          <thead>
+            <tr>
+              <th width=200>Name</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+			    <for each="thisClass" in="data">
+            <if test="thisClass.alias != '_global_'">
+			        <tr>
+                <td>{+(new Link().toSymbol(thisClass.alias))+}</td>
+				        <td>{+resolveLinks(summarize(thisClass.classDesc))+}</td>
+              </tr>
+            </if>
+			    </for>
+        </table>
         <div class="clear"></div>
       </section>
     </div>
