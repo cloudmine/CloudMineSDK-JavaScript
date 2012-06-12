@@ -43,6 +43,7 @@
    * @config {boolean} [dontwait] Don't wait for the result of the code snippet (applies only for code snippets)
    * @config {boolean} [resultsonly] Only return results from the code snippet (applies only for code snippets)
    * @namespace cloudmine
+   * @name WebService
    * @constructor
    */
   function WebService(options) {
@@ -56,7 +57,7 @@
      * @param {string|string[]|null} If set, return the specified keys, otherwise return all keys. 
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
      * @function
-     * @memberOf WebService
+     * @memberOf WebService.prototype
      */
     get: function(keys, options) {
       options = opts(this, options);
@@ -88,7 +89,7 @@
      * @return An APICall instance for the web service request used to attach events.
      *
      * @function
-     * @memberOf WebService
+     * @memberOf WebService.prototype
      */
     update: function(key, value, options) {
       if (isObject(key)) options = value;
@@ -124,7 +125,7 @@
      * @return An APICall instance for the web service request used to attach events.
      *
      * @function
-     * @memberOf WebService
+     * @memberOf WebService.prototype
      */
     set: function(key, value, options) {
       if (isObject(key)) options = value;
@@ -156,7 +157,7 @@
      * @return An APICall instance for the web service request used to attach events.
      *
      * @function
-     * @memberOf WebService
+     * @memberOf WebService.prototype
      */
     destroy: function(keys, options) {
       options = opts(this, options);
@@ -181,7 +182,7 @@
      * @return An APICall instance for the web service request used to attach events.
      *
      * @function
-     * @memberOf WebService
+     * @memberOf WebService.prototype
      */
     search: function(query, options) {
       options = opts(this, options);
@@ -205,7 +206,7 @@
      * @return An APICall instance for the web service request used to attach events.
      *
      * @function
-     * @memberOf WebService
+     * @memberOf WebService.prototype
      */
     searchFiles: function(query, options) {
       query = query || "";
@@ -232,7 +233,7 @@
      * @return An APICall instance for the web service request used to attach events.
      *
      * @function
-     * @memberOf WebService
+     * @memberOf WebService.prototype
      */
     upload: function(key, file, options) {
       options = opts(this, options);
@@ -304,7 +305,7 @@
      * @return An APICall instance for the web service request used to attach events.
      *
      * @function
-     * @memberOf WebService
+     * @memberOf WebService.prototype
      */
     download: function(key, options) {
       // If we aren't given a mode, download the file directly to the user's computer.
@@ -340,7 +341,7 @@
      *
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
      * @function
-     * @memberOf WebService
+     * @memberOf WebService.prototype
      */
     createUser: function(user, password, options) {
       if (isObject(user)) options = password;
@@ -375,7 +376,7 @@
      * @return An APICall instance for the web service request used to attach events.
      *
      * @function
-     * @memberOf WebService
+     * @memberOf WebService.prototype
      */
     changePassword: function(user, oldpassword, password, options) {
       if (isObject(user)) options = oldpassword;
@@ -408,7 +409,7 @@
      * @return An APICall instance for the web service request used to attach events.
      *
      * @function
-     * @memberOf WebService
+     * @memberOf WebService.prototype
      */
     resetPassword: function(userid, options) {
       options = opts(this, options);
@@ -436,7 +437,7 @@
      * @return An APICall instance for the web service request used to attach events.
      *
      * @function
-     * @memberOf WebService
+     * @memberOf WebService.prototype
      */
     confirmReset: function(token, newPassword, options) {
       options = opts(this, options);
@@ -468,7 +469,7 @@
      * @return An APICall instance for the web service request used to attach events.
      *
      * @function
-     * @memberOf WebService
+     * @memberOf WebService.prototype
      */
     login: function(user, password, options) {
       if (isObject(user)) options = password;
@@ -502,7 +503,7 @@
      * @return An APICall instance for the web service request used to attach events.
      *
      * @function
-     * @memberOf WebService
+     * @memberOf WebService.prototype
      */
     logout: function(options) {
       options = opts(this, options);
@@ -537,7 +538,7 @@
      * @return An APICall instance for the web service request used to attach events.
      *
      * @function
-     * @memberOf WebService
+     * @memberOf WebService.prototype
      */
     verify: function(user, password, options) {
       if (isObject(user)) opts = password;
@@ -562,7 +563,7 @@
      * Return true if the user is logged in, false otherwise.
      *
      * @function
-     * @memberOf WebService
+     * @memberOf WebService.prototype
      */
     isLoggedIn: function() {
       return !!this.options.session_token;
@@ -573,7 +574,7 @@
      * @return The logged in userid, if applicable.
      *
      * @function
-     * @memberOf WebService
+     * @memberOf WebService.prototype
      */
     getUserID: function() {
       return this.options.userid;
@@ -584,7 +585,7 @@
      * @return The current session token, if logged in.
      *
      * @function
-     * @memberOf WebService
+     * @memberOf WebService.prototype
      */
     getSessionToken: function() {
       return this.options.session_token;
@@ -657,6 +658,8 @@
    *    'success': function(keys, responseObject)
    *    'meta': function(keys, responseObject)
    *    'result: function(keys, responseObject)
+   * @class
+   * @name APICall
    */
   function APICall(config) {
     this.config = merge({}, defaultConfig, config);
@@ -744,7 +747,7 @@
      * @param context {Object} Context to call the callback in.
      * @return The current APICall object
      * @function
-     * @memberOf APICall
+     * @memberOf APICall.prototype
      */
     on: function(eventType, callback, context) {
       if (isFunction(callback)) {
@@ -767,7 +770,7 @@
      * @params All parameters following event will be sent to the event handlers.
      * @return The current APICall object
      * @function
-     * @memberOf APICall
+     * @memberOf APICall.prototype
      */
     trigger: function(event/*, arg1...*/) {
       var events = this._events[event];
@@ -791,7 +794,7 @@
      * @param context {Object} The context to call the callback in.
      * @return The current APICall object
      * @function
-     * @memberOf APICall
+     * @memberOf APICall.prototype
      */
     off: function(eventType, callback, context) {
       if (eventType == null && callback == null && context == null) {
@@ -829,7 +832,7 @@
      * calls. Synchronous calls can be achieved by setting async to false in WebService.
      * @return The current APICall object
      * @function
-     * @memberOf APICall
+     * @memberOf APICall.prototype
      */
     abort: function() {
       if (this.xhr) {
@@ -848,7 +851,7 @@
      * Set data to send to the server. This is ineffective for running ajax calls.
      * @return The current APICall object
      * @function
-     * @memberOf APICall
+     * @memberOf APICall.prototype
      */
     setData: function(data) {
       if (!this.xhr && this.config) {
@@ -862,7 +865,7 @@
      * after you have attached all your event handlers. You should not attach event handlers after this
      * is called.
      * @function
-     * @memberOf APICall
+     * @memberOf APICall.prototype
      */
     done: function() {
       if (!this.xhr && this.config) {
@@ -990,6 +993,12 @@
     return out;
   }
 
+  /**
+   * Internal minimal Node.js jQuery.ajax adapter.
+   * @function
+   * @private
+   * @param {String} uri 
+   */
   function HttpRequest(uri, config) {
     config = config || {};
     this.status = 400;
