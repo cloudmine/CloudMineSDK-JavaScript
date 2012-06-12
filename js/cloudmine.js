@@ -43,6 +43,7 @@
    * @config {boolean} [dontwait] Don't wait for the result of the code snippet (applies only for code snippets)
    * @config {boolean} [resultsonly] Only return results from the code snippet (applies only for code snippets)
    * @namespace cloudmine
+   * @name WebService
    * @constructor
    */
   function WebService(options) {
@@ -56,7 +57,7 @@
      * @param {string|string[]|null} If set, return the specified keys, otherwise return all keys. 
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
      * @function
-     * @memberOf WebService
+     * @memberOf WebService.prototype
      */
     get: function(keys, options) {
       options = opts(this, options);
@@ -88,7 +89,7 @@
      * @return An APICall instance for the web service request used to attach events.
      *
      * @function
-     * @memberOf WebService
+     * @memberOf WebService.prototype
      */
     update: function(key, value, options) {
       if (isObject(key)) options = value;
@@ -123,7 +124,7 @@
      * @return An APICall instance for the web service request used to attach events.
      *
      * @function
-     * @memberOf WebService
+     * @memberOf WebService.prototype
      */
     set: function(key, value, options) {
       if (isObject(key)) options = value;
@@ -154,7 +155,7 @@
      * @return An APICall instance for the web service request used to attach events.
      *
      * @function
-     * @memberOf WebService
+     * @memberOf WebService.prototype
      */
     destroy: function(keys, options) {
       options = opts(this, options);
@@ -179,7 +180,7 @@
      * @return An APICall instance for the web service request used to attach events.
      *
      * @function
-     * @memberOf WebService
+     * @memberOf WebService.prototype
      */
     search: function(query, options) {
       options = opts(this, options);
@@ -203,7 +204,7 @@
      * @return An APICall instance for the web service request used to attach events.
      *
      * @function
-     * @memberOf WebService
+     * @memberOf WebService.prototype
      */
     searchFiles: function(query, options) {
       query = query || "";
@@ -230,7 +231,7 @@
      * @return An APICall instance for the web service request used to attach events.
      *
      * @function
-     * @memberOf WebService
+     * @memberOf WebService.prototype
      */
     uploadFile: (function() {
       // FileAPI: IE 10+, Firefox 3.6+, Chrome 13+, Opera 11.1, Safari 5 (Mac)
@@ -268,7 +269,7 @@
      * @return An APICall instance for the web service request used to attach events.
      *
      * @function
-     * @memberOf WebService
+     * @memberOf WebService.prototype
      */
     downloadFile: function(key, options) {
       options = opts(this, options);
@@ -297,7 +298,7 @@
      *
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
      * @function
-     * @memberOf WebService
+     * @memberOf WebService.prototype
      */
     createUser: function(user, password, options) {
       if (isObject(user)) options = password;
@@ -332,7 +333,7 @@
      * @return An APICall instance for the web service request used to attach events.
      *
      * @function
-     * @memberOf WebService
+     * @memberOf WebService.prototype
      */
     changePassword: function(user, oldpassword, password, options) {
       if (isObject(user)) options = oldpassword;
@@ -365,7 +366,7 @@
      * @return An APICall instance for the web service request used to attach events.
      *
      * @function
-     * @memberOf WebService
+     * @memberOf WebService.prototype
      */
     resetPassword: function(userid, options) {
       options = opts(this, options);
@@ -393,7 +394,7 @@
      * @return An APICall instance for the web service request used to attach events.
      *
      * @function
-     * @memberOf WebService
+     * @memberOf WebService.prototype
      */
     confirmReset: function(token, newPassword, options) {
       options = opts(this, options);
@@ -425,7 +426,7 @@
      * @return An APICall instance for the web service request used to attach events.
      *
      * @function
-     * @memberOf WebService
+     * @memberOf WebService.prototype
      */
     login: function(user, password, options) {
       if (isObject(user)) options = password;
@@ -459,7 +460,7 @@
      * @return An APICall instance for the web service request used to attach events.
      *
      * @function
-     * @memberOf WebService
+     * @memberOf WebService.prototype
      */
     logout: function(options) {
       options = opts(this, options);
@@ -494,7 +495,7 @@
      * @return An APICall instance for the web service request used to attach events.
      *
      * @function
-     * @memberOf WebService
+     * @memberOf WebService.prototype
      */
     verify: function(user, password, options) {
       if (isObject(user)) opts = password;
@@ -519,7 +520,7 @@
      * Return true if the user is logged in, false otherwise.
      *
      * @function
-     * @memberOf WebService
+     * @memberOf WebService.prototype
      */
     isLoggedIn: function() {
       return !!this.options.session_token;
@@ -530,7 +531,7 @@
      * @return The logged in userid, if applicable.
      *
      * @function
-     * @memberOf WebService
+     * @memberOf WebService.prototype
      */
     getUserID: function() {
       return this.options.userid;
@@ -541,7 +542,7 @@
      * @return The current session token, if logged in.
      *
      * @function
-     * @memberOf WebService
+     * @memberOf WebService.prototype
      */
     getSessionToken: function() {
       return this.options.session_token;
@@ -610,6 +611,8 @@
    *    'success': function(keys, responseObject)
    *    'meta': function(keys, responseObject)
    *    'result: function(keys, responseObject)
+   * @class
+   * @name APICall
    */
   function APICall(config) {
     config = merge({}, defaultConfig, config);
@@ -728,7 +731,7 @@
      * @param context {Object} Context to call the callback in.
      * @return The current APICall object
      * @function
-     * @memberOf APICall
+     * @memberOf APICall.prototype
      */
     on: function(eventType, callback, context) {
       if (isFunction(callback)) {
@@ -751,7 +754,7 @@
      * @params All parameters following event will be sent to the event handlers.
      * @return The current APICall object
      * @function
-     * @memberOf APICall
+     * @memberOf APICall.prototype
      */
     trigger: function(event/*, arg1...*/) {
       var events = this._events[event];
@@ -775,7 +778,7 @@
      * @param context {Object} The context to call the callback in.
      * @return The current APICall object
      * @function
-     * @memberOf APICall
+     * @memberOf APICall.prototype
      */
     off: function(eventType, callback, context) {
       if (eventType == null && callback == null && context == null) {
@@ -795,7 +798,7 @@
      * calls. Synchronous calls can be achieved by setting async to false in WebService.
      * @return The current APICall object
      * @function
-     * @memberOf APICall
+     * @memberOf APICall.prototype
      */
     abort: function() {
       if (!this._config && this.xhr) {
@@ -810,7 +813,7 @@
      * Set data to send to the server. This is ineffective for running ajax calls.
      * @return The current APICall object
      * @function
-     * @memberOf APICall
+     * @memberOf APICall.prototype
      */
     setData: function(data) {
       if (!this.xhr && this._config) {
@@ -824,7 +827,7 @@
      * after you have attached all your event handlers. You should not attach event handlers after this
      * is called.
      * @function
-     * @memberOf APICall
+     * @memberOf APICall.prototype
      */
     done: function() {
       if (!this.xhr && this._config) {
@@ -1020,13 +1023,6 @@
     return obj;
   }
 
-  function setAJAX(func) {
-    if (func) ajax = func;
-    else if (($ = this.jQuery || this.Zepto) != null) ajax = $.ajax;
-    else throw "Missing jQuery-compatible ajax implementation";
-    return ajax;
-  }  
-
   function NotSupported() {
     throw "Operation Not Supported";
   }
@@ -1035,19 +1031,19 @@
   this.cloudmine = this.cloudmine || {};
   this.cloudmine.WebService = WebService;
   if (!this.cloudmine.API) this.cloudmine.API = "https://api.cloudmine.me";
-  setAJAX();
-  
+
+  // Assigns AJAX implementation
+  if (func) ajax = func;
+  else if (($ = this.jQuery || this.Zepto) != null) ajax = $.ajax;
+  else throw "Missing jQuery-compatible ajax implementation";
+
   // Base64 Library from http://www.webtoolkit.info
   var base64 = {_keyStr:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",encode:function(a){var b="";var c,d,e,f,g,h,i;var j=0;a=base64._utf8_encode(a);while(j<a.length){c=a.charCodeAt(j++);d=a.charCodeAt(j++);e=a.charCodeAt(j++);f=c>>2;g=(c&3)<<4|d>>4;h=(d&15)<<2|e>>6;i=e&63;if(isNaN(d)){h=i=64}else if(isNaN(e)){i=64}b=b+this._keyStr.charAt(f)+this._keyStr.charAt(g)+this._keyStr.charAt(h)+this._keyStr.charAt(i)}return b},decode:function(a){var b="";var c,d,e;var f,g,h,i;var j=0;a=a.replace(/[^A-Za-z0-9\+\/\=]/g,"");while(j<a.length){f=this._keyStr.indexOf(a.charAt(j++));g=this._keyStr.indexOf(a.charAt(j++));h=this._keyStr.indexOf(a.charAt(j++));i=this._keyStr.indexOf(a.charAt(j++));c=f<<2|g>>4;d=(g&15)<<4|h>>2;e=(h&3)<<6|i;b=b+String.fromCharCode(c);if(h!=64){b=b+String.fromCharCode(d)}if(i!=64){b=b+String.fromCharCode(e)}}b=base64._utf8_decode(b);return b},_utf8_encode:function(a){a=a.replace(/\r\n/g,"\n");var b="";for(var c=0;c<a.length;c++){var d=a.charCodeAt(c);if(d<128){b+=String.fromCharCode(d)}else if(d>127&&d<2048){b+=String.fromCharCode(d>>6|192);b+=String.fromCharCode(d&63|128)}else{b+=String.fromCharCode(d>>12|224);b+=String.fromCharCode(d>>6&63|128);b+=String.fromCharCode(d&63|128)}}return b},_utf8_decode:function(a){var b="";var c=0;var d=c1=c2=0;while(c<a.length){d=a.charCodeAt(c);if(d<128){b+=String.fromCharCode(d);c++}else if(d>191&&d<224){c2=a.charCodeAt(c+1);b+=String.fromCharCode((d&31)<<6|c2&63);c+=2}else{c2=a.charCodeAt(c+1);c3=a.charCodeAt(c+2);b+=String.fromCharCode((d&15)<<12|(c2&63)<<6|c3&63);c+=3}}return b}};
-
+  
   if (this.exports) {
     this.exports = {
-      WebService: WebService,
-      setAJAX: setAJAX,
-      setAPI: function setAPI(host) {
-        this.cloudmine.API = host;
-      }
-    };
+      WebService: WebService
+     };
   }
 })();
 
