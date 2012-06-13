@@ -1,19 +1,22 @@
-/* CloudMine JavaScript Library v0.2 cloudmine.me | cloudmine.me/license */ 
-
+/* CloudMine JavaScript Library v1.0 cloudmine.me | cloudmine.me/license */ 
+/** @namespace cloudmine */
 (function() {
   /**
    * Construct a new WebService instance
    *
-   * Each method on the WebService instance will return an APICall object which may be used to
-   * access the results of the method called. You can chain multiple events together, with the
-   * All events are at least guaranteed to have the callback signature: function(data, apicall).
+   * <p>Each method on the WebService instance will return an APICall object which may be used to
+   * access the results of the method called. You can chain multiple events together with the
+   * returned object (an APICall instance).
+   *
+   * <p>All events are at least guaranteed to have the callback signature: function(data, apicall).
    * supported events:
-   *    200, 201, 400, 401, 404, 409, ok, created, badrequest, unauthorized, notfound, conflict,
-   *    success, error, complete, meta, result
-   * Event order: success callbacks, meta callbacks, result callbacks, error callbacks, complete
+   * <p>   200, 201, 400, 401, 404, 409, ok, created, badrequest, unauthorized, notfound, conflict,
+   *    success, error, complete, meta, result, abort
+   * <p>Event order: success callbacks, meta callbacks, result callbacks, error callbacks, complete
    * callbacks 
    *
-   * Example:
+   * <p>Example:
+   * <pre class='code'>
    * var ws = new cloudmine.WebService({appid: "abc", apikey: "abc"});
    * ws.get("MyKey").on("success", function(data, apicall) {
    *    console.log("MyKey value: %o", data["MyKey"]);
@@ -26,8 +29,8 @@
    * }).on("complete", function(data, apicall) {
    *    console.log("Finished get on 'MyKey':", data);
    * });
-   *
-   * Refer to APICall's documentation for further information on events.
+   * </pre>
+   * <p>Refer to APICall's documentation for further information on events.
    *
    * @param {object} Default configuration for this WebService
    * @config {string} [appid] The application id for requests (Required)
@@ -42,7 +45,6 @@
    * @config {string|object} [params] Parameters to give the code snippet (applies only for code snippets)
    * @config {boolean} [dontwait] Don't wait for the result of the code snippet (applies only for code snippets)
    * @config {boolean} [resultsonly] Only return results from the code snippet (applies only for code snippets)
-   * @namespace cloudmine
    * @name WebService
    * @constructor
    */
@@ -50,14 +52,14 @@
     this.options = opts(this, options);
   }
 
+  /** @namespace WebService.prototype */
   WebService.prototype = {
     /**
      * Get data from CloudMine.
      * Results may be affected by defaults and/or by the options parameter.
-     * @param {string|string[]|null} If set, return the specified keys, otherwise return all keys. 
+     * @param {string|string[]|null} keys If set, return the specified keys, otherwise return all keys. 
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
-     * @function
-     * @memberOf WebService.prototype
+     * @return {APICall} An APICall instance for the web service request used to attach events.
      */
     get: function(keys, options) {
       options = opts(this, options);
@@ -79,16 +81,25 @@
      * Create new data, and merge existing data.
      * The data must be convertable to JSON.
      * Results may be affected by defaults and/or by the options parameter.
-     * Use one of the two function signatures:
-     * @param {object} key An object hash where the top level properties are the keys.
+     * @param {object} data An object hash where the top level properties are the keys.
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
-     *    - OR -
+     * @return {APICall} An APICall instance for the web service request used to attach events.
+     *
+     * @function
+     * @name update
+     * @memberOf WebService.prototype
+     */
+    /**
+     * Create new data, and merge existing data.
+     * The data must be convertable to JSON.
+     * Results may be affected by defaults and/or by the options parameter.
      * @param {string|null} key The key to affect. If given null, a random key will be assigned.
      * @param {string|number|object} value The value of the object
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
-     * @return An APICall instance for the web service request used to attach events.
+     * @return {APICall} An APICall instance for the web service request used to attach events.
      *
      * @function
+     * @name update^2
      * @memberOf WebService.prototype
      */
     update: function(key, value, options) {
@@ -116,15 +127,24 @@
      * Create or overwrite existing objects in CloudMine with the given key or keys.
      * The data must be convertable to JSON.
      * Results may be affected by defaults and/or by the options parameter.
-     * Use one of the two function signatures:
-     * @param {object} key An object hash where the top level properties are the keys.
+     * @param {object} data An object hash where the top level properties are the keys.
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
-     *   -OR-
-     * @param {string|null} key The key to affect. If given null, a random key will be assigned.
-     * @param {string|number|object} The object to store. 
-     * @return An APICall instance for the web service request used to attach events.
+     * @return {APICall} An APICall instance for the web service request used to attach events.
      *
      * @function
+     * @name set
+     * @memberOf WebService.prototype
+     */
+    /**
+     * Create or overwrite existing objects in CloudMine with the given key or keys.
+     * The data must be convertable to JSON.
+     * Results may be affected by defaults and/or by the options parameter.
+     * @param {string|null} key The key to affect. If given null, a random key will be assigned.
+     * @param {string|number|object} The object to store. 
+     * @return {APICall} An APICall instance for the web service request used to attach events.
+     *
+     * @function
+     * @name set^2
      * @memberOf WebService.prototype
      */
     set: function(key, value, options) {
@@ -154,10 +174,7 @@
      * Results may be affected by defaults and/or by the options parameter.
      * @param {string|string[]|null} keys The keys to delete on the server.
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
-     * @return An APICall instance for the web service request used to attach events.
-     *
-     * @function
-     * @memberOf WebService.prototype
+     * @return {APICall} An APICall instance for the web service request used to attach events.
      */
     destroy: function(keys, options) {
       options = opts(this, options);
@@ -179,10 +196,7 @@
      * Results may be affected by defaults and/or by the options parameter.
      * @param {string} query Query parameters to search for.
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
-     * @return An APICall instance for the web service request used to attach events.
-     *
-     * @function
-     * @memberOf WebService.prototype
+     * @return {APICall} An APICall instance for the web service request used to attach events.
      */
     search: function(query, options) {
       options = opts(this, options);
@@ -203,10 +217,7 @@
      * Results may be affected by defaults and/or by the options parameter.
      * @param {string} query Additional query parameters to search for.
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
-     * @return An APICall instance for the web service request used to attach events.
-     *
-     * @function
-     * @memberOf WebService.prototype
+     * @return {APICall} An APICall instance for the web service request used to attach events.
      */
     searchFiles: function(query, options) {
       query = query || "";
@@ -225,21 +236,15 @@
 
     /**
      * Upload a file stored in CloudMine.
-     *
      * @param {string} key The binary file's object key.
-     * @param {File|string} file FileAPI: A HTML5 FileAPI File object, Node.js: The filename to upload.
+     * @param {file|string} file FileAPI: A HTML5 FileAPI File object, Node.js: The filename to upload.
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
-     * @config {string} [mode] Force upload behavior, even if the client doesn't support it. "fileapi", "node", "swf"
-     * @return An APICall instance for the web service request used to attach events.
-     *
-     * @function
-     * @memberOf WebService.prototype
+     * @return {APICall} An APICall instance for the web service request used to attach events.
      */
     upload: function(key, file, options) {
       options = opts(this, options);
       if (!key) key = uuid();
 
-      
       // Warning: may not necessarily use ajax to perform upload.
       var apicall = new APICall({
         action: 'binary/' + key,
@@ -251,49 +256,66 @@
         processResponse: APICall.basicResponse
       });
 
+      var contentType = options.contentType;
+      var filename = options.filename || key;
       // Prepare given data.
-      // TODO:
-      //   FileAPI: Support Blob, File, FileReader.
-      //   Primitive Arrays: Support arrays like UInt32Array, etc.
-      //   Canvas: Need to get at the binary data from it and support it.
-      //   Node.JS: Support Buffers, Arrays, Specify by file name.
-
-      // Extract the data from the file first before uploading.
-      if (file instanceof File) {
+      if (isString(file)) {
+        // Handle file names being passed.
+        if (ajax == NodeAJAX) {
+          console.log("Upload: Node string filename");
+          APICall.binaryUpload(apicall, require('fs').readFileSync(file), filename, contentType).done();
+        } else if (swfupload) {
+          console.log("Upload: swfupload filename"); 
+          // Try to upload using swfupload.
+        } else NotSupported();
+      } else if (isBinary(file)) {
         var reader = new FileReader();
-        reader.onload = function(e) {
-          apicall.setData(e.target.result).done();
-        };
-        reader.readAsBinaryString(file);
-      } else if (file instanceof Blob) {
-        // Blob Builder!
-      } else if (file instanceof ArrayBufferView) {
-        // Handle the primitive array types (Uint32Array, Int32Array, Float32Array, etc).
-      } else {
-        // Use the CanvasImageData instead.
-        if (file instanceof CanvasRenderingContext2D) file = file.getImageData();
-
-        if (file instanceof CanvasImageData) {
+        
+        /** @private */
+        reader.onabort = function(e) {
+          apicall.setData("FileReader aborted").abort();
         }
-      }
+
+        /** @private */
+        reader.onerror = function(e) {
+          apicall.setData(e.target.error).abort();
+        }
+
+        /** @private */
+        reader.onload = function(e) {
+          APICall.binaryUpload(apicall, e.target.result, filename, contentType).done();
+        };
+
+        // Don't need to transform Files to Blobs.
+        if (File && file instanceof File) {
+          if (!options.contentType) apicall.setContentType(file.type);
+        } else if (CanvasImageData && file instanceof CanvasImageData) {
+          var byteArray = new Uint8Array(file.length);
+          for (var i = 0; i < file.length; i++) {
+            byteArray[i] = file[i];
+          }
+
+          if (!contentType) contentType = 'image/png';
+          file = getBlob(byteArray);
+        } else {
+          if (!contentType) contentType = 'application/octet-stream';
+          file = getBlob(file, contentType);
+        }
+        
+        reader.readAsDataURL(file);
+      } else NotSupported();
 
       return apicall;
     },
 
     /**
      * Download a file stored in CloudMine.
-     * WARNING: Experimental, behavior subject to change.
-     *
      * @param {string} key The binary file's object key.
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
      * @config {string} [mode] Force download behavior, even if the client doesn't support it. "node", "iframe", "raw"
-     * @return An APICall instance for the web service request used to attach events.
-     *
-     * @function
-     * @memberOf WebService.prototype
+     * @return {APICall} An APICall instance for the web service request used to attach events.
      */
     download: function(key, options) {
-
       // If we aren't given a mode, download the file directly to the user's computer.
       var processor = (ajax == NodeAJAX ? APICall.nodeDownload : APICall.iframeDownload);
       if (options.mode === 'node') processor = APICall.nodeDownload;
@@ -316,17 +338,25 @@
 
     /**
      * Create a new user.
-     * Use one of the two function signatures:
-     * @param {object} user An object with a userid and password field.
+     * @param {object} data An object with a userid and password field.
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
-     *   -OR-
-     * @param {string} user The userid to login as.
-     * @param {string} password The password to login as.
-     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
-     * @return An APICall instance for the web service request used to attach events.
+     * @return {APICall} An APICall instance for the web service request used to attach events.
      *
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
      * @function
+     * @name createUser
+     * @memberOf WebService.prototype
+     */
+     /**
+     * Create a new user.
+     * @param {string} user The userid to login as.
+     * @param {string} password The password to login as.
+     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @return {APICall} An APICall instance for the web service request used to attach events.
+     *
+     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @function
+     * @name createUser^2
      * @memberOf WebService.prototype
      */
     createUser: function(user, password, options) {
@@ -351,17 +381,24 @@
 
     /**
      * Change a user's password
-     * Use one of the two function signatures:
-     * @param {object} user An object with userid, password, and oldpassword fields.
+     * @param {object} data An object with userid, password, and oldpassword fields.
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
-     *   -OR-
+     * @return {APICall} An APICall instance for the web service request used to attach events.
+     *
+     * @function
+     * @name changePassword
+     * @memberOf WebService.prototype
+     */
+    /**
+     * Change a user's password
      * @param {string} user The userid to change the password.
      * @param {string} oldpassword The existing password for the user.
      * @param {string} password The new password for the user.
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
-     * @return An APICall instance for the web service request used to attach events.
+     * @return {APICall} An APICall instance for the web service request used to attach events.
      *
      * @function
+     * @name changePassword^2
      * @memberOf WebService.prototype
      */
     changePassword: function(user, oldpassword, password, options) {
@@ -392,10 +429,7 @@
      * Initiate a password reset request.
      * @param {string} userid The userid to send a reset password email to.
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
-     * @return An APICall instance for the web service request used to attach events.
-     *
-     * @function
-     * @memberOf WebService.prototype
+     * @return {APICall} An APICall instance for the web service request used to attach events.
      */
     resetPassword: function(userid, options) {
       options = opts(this, options);
@@ -420,10 +454,7 @@
      * @param {string} token The token for password reset. Usually received by email.
      * @param {string} newPassword The password to assign to the user.
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
-     * @return An APICall instance for the web service request used to attach events.
-     *
-     * @function
-     * @memberOf WebService.prototype
+     * @return {APICall} An APICall instance for the web service request used to attach events.
      */
     confirmReset: function(token, newPassword, options) {
       options = opts(this, options);
@@ -445,16 +476,23 @@
 
     /**
      * Login as a user to access user-level data.
-     * Use one of the two function signatures:
-     * @param {object} user An object hash with userid and password fields.
+     * @param {object} data An object hash with userid and password fields.
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
-     *   -OR-
+     * @return {APICall} An APICall instance for the web service request used to attach events.
+     *
+     * @function
+     * @name login
+     * @memberOf WebService.prototype
+     */
+    /**
+     * Login as a user to access user-level data.
      * @param {string} user The user to login as
      * @param {string} password The password for the user
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
-     * @return An APICall instance for the web service request used to attach events.
+     * @return {APICall} An APICall instance for the web service request used to attach events.
      *
      * @function
+     * @name login^2
      * @memberOf WebService.prototype
      */
     login: function(user, password, options) {
@@ -486,10 +524,7 @@
     /**
      * Logout the current user.
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
-     * @return An APICall instance for the web service request used to attach events.
-     *
-     * @function
-     * @memberOf WebService.prototype
+     * @return {APICall} An APICall instance for the web service request used to attach events.
      */
     logout: function(options) {
       options = opts(this, options);
@@ -514,16 +549,23 @@
 
     /**
      * Verify if the given userid and password is valid.
-     * Use one of the two function signatures:
-     * @param {object} user An object with userid and password fields.
+     * @param {object} data An object with userid and password fields.
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
-     *   -OR-
+     * @return {APICall} An APICall instance for the web service request used to attach events.
+     *
+     * @function
+     * @name verify
+     * @memberOf WebService.prototype
+     */
+    /**
+     * Verify if the given userid and password is valid.
      * @param {string} user The userid to login
      * @param {string} password The password of the user to login
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
-     * @return An APICall instance for the web service request used to attach events.
+     * @return {APICall} An APICall instance for the web service request used to attach events.
      *
      * @function
+     * @name verify^2
      * @memberOf WebService.prototype
      */
     verify: function(user, password, options) {
@@ -546,10 +588,8 @@
     },
 
     /**
-     * Return true if the user is logged in, false otherwise.
-     *
-     * @function
-     * @memberOf WebService.prototype
+     * Check if the store has a logged in user.
+     * @return {boolean} True if the user is logged in, false otherwise.
      */
     isLoggedIn: function() {
       return !!this.options.session_token;
@@ -557,10 +597,7 @@
 
     /**
      * Get the current userid
-     * @return The logged in userid, if applicable.
-     *
-     * @function
-     * @memberOf WebService.prototype
+     * @return {string} The logged in userid, if applicable.
      */
     getUserID: function() {
       return this.options.userid;
@@ -568,10 +605,7 @@
 
     /**
      * Get the current session token.
-     * @return The current session token, if logged in.
-     *
-     * @function
-     * @memberOf WebService.prototype
+     * @return {string} The current session token, if logged in.
      */
     getSessionToken: function() {
       return this.options.session_token;
@@ -580,7 +614,7 @@
     /**
      * Get a default option that is sent to the server.
      * @param {string} option A default parameter to send to the server.
-     * @return The value of the default parameter.
+     * @return {*} The value of the default parameter.
      */
     getOption: function(option) {
       return (valid_params[option] ? this.options[option] : null);
@@ -590,7 +624,7 @@
      * Set a default option that is sent to the server
      * @param {string} option A default parameter to send to the server.
      * @param {string} value The value of the option to set.
-     * @return true if the option was set, false for invalid options.
+     * @return {boolean} true if the option was set, false for invalid options.
      */
     setOption: function(option, value) {
       if (valid_params[option]) {
@@ -613,7 +647,7 @@
 
     /**
      * Determine if this store is using application data.
-     * @return true if this store is using application data, false if is using user-level data.
+     * @return {boolean} true if this store is using application data, false if is using user-level data.
      */
     isApplicationData: function() {
       if (this.options.applevel === true || this.options.applevel === false) return this.options.applevel;
@@ -622,114 +656,120 @@
   };
   
   /**
-   * WebService will return an instance of this class that should be used to interact with
+   * <p>WebService will return an instance of this class that should be used to interact with
    * the API. Upon completion of the AJAX call, this object will fire the event handlers based on
    * what were attached.
    *
-   * You may chain event creation.
+   * <p>You may chain event creation.
    *
-   * Note: It is recommended to avoid referring directly to the ajax implementation used by this
+   * <p><b>Note:</b> It is recommended to avoid referring directly to the ajax implementation used by this
    *       function. Depending on environment, features on it may vary since this library only
    *       requires a small subset of jQuery-like AJAX functionality.
    *
-   * Event firing order:
-   *    Successes: HTTP Code String, HTTP Code Number, 'success'
-   *    Meta: 'meta' - This is for operations that can write meta data.
-   *    Result: 'result' - This is results from code snippets if used.
-   *    Errors: HTTP Code String, HTTP Code Number, 'error'
+   * <p>Event firing order:
+   *    <div>Successes: HTTP Code String, HTTP Code Number, 'success'</div>
+   *    <div>Meta: 'meta' - This is for operations that can write meta data.</div>
+   *    <div>Result: 'result' - This is results from code snippets if used.</div>
+   *    <div>Errors: HTTP Code String, HTTP Code Number, 'error'</div>
    *
-   * Event callback signatures:
-   *    HTTP Codes: function(keys, responseObject, statusCode)
-   *    'error': function(keys, responesObject)
-   *    'success': function(keys, responseObject)
-   *    'meta': function(keys, responseObject)
-   *    'result: function(keys, responseObject)
+   * <p>Event callback signatures:
+   *    <div>HTTP Codes: function(keys, responseObject, statusCode)</div>
+   *    <div>'error': function(keys, responesObject)</div>
+   *    <div>'success': function(keys, responseObject)</div>
+   *    <div>'meta': function(keys, responseObject)</div>
+   *    <div>'result: function(keys, responseObject)</div>
+   *    <div>'abort': function(keys, responseObject)</div>
    * @class
    * @name APICall
    */
   function APICall(config) {
-    config = merge({}, defaultConfig, config);
+    this.config = merge({}, defaultConfig, config);
     this._events = {};
 
     // Fields that are available at the completion of the api call.
-    this.additionalData = config.callbackData;
-    this.contentType = config.contentType;
+    this.additionalData = this.config.callbackData;
     this.data = null;
     this.hasErrors = false;
-    this.requestData = config.data;
+    this.requestData = this.config.data;
     this.requestHeaders = {
-      'X-CloudMine-ApiKey': config.apikey,
-      'X-CloudMine-Agent': 'JS/0.2',
-      'Content-Type': config.contentType
+      'X-CloudMine-ApiKey': this.config.apikey,
+      'X-CloudMine-Agent': 'JS/1.0',
     };
     this.responseHeaders = {};
     this.responseText = null;
     this.status = null;
-    this.type = config.type || 'GET';
+    this.type = this.config.type || 'GET';
     
     // Build the URL and headers
-    var query = (config.query ? ("?" + stringify(config.query)) : "");
-    var root = '/', session = config.options.session_token, applevel = config.options.applevel;
+    var query = (this.config.query ? ("?" + stringify(this.config.query)) : "");
+    var root = '/', session = this.config.options.session_token, applevel = this.config.options.applevel;
     if (applevel === false || (applevel !== true && session != null)) {
       root = '/user/';
       if (session != null) this.requestHeaders['X-CloudMine-SessionToken'] = session;
     }
-    config.headers = merge(this.requestHeaders, config.headers);
-    this.url = [apiroot, "/v1/app/", config.appid, root, config.action, query].join("");
-    
-    var self = this;
-    config.complete = function(xhr) {
-      var data = xhr.responseText;
-      self.status = xhr.status;
-      self.responseText = data;
-      each(xhr.getAllResponseHeaders().split('\n'), function(item) {
-        var index = (item.indexOf(':'));
-        if (index > 0) self.responseHeaders[item.substring(0, index)] = item.substring(index + 2);
-      });
+    this.config.headers = merge(this.requestHeaders, this.config.headers);
+    this.setContentType(config.contentType || 'application/json');
+    this.url = [apiroot, "/v1/app/", this.config.appid, root, this.config.action, query].join("");
 
-      // If we can parse the data as JSON or store the original data.
-      try {
-        self.data = JSON.parse(data || "{}");
-      } catch (e) {
-        self.data = data;
+    var self = this, sConfig = this.config;
+    
+    /** @private */
+    this.config.complete = function(xhr, status) {
+      var data;
+      if (xhr) {
+        data = xhr.responseText
+        self.status = xhr.status;
+        self.responseText = data;
+        each(xhr.getAllResponseHeaders().split('\n'), function(item) {
+          var index = (item.indexOf(':'));
+          if (index > 0) self.responseHeaders[item.substring(0, index)] = item.substring(index + 2);
+        });
+
+        // If we can parse the data as JSON or store the original data.
+        try {
+          self.data = JSON.parse(data || "{}");
+        } catch (e) {
+          self.data = data;
+        }
+      } else {
+        self.status = 'abort';
+        self.data = [ sConfig.data ];
       }
 
       // Parse the response only if a safe status
-      if (self.status >= 200 && self.status < 300) {
+      if (status == 'success' && self.status >= 200 && self.status < 300) {
         // Preprocess data coming in to hash-hash: [success/errors].[httpcode]
-        data = config.processResponse.call(self, self.data, xhr, self);
+        data = sConfig.processResponse.call(self, self.data, xhr, self);
       } else {
         data = {errors: {}};
-        if (isString(self.data)){
+        if (isString(self.data)) {
           self.data = { errors: [ self.data ] } // This way, we can rely on this structure data[statuscode].errors to always be an Array of one or more errors
         }
         data.errors[self.status] = self.data;
       }
 
-      // Trigger events from static context.
-      APICall.complete(self, data);
+      setTimeout(function() {
+        APICall.complete(self, data);
+      }, 1);
     }
 
     // Let script continue before triggering ajax call
-    if (!config.later && config.async) {
+    if (!this.config.later && this.config.async) {
       setTimeout(function() {
-        self.xhr = ajax(self.url, config);
+        self.xhr = ajax(self.url, sConfig);
       }, 1);
-    } else {
-      this._config = config;
     }
   }
 
+  /** @namespace APICall.prototype */
   APICall.prototype = {
     /**
      * Attach an event listener to this APICall object.
-     * @param eventType {String|number} The event to listen to. Can be an http code as number or string,
+     * @param {string|number} eventType The event to listen to. Can be an http code as number or string,
      *                                  success, meta, result, error.
-     * @param callback {Function} Callback to call upon event trigger.
-     * @param context {Object} Context to call the callback in.
-     * @return The current APICall object
-     * @function
-     * @memberOf APICall.prototype
+     * @param {function} callback Callback to call upon event trigger.
+     * @param {object} context Context to call the callback in.
+     * @return {APICall} The current APICall object
      */
     on: function(eventType, callback, context) {
       if (isFunction(callback)) {
@@ -748,11 +788,9 @@
 
     /**
      * Trigger an event on this APICall object. This will call all event handlers in order.
-     * @param event {String|number} The event to trigger.
-     * @params All parameters following event will be sent to the event handlers.
-     * @return The current APICall object
-     * @function
-     * @memberOf APICall.prototype
+     * All parameters following event will be sent to the event handlers.
+     * @param {string|number} event The event to trigger.
+     * @return {APICall} The current APICall object
      */
     trigger: function(event/*, arg1...*/) {
       var events = this._events[event];
@@ -770,13 +808,11 @@
      * Remove event handlers.
      * Event handlers will be removed based on the parameters given. If no parameters are given, all
      * event handlers will be removed.
-     * @param eventType {String|number} The event type which can be an http code as number or string,
-     *                                  or can be success, error, meta, result.
-     * @param callback {function} The function that was used to create the callback.
-     * @param context {Object} The context to call the callback in.
-     * @return The current APICall object
-     * @function
-     * @memberOf APICall.prototype
+     * @param {string|number} eventType The event type which can be an http code as number or string,
+     *                                  or can be success, error, meta, result, abort.
+     * @param {function} callback The function that was used to create the callback.
+     * @param {object} context The context to call the callback in.
+     * @return {APICall} The current APICall object
      */
     off: function(eventType, callback, context) {
       if (eventType == null && callback == null && context == null) {
@@ -792,30 +828,46 @@
     },
 
     /**
+     * Set the content-type for a waiting APICall.
+     * Note: this has no effect if the APICall has completed.
+     * @param {string} type The content-type to set. If not specified, this will use 'application/octet-stream'.
+     * @return {APICall} The current APICall object
+     */
+    setContentType: function(type) {
+      type = type || 'application/octet-stream';
+      if (this.config) {
+        this.config.contentType = type;
+        this.requestHeaders['content-type'] = type;
+        this.config.headers['content-type'] = type;
+      }
+      return this;
+    },
+
+    /**
      * Aborts the current connection. This is ineffective for running synchronous calls or completed
      * calls. Synchronous calls can be achieved by setting async to false in WebService.
-     * @return The current APICall object
-     * @function
-     * @memberOf APICall.prototype
+     * @return {APICall} The current APICall object
      */
     abort: function() {
-      if (!this._config && this.xhr) {
+      if (this.xhr) {
         this.xhr.abort();
         this.xhr = undefined;
         delete this.xhr;
+      } else if (this.config) {
+        this.config.complete.call(this, this.xhr, 'abort');
+        this.config = undefined;
+        delete this.config;
       }
       return this;
     },
 
     /**
      * Set data to send to the server. This is ineffective for running ajax calls.
-     * @return The current APICall object
-     * @function
-     * @memberOf APICall.prototype
+     * @return {APICall} The current APICall object
      */
     setData: function(data) {
-      if (!this.xhr && this._config) {
-        this._config.data = data;
+      if (!this.xhr && this.config) {
+        this.config.data = data;
       }
       return this;
     },
@@ -824,28 +876,35 @@
      * If a synchronous ajax call is done (via setting: options.async = false), you must call this function
      * after you have attached all your event handlers. You should not attach event handlers after this
      * is called.
-     * @function
-     * @memberOf APICall.prototype
      */
     done: function() {
-      if (!this.xhr && this._config) {
-        this.xhr = ajax(this.url, this._config);
-        this._config = undefined;
-        delete this._config;
+      if (!this.xhr && this.config) {
+        this.xhr = ajax(this.url, this.config);
+        this.config = undefined;
+        delete this.config;
       }
       return this;
     }
   };
 
-  // Complete the API Call.
+  /**
+   * Complete the given API Call, usually called after completed processing of data, though can be
+   * used to circumvent the standard AJAX call functionality for calls that are not currently running.
+   * @param {APICall} apicall The api call to affect. Can be either a completed request or a deferred request.
+   * @param {object} data Processed data where the top level keys are: success, errors, meta, result.
+   * 
+   * @private
+   * @function
+   * @memberOf APICall
+  */
   APICall.complete = function(apicall, data) {
     // Success results may have errors for certain keys
     if (data.errors) apicall.hasErrors = true;
 
     // Clean up temporary state.
-    if (apicall._config) {
-      apicall._config = undefined;
-      delete apicall._config;
+    if (apicall.config) {
+      apicall.config = undefined;
+      delete apicall.config;
     }
     if (apicall.xhr) {
       apicall.xhr = undefined;
@@ -885,7 +944,15 @@
     apicall.trigger('complete', data, apicall);      
   }
 
-  // Use this for standard cloudmine text responses that have success/errors/meta/result fields.
+
+  /**
+   * Standard CloudMine response for the 200-299 range responses.
+   * This will transform the response so that APICall.complete will trigger the appropriate handlers.
+   * 
+   * @private
+   * @function
+   * @memberOf APICall
+  */
   APICall.textResponse = function(data, xhr, response) {
     var out = {};
     if (data.success || data.errors || data.meta || data.result) {
@@ -910,38 +977,107 @@
     }
 
     return out;
-  };
+  }
 
-  // Use this if you know the response is not a standard cloudmine text response.
-  // E.g. Binary response.
+  /**
+   * Minimal processing of data so that the success handler is called upon completion.
+   * This assumes any response in the 200-299 range is a success.
+   * 
+   * @private
+   * @function
+   * @memberOf APICall
+  */
   APICall.basicResponse = function(data, xhr, response) {
     var out = {success: {}};
     out.success = data;
     return out;
-  };
-
-  APICall.nodeDownload = function(data, xhr, config) {
-    var out = {success: {}};
-    // TODO: Write file out to file system.
-    // out.success[config.key] = filehandle;
-    return out;
   }
 
-  APICall.iframeDownload = function(data, xhr, config) {
+  /**
+   * Convert binary data in browsers to a transmitable version and assign it to the given
+   * api call.
+   * @param {APICall} apicall The APICall to affect, it should have later: true.
+   * @param {object|string} data The data to send to the server. Strings are expected to be base64 encoded.
+   * @param {string} filename The filename to upload as.
+   * @param {string} contentType The content-type of the file. If not specified, it will guess if possible,
+   *                             otherwise assume application/octet-stream.
+   * @return {APICall} The apicall object that was given.
+   *               
+   * @private
+   * @function
+   * @memberOf APICall
+  */
+  APICall.binaryUpload = function(apicall, data, filename, contentType) {
+    var boundary = uuid();
+    if (data.toDataURL) data = data.toDataURL(contentType);
+    data = data.replace(/^data:(.+?);base64,/, '');
+    if (!contentType) contentType = RegExp.$1 || 'application/octet-stream';
+    apicall.setContentType('multipart/form-data; boundary=' + boundary);
+    return apicall.setData([
+      '--' + boundary,
+      'Content-Disposition: form-data; name="file"; filename="' + filename + '"',
+      'Content-Type: ' + contentType,
+      'Content-Transfer-Encoding: base64',
+      '',
+      data,
+      '--' + boundary + '--'
+    ].join('\r\n'));
+  }
+
+  /**
+   * This handles the response data from APICall so it can be written to file.
+   * @param {object} data Data returned from the ajax call.
+   * @param {any} xhr The ajax connection. This may vary depending on implementation.
+   * @param {object} config Configuration that was passed to the ajax connection.
+   * @private
+   * @function
+   * @memberOf APICall
+  */
+  APICall.nodeDownload = function(data, xhr, config) {
     var out = {success: {}};
-    // TODO: Add a hidden iframe to document, download file, remove iframe.
-    // out.success[config.key] = iframe
+    var nodeFileSystem = require('fs');
+    var filename = options.filename || key;
+    var filehandle = fs.writeFileSync(filename, data);
+    out.success[config.key] = filehandle;
     return out;
   }
 
   /**
-   * Internal minimal Node.js jQuery.ajax adapter.
-   * @function
+   * This handles creation of a hidden iframe to download files.
+   * @param {object} data Data returned from the ajax call.
+   * @param {any} xhr The ajax connection. This may vary depending on implementation.
+   * @param {object} config Configuration that was passed to the ajax connection.
    * @private
-   * @param {String} uri 
+   * @function
+   * @memberOf APICall
+  */
+  APICall.iframeDownload = function(data, xhr, config) {
+    var out = {success: {}};
+    var iframe = document.createElement('iframe');
+    iframe.id = 'downloader';
+    iframe.style.visibility = 'hidden';
+    document.body.appendChild(iframe);
+    iframe.src = this.url;
+    out.success[config.key] = iframe;
+    window.setTimeout(function(){document.removeChild(iframe)}, 1000*60);
+    return out;
+  }
+
+  /**
+   * Node.JS jQuery-like ajax adapter.
+   * This is an internal class that is not exposed.
+   *
+   * @param {string} uri The complete url to hit.
+   * @param {object} config Parameters for the ajax request.
+   * @config {string} [contentType] The Content Type of the request.
+   * @config {string} [type] The type of request, e.g. 'get', 'post'
+   * @config {object} [headers] Request headers to send to the client.
+   * @config {boolean} [processData] If true, process the data given.
+   * @config {string|Array|Object} [data] Data to send to the server.
+   * @name HttpRequest
+   * @constructor
    */
-  
-  function NodeAJAX(uri, config) {
+  function HttpRequest(uri, config) {
     config = config || {};
     this.status = 400;
     this.responseText = [];
@@ -965,6 +1101,7 @@
     
     // Fire request.
     var self = this, cbContext = config.context || this;
+    this._textStatus = 'success';
     this._request = (opts.protocol === "http:" ? http : https).request(opts, function(response) {
       response.setEncoding('utf8');
 
@@ -979,7 +1116,6 @@
       response.on('end', function() {
         self._headers = stringify(response.headers);
         self.status = response.statusCode;
-        var textStatus = null;
 
         // Process data if necessary.
         var data = self.responseText = self.responseText.join('');
@@ -987,41 +1123,59 @@
           try {
             data = JSON.parse(data);
           } catch (e) {
-            textStatus = 'parsererror';
+            self._textStatus = 'parsererror';
           }
         }
 
         
-        if (self.status >= 200 && self.status < 300) {
+        if (self._textStatus == 'success' && self.status >= 200 && self.status < 300) {
           if (config.success) config.success.call(cbContext, data, 'success', self);
         } else if (config.error) {
           config.error.call(cbContext, self, 'error', self.responseText);
         }
-        if (config.complete) config.complete.call(cbContext, self, self.status);
+        if (config.complete) config.complete.call(cbContext, self, self._textStatus);
       });
     });
 
+    // Handle request errors.
     this._request.on('error', function(e) {
       self.status = e.status;
       self.responseText = e.message;
+      self._textStatus = 'error';
       if (config.error) config.error.call(cbContext, self, 'error', e.message);
       if (config.complete) config.complete.call(cbContext, self, 'error');
     });
 
+    // Send data (if present) and fire the request.
     this._request.end(config.data);
   }
 
-  NodeAJAX.prototype = {
+  /** @namespace HttpRequest.prototype */
+  HttpRequest.prototype = {
+    /**
+     * Return a given response header
+     * @param {string} The header field to retreive.
+     * @return {string|null} The value of that header, if it exists.
+     */
     getResponseHeader: function(header) {
       return this._headers[header];
     },
     
+    /**
+     * Get all the response headers.
+     * @return {object} An object representing all the response headers.
+     */
     getAllResponseHeaders: function() {
       return stringify(this._headers, ': ', '\n');
     },
 
+    /**
+     * Abort the current connection. This has no effect if the request is already completed.
+     * This will trigger an abort error event.
+     */
     abort: function() {
       if (this._request) {
+        this._textStatus = 'abort';
         this._request.abort();
         this._request = undefined;
         delete this._request;
@@ -1044,7 +1198,6 @@
   var defaultConfig = {
     async: true,
     later: false,
-    contentType: 'application/json',
     processData: false,
     dataType: 'text',
     processResponse: APICall.textResponse,
@@ -1065,13 +1218,12 @@
 
   // Scope external dependencies, if necessary.
   var esc = this.encodeURIComponent || escape;
+  var File = this.File;
   var FileReader = this.FileReader;
   var BlobBuilder = this.BlobBuilder || this.WebKitBlobBuilder || this.MozBlobBuilder || this.MSBlobBuilder;
   var ArrayBuffer = this.ArrayBuffer;
-  var CanvasRenderingContext2D = this.CanvasRenderingContext2D;
   var CanvasImageData = this.CanvasImageData;
-  var ArrayBufferView = this.ArrayBufferView;
-  var File = this.File;
+  var BinaryClasses = [ File, CanvasImageData, ArrayBuffer, this.Uint8Array, this.Uint8ClampedArray, this.Uint16Array, this.Uint32Array, this.Int8Array, this.Int16Array, this.Int32Array, this.Float32Array, this.Float64Array ];
   var swfupload = this.swfupload;
 
   // Utility functions.
@@ -1162,6 +1314,10 @@
     return item && typeof item === "string"
   }
 
+  function isBinary(item) {
+    return isObject(item) && BinaryClasses.indexOf(item.__proto__.constructor) > -1
+  }
+
   function isArray(item) {
     return isObject(item) && item.length != null
   }
@@ -1177,6 +1333,21 @@
       }
     }
     return true;
+  }
+
+  function getBlob(data, contentType) {
+    var blob;
+    if (!contentType) contentType = 'application/octet-stream';
+
+    try {
+      // Binary in javascript is such a nightmare.
+      blob = new Blob(data, {type: contentType});
+    } catch (e) {
+      var builder = new BlobBuilder();
+      builder.append(data);
+      blob = builder.getBlob(contentType);
+    }
+    return blob;
   }
 
   function stringify(map, sep, eol, ignore) {
@@ -1199,11 +1370,19 @@
     }
     return obj;
   }
+  
+  function NotSupported() {
+    throw new Error("Unsupported operation", "cloudmine.js");
+  }
+
+  function NodeAJAX(url, config) {
+    return new HttpRequest(url, config);
+  }
 
   // Export CloudMine objects.
   var http, https, ajax, url, apiroot = "https://api.cloudmine.me";
   if (!this.window) {
-    ajax = function(url, config) { return new NodeAJAX(url, config); };
+    ajax = NodeAJAX;
     url = require('url');
     http = require('http');
     https = require('https');
@@ -1213,11 +1392,9 @@
     window.cloudmine.WebService = WebService;
     if (window.cloudmine.API) apiroot = window.cloudmine.API;
     if (($ = this.jQuery || this.Zepto) != null) ajax = $.ajax;
-    else throw "Missing jQuery-compatible ajax implementation";
+    else throw new Error("Missing jQuery-compatible ajax implementation", "cloudmine.js");
   }
 
   // Base64 Library from http://www.webtoolkit.info
   var base64 = {_keyStr:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",encode:function(a){var b="";var c,d,e,f,g,h,i;var j=0;a=base64._utf8_encode(a);while(j<a.length){c=a.charCodeAt(j++);d=a.charCodeAt(j++);e=a.charCodeAt(j++);f=c>>2;g=(c&3)<<4|d>>4;h=(d&15)<<2|e>>6;i=e&63;if(isNaN(d)){h=i=64}else if(isNaN(e)){i=64}b=b+this._keyStr.charAt(f)+this._keyStr.charAt(g)+this._keyStr.charAt(h)+this._keyStr.charAt(i)}return b},decode:function(a){var b="";var c,d,e;var f,g,h,i;var j=0;a=a.replace(/[^A-Za-z0-9\+\/\=]/g,"");while(j<a.length){f=this._keyStr.indexOf(a.charAt(j++));g=this._keyStr.indexOf(a.charAt(j++));h=this._keyStr.indexOf(a.charAt(j++));i=this._keyStr.indexOf(a.charAt(j++));c=f<<2|g>>4;d=(g&15)<<4|h>>2;e=(h&3)<<6|i;b=b+String.fromCharCode(c);if(h!=64){b=b+String.fromCharCode(d)}if(i!=64){b=b+String.fromCharCode(e)}}b=base64._utf8_decode(b);return b},_utf8_encode:function(a){a=a.replace(/\r\n/g,"\n");var b="";for(var c=0;c<a.length;c++){var d=a.charCodeAt(c);if(d<128){b+=String.fromCharCode(d)}else if(d>127&&d<2048){b+=String.fromCharCode(d>>6|192);b+=String.fromCharCode(d&63|128)}else{b+=String.fromCharCode(d>>12|224);b+=String.fromCharCode(d>>6&63|128);b+=String.fromCharCode(d&63|128)}}return b},_utf8_decode:function(a){var b="";var c=0;var d=c1=c2=0;while(c<a.length){d=a.charCodeAt(c);if(d<128){b+=String.fromCharCode(d);c++}else if(d>191&&d<224){c2=a.charCodeAt(c+1);b+=String.fromCharCode((d&31)<<6|c2&63);c+=2}else{c2=a.charCodeAt(c+1);c3=a.charCodeAt(c+2);b+=String.fromCharCode((d&15)<<12|(c2&63)<<6|c3&63);c+=3}}return b}};
-
 })();
-
