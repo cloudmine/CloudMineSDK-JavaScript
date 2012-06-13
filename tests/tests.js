@@ -740,7 +740,49 @@ $(function() {
     }
   });
 
-  // Test 15: Verify that we can download a file.
+  // Test 15: Verify that we can upload and download binary data.
+  var BinaryBuffer = this.Int32Array || this.Buffer;
+  asyncTest("Binary Buffer Upload Test", function() {
+    if (!BinaryBuffer) {
+      ok(false, "No known binary buffers supported, skipping test.");
+      start();
+    } else {
+      var key = uuid();
+      var buffer = new BinaryBuffer(32);
+      for (var i = 65; i < 97; ++i) {
+        buffer[i-65] = String.fromCharCode(i);
+      }
+
+      cm.upload(key).on('error', function() {
+        ok(false, "Upload unnamed binary buffer to server"); 
+      }).on('success', function() {
+        ok(true, "Upload unnamed binary buffer to server");
+      }).on('complete', verifyData);
+
+      function verifyData() {
+        cm.download(key, {mode: 'raw'}).on('error', function() {
+          ok(false, 'Download unnamed binary buffer from server');
+        }).on('success', function(data) {
+          ok(true, 'Downloaded unnamed binary buffer from server');
+          var downloaded = new BinaryBuffer(data[key]);
+          var same = true;
+          for (var i = 0; same && i < downloaded.length; ++i) {
+            same &= downloaded[i] === buffer[i];
+          }
+          ok(same, "Downloaded buffer contains the same contents as the original buffer.");
+        }).on('complete', deleteData);
+      }
+      function deleteData() {
+        cm.destroy(key).on('success', function() {
+          ok(true, 'Deleted unnamed binary buffer from server.');
+        }).on('error', function() {
+          ok(false, 'Deleted unnamed binary buffer from server.');
+        }).on('complete', start);
+      }
+    }
+  });
+
+  // Test 16: Verify that we can download a file.
   asyncTest('DND verify download capability', function() {
     if (!inBrowser) {
       ok(true, 'Test skipped.');
@@ -751,7 +793,7 @@ $(function() {
     }
   });
 
-  // Test 16: Verify that the file we uploaded is deleted.
+  // Test 17: Verify that the file we uploaded is deleted.
   asyncTest('Delete file capability', function() {
     cm.destroy(uploadKey).on('error', function() {
       ok(false, 'File does not exist on server');
@@ -767,5 +809,4 @@ $(function() {
       }).on('complete', start);
     }
   });
-
 });
