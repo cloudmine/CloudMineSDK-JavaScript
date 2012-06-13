@@ -269,12 +269,9 @@
           console.log("Upload: swfupload filename"); 
           // Try to upload using swfupload.
         } else NotSupported();
-      } else if (File && file instanceof File) {
-        console.log("Upload: FileAPI File");
-        // Try to upload FileAPI File objects
-        if (!options.contentType) apicall.setContentType(file.type);
-
+      } else if (isBinary(file)) {
         var reader = new FileReader();
+        
         /** @private */
         reader.onabort = function(e) {
           apicall.setData("FileReader aborted").abort();
@@ -290,15 +287,21 @@
           APICall.binaryUpload(apicall, e.target.result, filename, contentType).done();
         };
 
+        // Don't need to transform Files to Blobs.
+        if (File && file instanceof File) {
+          if (!options.contentType) apicall.setContentType(file.type);
+        } else if (CanvasImageData && file instanceof CanvasImageData) {
+          var byteArray = new Uint8Array(canvasImageLength);
+          for (var i = 0; i < file.length; i++) {
+            byteArray[i] = file[i];
+          }
+          file = getBlob(byteArray);
+        } else {
+          file = getBlob(file);
+        }
+        
+        console.log("Upload: Binary File Upload - %o", file);
         reader.readAsDataURL(file);
-      } else if (isBinary(file)) {
-        console.log("Upload: FileAPI Binary");
-        // Try to upload Binary blobs from WebGL
-        var blob = getBlob(file);
-        APICall.binaryUpload(apicall, blob, filename, contentType).done();
-      } else if (CanvasImageData && file instanceof CanvasImageData) {
-        console.log("Upload: Canvas Data");
-        APICall.binaryUpload(apicall, file, filename, contentType).done();
       } else NotSupported();
 
       return apicall;
@@ -1031,8 +1034,10 @@
   */
   APICall.nodeDownload = function(data, xhr, config) {
     var out = {success: {}};
-    // TODO: Write file out to file system.
-    // out.success[config.key] = filehandle;
+    var nodeFileSystem = require('fs');
+    var filename = options.filename || key;
+    var filehandle = fs.writeFileSync(filename, data);
+    out.success[config.key] = filehandle;
     return out;
   }
 
@@ -1047,8 +1052,13 @@
   */
   APICall.iframeDownload = function(data, xhr, config) {
     var out = {success: {}};
-    // TODO: Add a hidden iframe to document, download file, remove iframe.
-    // out.success[config.key] = iframe
+    var iframe = document.createElement('iframe');
+    iframe.id = 'downloader';
+    iframe.style.visibility = 'hidden';
+    document.body.appendChild(iframe);
+    iframe.src = this.url;
+    out.success[config.key] = iframe;
+    window.setTimeout(function(){document.removeChild(iframe)}, 1000*60);
     return out;
   }
 
@@ -1207,13 +1217,12 @@
 
   // Scope external dependencies, if necessary.
   var esc = this.encodeURIComponent || escape;
+  var File = this.File;
   var FileReader = this.FileReader;
   var BlobBuilder = this.BlobBuilder || this.WebKitBlobBuilder || this.MozBlobBuilder || this.MSBlobBuilder;
   var ArrayBuffer = this.ArrayBuffer;
-  var CanvasRenderingContext2D = this.CanvasRenderingContext2D;
   var CanvasImageData = this.CanvasImageData;
-  var BinaryClasses = [ this.ArrayBuffer, this.Uint8Array, this.Uint8ClampedArray, this.Uint16Array, this.Uint32Array, this.Int8Array, this.Int16Array, this.Int32Array, this.Float32Array, this.Float64Array ];
-  var File = this.File;
+  var BinaryClasses = [ File, CanvasImageData, ArrayBuffer, this.Uint8Array, this.Uint8ClampedArray, this.Uint16Array, this.Uint32Array, this.Int8Array, this.Int16Array, this.Int32Array, this.Float32Array, this.Float64Array ];
   var swfupload = this.swfupload;
 
   // Utility functions.
@@ -1388,6 +1397,4 @@
 
   // Base64 Library from http://www.webtoolkit.info
   var base64 = {_keyStr:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",encode:function(a){var b="";var c,d,e,f,g,h,i;var j=0;a=base64._utf8_encode(a);while(j<a.length){c=a.charCodeAt(j++);d=a.charCodeAt(j++);e=a.charCodeAt(j++);f=c>>2;g=(c&3)<<4|d>>4;h=(d&15)<<2|e>>6;i=e&63;if(isNaN(d)){h=i=64}else if(isNaN(e)){i=64}b=b+this._keyStr.charAt(f)+this._keyStr.charAt(g)+this._keyStr.charAt(h)+this._keyStr.charAt(i)}return b},decode:function(a){var b="";var c,d,e;var f,g,h,i;var j=0;a=a.replace(/[^A-Za-z0-9\+\/\=]/g,"");while(j<a.length){f=this._keyStr.indexOf(a.charAt(j++));g=this._keyStr.indexOf(a.charAt(j++));h=this._keyStr.indexOf(a.charAt(j++));i=this._keyStr.indexOf(a.charAt(j++));c=f<<2|g>>4;d=(g&15)<<4|h>>2;e=(h&3)<<6|i;b=b+String.fromCharCode(c);if(h!=64){b=b+String.fromCharCode(d)}if(i!=64){b=b+String.fromCharCode(e)}}b=base64._utf8_decode(b);return b},_utf8_encode:function(a){a=a.replace(/\r\n/g,"\n");var b="";for(var c=0;c<a.length;c++){var d=a.charCodeAt(c);if(d<128){b+=String.fromCharCode(d)}else if(d>127&&d<2048){b+=String.fromCharCode(d>>6|192);b+=String.fromCharCode(d&63|128)}else{b+=String.fromCharCode(d>>12|224);b+=String.fromCharCode(d>>6&63|128);b+=String.fromCharCode(d&63|128)}}return b},_utf8_decode:function(a){var b="";var c=0;var d=c1=c2=0;while(c<a.length){d=a.charCodeAt(c);if(d<128){b+=String.fromCharCode(d);c++}else if(d>191&&d<224){c2=a.charCodeAt(c+1);b+=String.fromCharCode((d&31)<<6|c2&63);c+=2}else{c2=a.charCodeAt(c+1);c3=a.charCodeAt(c+2);b+=String.fromCharCode((d&15)<<12|(c2&63)<<6|c3&63);c+=3}}return b}};
-
 })();
-
