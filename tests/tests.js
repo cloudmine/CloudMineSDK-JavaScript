@@ -741,19 +741,19 @@ $(function() {
   });
 
   // Test 15: Verify that we can upload and download binary data.
-  var BinaryBuffer = this.Int32Array || this.Buffer;
+  var BinaryBuffer = this.Uint8Array || this.Buffer;
   asyncTest("Binary Buffer Upload Test", function() {
     if (!BinaryBuffer) {
       ok(false, "No known binary buffers supported, skipping test.");
       start();
     } else {
-      var key = uuid();
+      var key = 'binary_buffer_' + noise(12);
       var buffer = new BinaryBuffer(32);
       for (var i = 65; i < 97; ++i) {
         buffer[i-65] = String.fromCharCode(i);
       }
 
-      cm.upload(key).on('error', function() {
+      cm.upload(key, buffer).on('error', function() {
         ok(false, "Upload unnamed binary buffer to server"); 
       }).on('success', function() {
         ok(true, "Upload unnamed binary buffer to server");
@@ -772,6 +772,7 @@ $(function() {
           ok(same, "Downloaded buffer contains the same contents as the original buffer.");
         }).on('complete', deleteData);
       }
+
       function deleteData() {
         cm.destroy(key).on('success', function() {
           ok(true, 'Deleted unnamed binary buffer from server.');
