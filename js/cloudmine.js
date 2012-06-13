@@ -258,7 +258,6 @@
 
       var contentType = options.contentType;
       var filename = options.filename || key;
-
       // Prepare given data.
       if (isString(file)) {
         // Handle file names being passed.
@@ -291,16 +290,18 @@
         if (File && file instanceof File) {
           if (!options.contentType) apicall.setContentType(file.type);
         } else if (CanvasImageData && file instanceof CanvasImageData) {
-          var byteArray = new Uint8Array(canvasImageLength);
+          var byteArray = new Uint8Array(file.length);
           for (var i = 0; i < file.length; i++) {
             byteArray[i] = file[i];
           }
+
+          if (!contentType) contentType = 'image/png';
           file = getBlob(byteArray);
         } else {
-          file = getBlob(file);
+          if (!contentType) contentType = 'application/octet-stream';
+          file = getBlob(file, contentType);
         }
         
-        console.log("Upload: Binary File Upload - %o", file);
         reader.readAsDataURL(file);
       } else NotSupported();
 
@@ -1314,10 +1315,7 @@
   }
 
   function isBinary(item) {
-    if (isObject(item)) {
-      return BinaryClasses.indexOf(item.__proto__.constructor) > -1
-    }
-    return false;
+    return isObject(item) && BinaryClasses.indexOf(item.__proto__.constructor) > -1
   }
 
   function isArray(item) {
@@ -1337,14 +1335,16 @@
     return true;
   }
 
-  function getBlob(data) {
+  function getBlob(data, contentType) {
     var blob;
+    if (!contentType) contentType = 'application/octet-stream';
+
     try {
       // Binary in javascript is such a nightmare.
-      blob = new Blob(file, {type: contentType});
+      blob = new Blob(data, {type: contentType});
     } catch (e) {
       var builder = new BlobBuilder();
-      builder.append(file);
+      builder.append(data);
       blob = builder.getBlob(contentType);
     }
     return blob;
