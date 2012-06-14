@@ -1034,7 +1034,7 @@
   */
   APICall.nodeDownload = function(data, xhr, config) {
     var out = {success: {}};
-    var nodeFileSystem = require('fs');
+    var fs = require('fs');
     var filename = options.filename || key;
     var filehandle = fs.writeFileSync(filename, data);
     out.success[config.key] = filehandle;
