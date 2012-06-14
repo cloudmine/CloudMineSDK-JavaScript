@@ -301,36 +301,82 @@
       return apicall;
     },
 
-
-    // filename: If present, download the file to the computer.
-    // mode: buffer should return an ArrayBuffer (Browser) or a Buffer (Node.js)
-    // mode: base64 should return the base64 encoded data
-    // mode: text should return the base64 decoded data.
     /**
      * Download a file stored in CloudMine.
      * @param {string} key The binary file's object key.
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
-     * @config {string} [mode] Force download behavior, even if the client doesn't support it. "node", "iframe", "raw"
+     * @config {string} [filename] If present, the file will be downloaded directly to the computer with the
+     *                             filename given. This does not validate the filename given!
+     * @config {string} [mode] If buffer, automatically move returning data to either an ArrayBuffer or Buffer
+     *                         if supported. Otherwise the result will be a standard string.
      * @return {APICall} An APICall instance for the web service request used to attach events.
      */
     download: function(key, options) {
-      // If we aren't given a mode, download the file directly to the user's computer.
-      var processor = (ajax == NodeAJAX ? APICall.nodeDownload : APICall.iframeDownload);
-      if (options.mode === 'node') processor = APICall.nodeDownload;
-      else if (options.mode === 'raw') processor = APICall.basicResponse;
-
       options = opts(this, options);
-      options.query = {force_download: true};
-      return new APICall({
+      var response = {success: {}}, query;
+
+      if (options.filename) {
+        query = {
+          force_download: true,
+          apikey: options.apikey,
+          session_token: options.session_token,
+          filename: options.filename
+        }
+      }
+
+      var apicall = new APICall({
         action: 'binary/' + key,
         type: 'GET',
         later: true,
         options: options,
+        query: query,
         appid: options.appid,
-        apikey: options.apikey,
-        key: key,
-        processResponse: processor
+        apikey: options.apikey
       });
+
+      // Download file directly to computer if given a filename.
+      if (options.filename) {
+        if (ajax == NodeAJAX) {
+          response.success[key] = require('fs').writeFileSync(options.filename, data);
+        } else {
+          function detach() {
+            if (iframe.parentNode) document.body.removeChild(iframe);
+          }
+          var iframe = document.createElement('iframe');
+          iframe.style.display = 'none';
+          iframe.src = apicall.url;
+          iframe.onload = detach;
+          detach.timer = setTimeout(detach, 60000);
+          document.body.appendChild(iframe);
+          response.success[key] = iframe;
+        }
+
+        apicall.done(response);
+      } else if (options.mode === 'buffer' && (ArrayBuffer || Buffer)) {
+        apicall.setProcessor(function(data) {
+          var buffer;
+          if (ArrayBuffer) {
+            buffer = new ArrayBuffer(data.length);
+            var charView = new Uint8Array(buffer);
+            for (var i = 0; i < data.length; ++i) {
+              charView[i] = data[i] & 0xFF;
+            }
+          } else {
+            buffer = new Buffer(data);
+          }
+
+          response.success[key] = buffer;
+          return response;
+        }).done();
+      } else {
+        // Raw data return. Do not attempt to process the result.
+        apicall.setProcessor(function(data) {
+          response.success[key] = data;
+          return response;
+        }).done();
+      }
+
+      return apicall;
     },
 
 
@@ -872,15 +918,36 @@
     },
 
     /**
+     * Set the data processor for the APICall. This is ineffective for running ajax calls.
+     * @return {APICall} The current APICall object
+     */
+    setProcessor: function(func) {
+      if (!this.xhr && this.config) {
+        this.config.processResponse = func;
+      }
+      return this;
+    },
+    
+    /**
      * If a synchronous ajax call is done (via setting: options.async = false), you must call this function
      * after you have attached all your event handlers. You should not attach event handlers after this
      * is called.
      */
-    done: function() {
+    done: function(response) {
       if (!this.xhr && this.config) {
-        this.xhr = ajax(this.url, this.config);
-        this.config = undefined;
-        delete this.config;
+        if (response) {
+          this.xhr = true;
+          var self = this;
+          setTimeout(function() {
+            APICall.complete(self, response);
+            self.config = undefined;
+            delete self.config;
+          }, 1);
+        } else {
+          this.xhr = ajax(this.url, this.config);
+          this.config = undefined;
+          delete this.config;
+        }
       }
       return this;
     }
@@ -1021,45 +1088,6 @@
       data,
       '--' + boundary + '--'
     ].join('\r\n'));
-  }
-
-  /**
-   * This handles the response data from APICall so it can be written to file.
-   * @param {object} data Data returned from the ajax call.
-   * @param {any} xhr The ajax connection. This may vary depending on implementation.
-   * @param {object} config Configuration that was passed to the ajax connection.
-   * @private
-   * @function
-   * @memberOf APICall
-  */
-  APICall.nodeDownload = function(data, xhr, config) {
-    var out = {success: {}};
-    var fs = require('fs');
-    var filename = options.filename || key;
-    var filehandle = fs.writeFileSync(filename, data);
-    out.success[config.key] = filehandle;
-    return out;
-  }
-
-  /**
-   * This handles creation of a hidden iframe to download files.
-   * @param {object} data Data returned from the ajax call.
-   * @param {any} xhr The ajax connection. This may vary depending on implementation.
-   * @param {object} config Configuration that was passed to the ajax connection.
-   * @private
-   * @function
-   * @memberOf APICall
-  */
-  APICall.iframeDownload = function(data, xhr, config) {
-    var out = {success: {}};
-    var iframe = document.createElement('iframe');
-    iframe.id = 'downloader';
-    iframe.style.visibility = 'hidden';
-    document.body.appendChild(iframe);
-    iframe.src = this.url;
-    out.success[config.key] = iframe;
-    window.setTimeout(function(){document.removeChild(iframe)}, 1000*60);
-    return out;
   }
 
   /**

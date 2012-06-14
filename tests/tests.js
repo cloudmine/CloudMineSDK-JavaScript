@@ -9,17 +9,15 @@ if (!this.window) {
 
 
 $(function() {
+  var ArrayBuffer = this.ArrayBuffer;
+  var Buffer = this.Buffer;
   var FileReader = this.FileReader;
-  var swfupload = this.swfupload;
-  module('Common');
+  var Uint8Array = this.Uint8Array;
+  var hasBuffers = (Uint8Array && ArrayBuffer) || Buffer; 
 
-  // var cm = new cloudmine.WebService({
-  //   appid: '84e5c4a381e7424b8df62e055f0b69db',
-  //   apikey: '84c8c3f1223b4710b180d181cd6fb1df'
-  // });
   var cm = new cloudmine.WebService({
-    appid: '3270d4dfa1f44a2a91ccf01e0d5faf1c',
-    apikey: '314d237589d742888edb1872341356e2'
+    appid: '84e5c4a381e7424b8df62e055f0b69db',
+    apikey: '84c8c3f1223b4710b180d181cd6fb1df'
   });
   var cm_bad_apikey = new cloudmine.WebService({
     appid: '84e5c4a381e7424b8df62e055f0b69db',
@@ -34,6 +32,21 @@ $(function() {
     var out = [];
     while (count-- > 0) out.push('abcdefghijklmnopqrstuvwxyz123456789_'[parseInt(Math.random() * 26)]);
     return out.join('');
+  }
+
+  function fillBuffer(data) {
+    var buffer;
+    if (ArrayBuffer) {
+      buffer = new ArrayBuffer(data.length);
+      var charView = new Uint8Array(buffer);
+      for (var i = 0; i < data.length; ++i) {
+        charView[i] = data[i] & 0xFF;
+      }
+    } else {
+      buffer = new Buffer(data);
+    }
+
+    return buffer;
   }
 
   // Test 1: Register a user, then log them
@@ -633,33 +646,8 @@ $(function() {
     }
   });
 
-  module('Node.JS');
-  // Test 12 (Node.JS): Verify that we can upload files
-  asyncTest('Verify upload capability', function() {
-    if (inBrowser) {
-      ok(true, 'Test skipped.');
-      start();
-    } else {
-      var uploadKey = 'test_obj_' + noise(8);
-      cm.upload(uploadKey, '../js/cloudmine.js', {contentType: 'text/cloudminetest'}).on('error', function() {
-        ok(false, 'Upload cloudmine.js as ' + uploadKey);
-      }).on('success', function() {
-        ok(true, 'Upload cloudmine.js as ' + uploadKey);
-      }).on('complete', verifyFileName);
-      
-      function verifyFileName() {
-        cm.get(uploadKey).on('error', function() {
-          ok(false, 'File was not uploaded.');
-        }).on('success', function(data) {
-          ok(data[key].name === 'cloudmine.js', 'File name is cloudmine.js');
-          ok(data[key].content_type === 'text/cloudminetest', 'Content-type is text/cloudminetest');
-        }).on('complete', start);
-      }
-    }
-  });
-
-  // Test 13 (Node.JS): Verify that we can download files and the file we uploaded did not get corrupted.
-  asyncTest('Verify download capability', function() {
+  // Test (Node.JS): Verify that we can download files and the file we uploaded did not get corrupted.
+  asyncTest('Node.JS: Verify download capability', function() {
     if (inBrowser) {
       ok(true, 'Test skipped.');
       start();
@@ -684,130 +672,110 @@ $(function() {
     }
   });
 
-  module('Browser');
-
-  // Test 14: Verify that we can upload files through the browser.
-  asyncTest('FileAPI binary upload via Drag & Drop', 5, function() {
-    if (!inBrowser || !FileReader) {
-      ok(true, 'Test skipped, required features not supported.');
-      start();
-    } else {
+  // Test: Verify that we can upload files.
+  asyncTest('Binary file upload test', 5, function() {
+    var uploadKey = 'test_obj_' + noise(8);
+    var fileHandle, filename;
+    
+    if (inBrowser) {
       if (FileReader) {
-        var uploadKey = 'test_obj_' + noise(8);
-        var filename = null;
-        var dragContents = false;
         var elem = document.querySelector('#dnd');
         var button = elem.querySelector('button');
-
-        function skipTest() {
-          dragContents = true;
+        
+        button.addEventListener('click', function skipTest() {
+          fileHandle = true;
           button.removeEventListener('click', skipTest, false);
-        }
-
-        function readFile(e) {
-          dragContents = e.dataTransfer.files[0];
+        }, false);
+        
+        
+        window.addEventListener('drop', function readFile(e) {
+          fileHandle = e.dataTransfer.files[0];
+          filename = fileHandle.name;
           window.removeEventListener('drop', readFile, false);
           e.preventDefault();
-        }
-
+        }, false);
+        
+        // Wait for user input.
+        elem.style.display = 'block';
+        
         function waitForDrag() {
-          if (dragContents) {
+          if (fileHandle) {
             clearInterval(waitForDrag.interval);
             elem.style.display = 'none';
             uploadContents();
           }
         }
-
-        function uploadContents() {
-          if (dragContents === true) {
-            ok(false, "Skipped uploading file.");
-            start();
-          } else {
-            filename = dragContents.name;
-            var aborted = false;
-            // FileReader may cause upload to abort.
-            cm.upload(uploadKey, dragContents).on('abort', function() {
-              aborted = true;
-              ok(false, "File reader aborted. If you are using chrome make sure you started with flags: --allow-file-access --allow-file-access-from-files");
-            }).on('error', function(data) {
-              if (!aborted) ok(false, "User specified file uploaded to server");
-            }).on('success', function() {
-              ok(true, "User specified file uploaded to server");
-            }).on('complete', verifyUpload);
-          }
-        }
-        
-        function verifyUpload() {
-          cm.get(uploadKey).on('error', function() {
-            ok(false, "File was uploaded to server");
-          }).on('success', function() {
-            ok(true, "File was uploaded to server");
-          }).on('complete', downloadFile);
-        }
-        
-        function downloadFile() {
-          cm.download(uploadKey, {filename: "Copy of " + filename}).on('success', function() {
-            ok(true, "Downloaded file to computer");
-          }).on('error', function() {
-            ok(false, "Downloaded file to computer");
-          }).on('complete', destroyFile);
-        }
-
-        function destroyFile() {
-          cm.destroy(uploadKey).on('error', function() {
-            ok(false, 'Delete file from server');
-          }).on('success', function() {
-            ok(true, 'Delete file from server');
-          }).on('complete', verifyDestroy);
-        }
-        
-        function verifyDestroy() {
-          cm.get(uploadKey).on('error', function() {
-            ok(true, 'File does not exist on server');
-          }).on('success', function() {
-            ok(false, 'File does not exist on server');
-          }).on('complete', start);
-        }
-
-        // Wait for user input.
-        button.addEventListener('click', skipTest, false);
-        window.addEventListener('drop', readFile, false);
         waitForDrag.interval = setInterval(waitForDrag, 100);
-        elem.style.display = 'block';
         waitForDrag();
       } else {
-        ok(false, "Test harness does not test swfupload!");
+        ok(false, "Incompatible browser configuration!");
         start();
       }
-    }
-  });
-
-  // Test 15: Verify that we can download a file.
-  asyncTest('DND verify download capability', function() {
-    if (!inBrowser) {
-      ok(true, 'Test skipped.');
-      start();
     } else {
-      ok(false, 'Test not implemented.');
-      start();
+      fileHandle = filename = '../js/cloudmine.js';
+      uploadContents();
+    }
+    
+    function uploadContents() {
+      if (fileHandle === true) {
+        ok(false, "Skipped uploading file.");
+        start();
+      } else {
+        // FileReader may cause upload to abort.
+        var aborted = false;
+        cm.upload(uploadKey, fileHandle).on('abort', function() {
+          aborted = true;
+          ok(false, "File reader aborted. If you are using chrome make sure you started with flags: --allow-file-access --allow-file-access-from-files");
+        }).on('error', function(data) {
+          if (!aborted) ok(false, "User specified file uploaded to server");
+        }).on('success', function() {
+          ok(true, "User specified file uploaded to server");
+        }).on('complete', verifyUpload);
+      }
+    }
+    
+    function verifyUpload() {
+      cm.get(uploadKey).on('error', function() {
+        ok(false, "File was uploaded to server");
+      }).on('success', function() {
+        ok(true, "File was uploaded to server");
+      }).on('complete', downloadFile);
+    }
+    
+    function downloadFile() {
+      cm.download(uploadKey, {filename: "Copy of " + filename}).on('success', function() {
+        ok(true, "Downloaded file to computer");
+      }).on('error', function() {
+        ok(false, "Downloaded file to computer");
+      }).on('complete', destroyFile);
+    }
+
+    function destroyFile() {
+      cm.destroy(uploadKey).on('error', function() {
+        ok(false, 'Delete file from server');
+      }).on('success', function() {
+        ok(true, 'Delete file from server');
+      }).on('complete', verifyDestroy);
+    }
+    
+    function verifyDestroy() {
+      cm.get(uploadKey).on('error', function() {
+        ok(true, 'File does not exist on server');
+      }).on('success', function() {
+        ok(false, 'File does not exist on server');
+      }).on('complete', start);
     }
   });
 
-  module('Common');
-
-  // Test 16: Verify that we can upload and download binary data.
-  var BinaryBuffer = this.ArrayBuffer || this.Buffer;
-  asyncTest("Binary Buffer Upload Test", function() {
-    if (!BinaryBuffer) {
+  // Test: Verify that we can upload and download binary data.
+  asyncTest("Binary buffer upload test", 5, function() {
+    if (!hasBuffers) {
       ok(false, "No known binary buffers supported, skipping test.");
       start();
     } else {
       var key = 'binary_buffer_' + noise(12);
-      var buffer = new BinaryBuffer(32);
-      var charView = new Uint8Array(buffer);
-      for (var i = 65; i < 97; ++i) {
-        charView[i-65] = String.fromCharCode(i) & 0xFF;
-      }
+      var data = '\x01\x02\x03\x04\x05\x06\x07\x08\x09\xF1\xF2\xF3\xF4\xF5\xF6\xF7\xF8\xF9';
+      var buffer = fillBuffer(data);
 
       // Upload the binary buffer to the server. Should automatically be base64 encoded.
       cm.upload(key, buffer).on('error', function() {
@@ -818,39 +786,27 @@ $(function() {
 
       var downloaded = null;
       function downloadData() {
-        // filename: If present, download the file to the computer.
-        // mode: buffer should return an ArrayBuffer (Browser) or a Buffer (Node.js)
-        // mode: base64 should return the base64 encoded data
-        // mode: text should return a utf8 encoded string.
         cm.download(key, {mode: 'buffer'}).on('error', function() {
           ok(false, 'Download unnamed binary buffer from server');
         }).on('success', function(data) {
+          downloaded = fillBuffer(data[key]);
           ok(true, 'Downloaded unnamed binary buffer from server');
-          downloaded = data;
-          var downloaded = new BinaryBuffer(data.length);
-          var view = new Uint8Array(downloaded);
-          view.set(data);
-          var same = true;
-          for (var i = 0; same && i < downloaded.length; ++i) {
-            same &= downloaded[i] === buffer[i];
-          }
-          ok(same, "Downloaded buffer contains the same contents as the original buffer.");
-        }).on('complete', deleteData);
+        }).on('complete', verifyData);
       }
 
       function verifyData() {
-        var downloadedChars = new Uint8Array(downloaded);
-        equal(downloadedChars.length, charView.length, "Binary buffers have the same length");
-        var same = true;
-        for (var i = 0; i < downloadedChars.length; ++i) {
-          
+        equal(downloaded ? downloaded.length : null, buffer.length, "Binary buffers have the same length");
+
+        var same = downloaded != null;
+        for (var i = 0; same && i < downloaded.length; ++i) {
+          same &= downloaded[i] === buffer[i];
         }
-        ok(same, "Binary buffers have the same contents");
+
+        ok(same, "Downloaded buffer contains the same contents as the original buffer.");
         deleteData();
       }
 
       function deleteData() {
-        console.log("Destroying data");
         cm.destroy(key).on('success', function() {
           ok(true, 'Deleted unnamed binary buffer from server.');
         }).on('error', function() {
@@ -859,5 +815,4 @@ $(function() {
       }
     }
   });
-
 });
