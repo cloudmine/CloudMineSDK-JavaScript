@@ -250,6 +250,7 @@
         action: 'binary/' + key,
         type: 'post',
         later: true,
+        encoding: 'binary',
         options: options,
         appid: options.appid,
         apikey: options.apikey,
@@ -261,13 +262,19 @@
         APICall.binaryUpload(apicall, data, options.filename, options.contentType).done();
       }
       
-      if (isString(file)) {
+      if (isString(file) || (Buffer && file instanceof Buffer)) {
         // Upload by filename
-        if (ajax == NodeAJAX) upload(require('fs').readFileSync(file));
+
+        if (ajax == NodeAJAX) {
+          if (isString(file)) file = require('fs').readFileSync(file);
+          upload(file);
+        }
         else NotSupported();
-      } else if (CanvasImageData && file instanceof CanvasImageData) {
-        // Upload CanvasImageData objects, this will use the .toDataURL() method.
+      } else if (file.toDataURL) {
+        // Canvas will have a toDataURL function.
         upload(file, 'image/png');
+      } else if (CanvasRenderingContext2D && file instanceof CanvasRenderingContext2D) {
+        upload(file.canvas, 'image/png');
       } else if (isBinary(file)) {
         // Binary files are base64 encoded from a buffer.
         var reader = new FileReader();
@@ -327,6 +334,7 @@
         action: 'binary/' + key,
         type: 'GET',
         later: true,
+        encoding: 'binary',
         options: options,
         query: query,
         appid: options.appid,
@@ -336,7 +344,10 @@
       // Download file directly to computer if given a filename.
       if (options.filename) {
         if (ajax == NodeAJAX) {
-          response.success[key] = require('fs').writeFileSync(options.filename, data);
+          apicall.setProcessor(function(data) {
+            response.success[key] = require('fs').writeFileSync(options.filename, data, 'binary');
+            return response;
+          }).done();
         } else {
           function detach() {
             if (iframe.parentNode) document.body.removeChild(iframe);
@@ -354,14 +365,14 @@
       } else if (options.mode === 'buffer' && (ArrayBuffer || Buffer)) {
         apicall.setProcessor(function(data) {
           var buffer;
-          if (ArrayBuffer) {
+          if (Buffer) {
+            buffer = new Buffer(data, 'binary');
+          } else {
             buffer = new ArrayBuffer(data.length);
             var charView = new Uint8Array(buffer);
             for (var i = 0; i < data.length; ++i) {
               charView[i] = data[i] & 0xFF;
             }
-          } else {
-            buffer = new Buffer(data);
           }
 
           response.success[key] = buffer;
@@ -879,7 +890,7 @@
      * @return {APICall} The current APICall object
      */
     setContentType: function(type) {
-      type = type || 'application/octet-stream';
+      type = type || defaultType;
       if (this.config) {
         this.config.contentType = type;
         this.requestHeaders['content-type'] = type;
@@ -1078,9 +1089,15 @@
   */
   APICall.binaryUpload = function(apicall, data, filename, contentType) {
     var boundary = uuid();
-    if (data.toDataURL) data = data.toDataURL(contentType);
-    data = data.replace(/^data:(.*?);?base64,/, '');
-    if (!contentType) contentType = RegExp.$1 || 'application/octet-stream';
+    if (Buffer && data instanceof Buffer) {
+      data = data.toString('base64');
+      if (!contentType) contentType = defaultType;
+    } else {
+      if (data.toDataURL) data = data.toDataURL(contentType);
+      data = data.replace(/^data:(.*?);?base64,/, '');
+      if (!contentType) contentType = RegExp.$1 || defaultType;
+    }
+
     apicall.setContentType('multipart/form-data; boundary=' + boundary);
     return apicall.setData([
       '--' + boundary,
@@ -1133,7 +1150,7 @@
     var self = this, cbContext = config.context || this;
     this._textStatus = 'success';
     this._request = (opts.protocol === "http:" ? http : https).request(opts, function(response) {
-      response.setEncoding('utf8');
+      response.setEncoding(config.encoding || 'utf8');
 
       response.on('data', function(chunk) {
         self.responseText.push(chunk);
@@ -1247,15 +1264,16 @@
   };
 
   // Scope external dependencies, if necessary.
+  var base = this.window ? window : root;
   var defaultType = 'application/octet-stream';
-  var esc = this.encodeURIComponent || escape;
-  var File = this.File;
-  var FileReader = this.FileReader;
-  var BlobBuilder = this.BlobBuilder || this.WebKitBlobBuilder || this.MozBlobBuilder || this.MSBlobBuilder;
-  var ArrayBuffer = this.ArrayBuffer;
-  var CanvasImageData = this.CanvasImageData;
-  var BinaryClasses = [ File, CanvasImageData, ArrayBuffer, this.Uint8Array, this.Uint8ClampedArray, this.Uint16Array, this.Uint32Array, this.Int8Array, this.Int16Array, this.Int32Array, this.Float32Array, this.Float64Array ];
-  var swfupload = this.swfupload;
+  var esc = base.encodeURIComponent || escape;
+  var File = base.File;
+  var FileReader = base.FileReader;
+  var BlobBuilder = base.BlobBuilder || base.WebKitBlobBuilder || base.MozBlobBuilder || base.MSBlobBuilder;
+  var ArrayBuffer = base.ArrayBuffer;
+  var Buffer = base.Buffer;
+  var CanvasRenderingContext2D = base.CanvasRenderingContext2D;
+  var BinaryClasses = [ File, Buffer, CanvasRenderingContext2D, ArrayBuffer, base.Uint8Array, base.Uint8ClampedArray, base.Uint16Array, base.Uint32Array, base.Int8Array, base.Int16Array, base.Int32Array, base.Float32Array, base.Float64Array ];
 
   // Utility functions.
   function hex() { return Math.round(Math.random() * 16).toString(16); }
@@ -1368,7 +1386,7 @@
 
   function getBlob(data, contentType) {
     var blob;
-    if (!contentType) contentType = 'application/octet-stream';
+    if (!contentType) contentType = defaultType;
     data = new Uint8Array(data);
     try {
       // Binary in javascript is such a nightmare.

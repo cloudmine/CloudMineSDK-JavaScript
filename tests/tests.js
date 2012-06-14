@@ -1,12 +1,14 @@
 var inBrowser = true;
-var ArrayBuffer = this.ArrayBuffer;
-var Buffer = this.Buffer;
-var FileReader = this.FileReader;
-var Uint8Array = this.Uint8Array;
-var hasBuffers = (Uint8Array && ArrayBuffer) || Buffer; 
+var base = this.window ? window : root;
+var ArrayBuffer = base.ArrayBuffer;
+var Buffer = base.Buffer;
+var FileReader = base.FileReader;
+var Uint8Array = base.Uint8Array;
+var CanvasRenderingContext2D = base.CanvasRenderingContext2D;
+var hasBuffers = Buffer || (Uint8Array && ArrayBuffer); 
 
 // QUnit for Node: Redefine a few things.
-if (!this.window) {
+if (!base.window) {
   function $(func) { func(); }
   cloudmine = {WebService: module.require('../js/cloudmine.js')};
   module = QUnit.module;
@@ -56,14 +58,14 @@ $(function() {
 
   function fillBuffer(data) {
     var buffer;
-    if (ArrayBuffer) {
+    if (Buffer) {
+      buffer = new Buffer(data, 'binary');
+    } else {
       buffer = new ArrayBuffer(data.length);
       var charView = new Uint8Array(buffer);
       for (var i = 0; i < data.length; ++i) {
         charView[i] = data[i] & 0xFF;
       }
-    } else {
-      buffer = new Buffer(data);
     }
 
     return buffer;
@@ -840,28 +842,49 @@ $(function() {
     }
   });
 
-  asyncTest('Node.JS: Verify download capability', function() {
+  asyncTest('Verify download integrity.', 4, function() {
     if (inBrowser) {
-      ok(true, 'Test skipped.');
+      expect(1);
+      ok(true, 'This test currently cannot be performed in browsers for files.');
       start();
     } else {
+      var fs = require('fs');
       var uploadKey = 'test_obj_' + noise(8);
-      function hash(data) {
+      var downloadTo = 'binary_downloaded.png'
+      function hash(contents) {
         var md5 = require('crypto').createHash('md5');
         md5.update(contents);
-        md5.digest('hex');
+        var hash = md5.digest('hex');
+        return hash;
       }
 
-      cm.download(uploadKey, {filename: '_tmp_cloudmine.js'}).on('error', function() {
-        ok(false, 'File does not exist on server');
-      }).on('success', function(data) {
-        var fs = require('fs');
-        var originalFile = fs.readFileSync('../js/cloudmine.js', 'utf8');
-        var downloadedFile = fs.readFileSync('_tmp_cloudmine.js', 'utf8');
-        var originalHash = hash(originalFile);
-        ok(hash(downloadedFile) === originalHash, "Downloaded file matches content of uploaded");
-        ok(hash(data[key]) === originalHash, "In memory copy matches content of uploaded");
-      }).on('complete', start);
+      var downloadedFile;
+      var apicall = cm.upload(uploadKey, "binary.png").on('success', function() {
+        ok(true, "Uploaded binary.png to " + uploadKey);
+      }).on('error', function() {
+        ok(false, "Uploaded binary.png to " + uploadKey);
+      }).on('complete', download);
+
+      function download() {
+        cm.download(uploadKey, {filename: downloadTo}).on('error', function() {
+          ok(false, 'File was downloaded from server.');
+        }).on('success', function(data) {
+          ok(true, 'File was downloaded from server.');
+        }).on('complete', compareHashes);
+      }
+
+      function compareHashes() {
+        var exists = require('path').existsSync(downloadTo); 
+        ok(exists, 'File was downloaded to the correct file name.');
+        if (exists) {
+          var originalHash = hash(fs.readFileSync('binary.png', 'binary'));
+          var downloadedHash = hash(fs.readFileSync(downloadTo, 'binary'));
+          ok(downloadedHash === originalHash, "Downloaded file matches content of uploaded");
+        } else {
+          ok(false, "Downloaded file does not exist on system!");
+        }
+        start();
+      }
     }
   });
 
@@ -875,8 +898,11 @@ $(function() {
         var button = elem.querySelector('button');
         
         button.addEventListener('click', function skipTest() {
-          fileHandle = true;
-          button.removeEventListener('click', skipTest, false);
+          clearInterval(waitForDrag.interval);
+          elem.parentNode.removeChild(elem);
+          expect(1);
+          ok(true, "Skipped test as directed by user.");
+          start();
         }, false);
         
         function hammerTime(e) {
@@ -911,26 +937,21 @@ $(function() {
         start();
       }
     } else {
-      fileHandle = filename = '../js/cloudmine.js';
+      fileHandle = filename = 'binary.png';
       uploadContents();
     }
     
     function uploadContents() {
-      if (fileHandle === true) {
-        ok(false, "Skipped uploading file.");
-        start();
-      } else {
-        // FileReader may cause upload to abort.
-        var aborted = false;
-        cm.upload(uploadKey, fileHandle).on('abort', function() {
-          aborted = true;
-          ok(false, "File reader aborted. If you are using chrome make sure you started with flags: --allow-file-access --allow-file-access-from-files");
-        }).on('error', function(data) {
-          if (!aborted) ok(false, "User specified file uploaded to server");
-        }).on('success', function() {
-          ok(true, "User specified file uploaded to server");
-        }).on('complete', verifyUpload);
-      }
+      // FileReader may cause upload to abort.
+      var aborted = false;
+      cm.upload(uploadKey, fileHandle).on('abort', function() {
+        aborted = true;
+        ok(false, "File reader aborted. If you are using chrome make sure you started with flags: --allow-file-access --allow-file-access-from-files");
+      }).on('error', function(data) {
+        if (!aborted) ok(false, "User specified file uploaded to server");
+      }).on('success', function() {
+        ok(true, "User specified file uploaded to server");
+      }).on('complete', verifyUpload);
     }
     
     function verifyUpload() {
@@ -968,7 +989,8 @@ $(function() {
 
   asyncTest("Binary buffer upload test", 5, function() {
     if (!hasBuffers) {
-      ok(false, "No known binary buffers supported, skipping test.");
+      expect(1);
+      ok(true, "No known binary buffers supported, skipping test.");
       start();
     } else {
       var key = 'binary_buffer_' + noise(12);
@@ -1011,6 +1033,37 @@ $(function() {
       }).on('success', function() {
         ok(true, "Upload unnamed binary buffer to server");
       }).on('complete', downloadData);
+    }
+  });
+ 
+  asyncTest("Canvas upload test", 2, function() {
+    if (!CanvasRenderingContext2D) {
+      expect(1);
+      ok(true, "Platform does not support Canvas data. Skipping test.");
+      start();
+    } else {
+      // Create a canvas, blue square overlaying red square [credit: MDN].
+      var canvas = document.createElement('canvas');  
+      var ctx = canvas.getContext("2d");
+      ctx.fillStyle = "rgb(200,0,0)";
+      ctx.fillRect (10, 10, 55, 50);
+      ctx.fillStyle = "rgba(0, 0, 200, 0.5)";
+      ctx.fillRect (30, 30, 55, 50);
+
+      function downloadCanvas() {
+        cm.download(key, {filename: key + ".png"}).on('success', function() {
+          ok(true, "Downloaded canvas. Should be a red square with a blue square overlaid.");
+        }).on('error', function() {
+          ok(false, "Downloaded canvas. Should be a red square with a blue square overlaid.");
+        }).on('complete', start);
+      }
+      
+      var key = "canvas_image_" + noise(12);
+      cm.upload(key, ctx).on('success', function() {
+        ok(true, 'Uploaded canvas to server');
+      }).on('error', function() {
+        ok(false, 'Uploaded canvas to server');
+      }).on('complete', downloadCanvas);
     }
   });
 });
