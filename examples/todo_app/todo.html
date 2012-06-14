@@ -24,8 +24,9 @@
     <input type="password" id="login_password" placeholder="Password"/><div class="grey">You can hit Enter to log in.</div>
     <br><br>
     <input type="submit" value="Login" id="login_button" />
-     <span id="or">or</span>
+    <span id="or">or</span>
     <input type="submit" value="Register" id="register_button" />
+    <div id="error_login" class="error"></div>
   </div>
 
   <div id="restoring_session">
@@ -38,7 +39,7 @@
   </div>
 
   <div id="todo">
-  
+    <div id="empty_list">You haven't added any items yet.</div>
   </div>
 
   <div id="new">
@@ -48,6 +49,7 @@
     <div id="due_in_hours">Due in <input type="text" id="due_in" maxlength="3"> hours. <div class="grey">(Optional)</div></div>
     <br>
     <input type="submit" value="Create" id="create_button" />
+    <div id="error_list" class="error"></div>
   </div>
 </div>
 </body>
