@@ -237,9 +237,9 @@ $(document).ready(function(){
 
       // Make the Cloudmine library call to send the data to the cloud, along with the unique_id
       
-      cm.update(unique_id, object_data)
+      cm.update(unique_id, data)
         .on('success', function(){
-          todo.draw_new_item(object_data);
+          todo.draw_item(data);
         })
         .on('unauthorized', function(data){
           todo.error('list', data.errors[0]);
@@ -330,7 +330,6 @@ $(document).ready(function(){
       todo.data[item_data.__id__] = item_data;
 
       item_text = ''; // By default, start with an empty string.
-      
       if (item_data.deadline.timestamp != null){ // Parse how much time is left to complete this task.
         parsed_deadline = todo.parse_remaining_time(item_data.deadline.timestamp); 
         if (parsed_deadline <= 0){
@@ -418,10 +417,7 @@ $(document).ready(function(){
         todo_div.addClass('done');
         todo_checkbox.attr('checked', true);
       }
-
-      todo.push_item({
-        done: data.done
-      }, data.__id__, function(){ });
+      cm.update(data.__id__, { done: data.done });
     },
     
     /*
