@@ -1,4 +1,4 @@
-/* CloudMine JavaScript Library v1.0 cloudmine.me | cloudmine.me/license */ 
+/* CloudMine JavaScript Library v0.9 cloudmine.me | cloudmine.me/license */ 
 /** @namespace cloudmine */
 (function() {
   /**
