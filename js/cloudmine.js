@@ -1343,7 +1343,7 @@
   }
 
   function isBinary(item) {
-    return isObject(item) && BinaryClasses.indexOf(item.__proto__.constructor) > -1
+    return isObject(item) && BinaryClasses.indexOf(item.constructor) > -1
   }
 
   function isArray(item) {

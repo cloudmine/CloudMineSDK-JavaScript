@@ -1,5 +1,11 @@
-// QUnit for Node: Redefine a few things.
 var inBrowser = true;
+var ArrayBuffer = this.ArrayBuffer;
+var Buffer = this.Buffer;
+var FileReader = this.FileReader;
+var Uint8Array = this.Uint8Array;
+var hasBuffers = (Uint8Array && ArrayBuffer) || Buffer; 
+
+// QUnit for Node: Redefine a few things.
 if (!this.window) {
   function $(func) { func(); }
   cloudmine = {WebService: module.require('../js/cloudmine.js')};
@@ -9,12 +15,6 @@ if (!this.window) {
 
 
 $(function() {
-  var ArrayBuffer = this.ArrayBuffer;
-  var Buffer = this.Buffer;
-  var FileReader = this.FileReader;
-  var Uint8Array = this.Uint8Array;
-  var hasBuffers = (Uint8Array && ArrayBuffer) || Buffer; 
-
   var cm = new cloudmine.WebService({
     appid: '84e5c4a381e7424b8df62e055f0b69db',
     apikey: '84c8c3f1223b4710b180d181cd6fb1df'
@@ -687,13 +687,20 @@ $(function() {
           button.removeEventListener('click', skipTest, false);
         }, false);
         
-        
-        window.addEventListener('drop', function readFile(e) {
+        function hammerTime(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          return false;
+        }
+        elem.addEventListener('dragover', hammerTime, false);
+        elem.addEventListener('dragenter', hammerTime, false);
+        elem.addEventListener('dragleave', hammerTime, false);
+        elem.addEventListener('dragdrop', hammerTime, false);
+        elem.addEventListener('drop', function readFile(e) {
+          hammerTime(e);
           fileHandle = e.dataTransfer.files[0];
           filename = fileHandle.name;
-          window.removeEventListener('drop', readFile, false);
-          e.preventDefault();
-        }, false);
+        }, true);
         
         // Wait for user input.
         elem.style.display = 'block';
@@ -777,13 +784,6 @@ $(function() {
       var data = '\x01\x02\x03\x04\x05\x06\x07\x08\x09\xF1\xF2\xF3\xF4\xF5\xF6\xF7\xF8\xF9';
       var buffer = fillBuffer(data);
 
-      // Upload the binary buffer to the server. Should automatically be base64 encoded.
-      cm.upload(key, buffer).on('error', function() {
-        ok(false, "Upload unnamed binary buffer to server"); 
-      }).on('success', function() {
-        ok(true, "Upload unnamed binary buffer to server");
-      }).on('complete', downloadData);
-
       var downloaded = null;
       function downloadData() {
         cm.download(key, {mode: 'buffer'}).on('error', function() {
@@ -813,6 +813,13 @@ $(function() {
           ok(false, 'Deleted unnamed binary buffer from server.');
         }).on('complete', start);
       }
+
+      // Upload the binary buffer to the server. Should automatically be base64 encoded.
+      cm.upload(key, buffer).on('error', function() {
+        ok(false, "Upload unnamed binary buffer to server"); 
+      }).on('success', function() {
+        ok(true, "Upload unnamed binary buffer to server");
+      }).on('complete', downloadData);
     }
   });
 });
