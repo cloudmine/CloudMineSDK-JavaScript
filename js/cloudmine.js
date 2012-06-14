@@ -243,6 +243,7 @@
      */
     upload: function(key, file, options) {
       options = opts(this, options);
+      if (!options.filename) options.filename = key;
       if (!key) key = uuid();
 
       // Warning: may not necessarily use ajax to perform upload.
@@ -256,23 +257,24 @@
         processResponse: APICall.basicResponse
       });
 
-      var contentType = options.contentType;
-      var filename = options.filename || key;
-      // Prepare given data.
+      function upload(data, type) {
+        if (!options.contentType) options.contentType = type || defaultType;
+        APICall.binaryUpload(apicall, data, options.filename, options.contentType).done();
+      }
+      
       if (isString(file)) {
-        // Handle file names being passed.
-        if (ajax == NodeAJAX) {
-          console.log("Upload: Node string filename");
-          APICall.binaryUpload(apicall, require('fs').readFileSync(file), filename, contentType).done();
-        } else if (swfupload) {
-          console.log("Upload: swfupload filename"); 
-          // Try to upload using swfupload.
-        } else NotSupported();
+        // Upload by filename
+        if (ajax == NodeAJAX) upload(require('fs').readFileSync(file));
+        else NotSupported();
+      } else if (CanvasImageData && file instanceof CanvasImageData) {
+        // Upload CanvasImageData objects, this will use the .toDataURL() method.
+        upload(file, 'image/png');
       } else if (isBinary(file)) {
+        // Binary files are base64 encoded from a buffer.
         var reader = new FileReader();
         
         /** @private */
-        reader.onabort = function(e) {
+        reader.onabort = function() {
           apicall.setData("FileReader aborted").abort();
         }
 
@@ -283,23 +285,14 @@
 
         /** @private */
         reader.onload = function(e) {
-          APICall.binaryUpload(apicall, e.target.result, filename, contentType).done();
-        };
+          upload(e.target.result);
+        }
 
         // Don't need to transform Files to Blobs.
         if (File && file instanceof File) {
-          if (!options.contentType) apicall.setContentType(file.type);
-        } else if (CanvasImageData && file instanceof CanvasImageData) {
-          var byteArray = new Uint8Array(file.length);
-          for (var i = 0; i < file.length; i++) {
-            byteArray[i] = file[i];
-          }
-
-          if (!contentType) contentType = 'image/png';
-          file = getBlob(byteArray);
+          if (!options.contentType && file.type != "") options.contentType = file.type;
         } else {
-          if (!contentType) contentType = 'application/octet-stream';
-          file = getBlob(file, contentType);
+          file = getBlob(file, options.contentType || defaultType);
         }
         
         reader.readAsDataURL(file);
@@ -308,6 +301,11 @@
       return apicall;
     },
 
+
+    // filename: If present, download the file to the computer.
+    // mode: buffer should return an ArrayBuffer (Browser) or a Buffer (Node.js)
+    // mode: base64 should return the base64 encoded data
+    // mode: text should return the base64 decoded data.
     /**
      * Download a file stored in CloudMine.
      * @param {string} key The binary file's object key.
@@ -379,6 +377,7 @@
       });
     },
 
+    
     /**
      * Change a user's password
      * @param {object} data An object with userid, password, and oldpassword fields.
@@ -575,8 +574,8 @@
       options.applevel = true;
       
       return new APICall({
-        url: 'account',
-        type: options.method || 'POST',
+        action: 'account/login',
+        type: 'POST',
         appid: this.options.appid,
         apikey: this.options.apikey,
         processResponse: APICall.basicResponse,
@@ -693,7 +692,7 @@
     this.requestData = this.config.data;
     this.requestHeaders = {
       'X-CloudMine-ApiKey': this.config.apikey,
-      'X-CloudMine-Agent': 'JS/1.0',
+      'X-CloudMine-Agent': 'JS/0.9',
     };
     this.responseHeaders = {};
     this.responseText = null;
@@ -1010,7 +1009,7 @@
   APICall.binaryUpload = function(apicall, data, filename, contentType) {
     var boundary = uuid();
     if (data.toDataURL) data = data.toDataURL(contentType);
-    data = data.replace(/^data:(.+?);base64,/, '');
+    data = data.replace(/^data:(.*?);?base64,/, '');
     if (!contentType) contentType = RegExp.$1 || 'application/octet-stream';
     apicall.setContentType('multipart/form-data; boundary=' + boundary);
     return apicall.setData([
@@ -1217,6 +1216,7 @@
   };
 
   // Scope external dependencies, if necessary.
+  var defaultType = 'application/octet-stream';
   var esc = this.encodeURIComponent || escape;
   var File = this.File;
   var FileReader = this.FileReader;

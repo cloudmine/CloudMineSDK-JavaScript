@@ -13,9 +13,13 @@ $(function() {
   var swfupload = this.swfupload;
   module('Common');
 
+  // var cm = new cloudmine.WebService({
+  //   appid: '84e5c4a381e7424b8df62e055f0b69db',
+  //   apikey: '84c8c3f1223b4710b180d181cd6fb1df'
+  // });
   var cm = new cloudmine.WebService({
-    appid: '84e5c4a381e7424b8df62e055f0b69db',
-    apikey: '84c8c3f1223b4710b180d181cd6fb1df'
+    appid: '3270d4dfa1f44a2a91ccf01e0d5faf1c',
+    apikey: '314d237589d742888edb1872341356e2'
   });
   var cm_bad_apikey = new cloudmine.WebService({
     appid: '84e5c4a381e7424b8df62e055f0b69db',
@@ -33,7 +37,7 @@ $(function() {
   }
 
   // Test 1: Register a user, then log them
-  asyncTest('Create user, log in as them', 2, function() {
+  asyncTest('Create user, verify creation, log in as them', 3, function() {
     var user = {
       email: noise(5) + '@' + noise(5) + '.com',
       password: noise(5)
@@ -43,7 +47,15 @@ $(function() {
       ok(true, 'Created user ' + user.email + ' with password ' + user.password);
     }).on('error', function() {
       ok(false, 'Created user ' + user.email + ' with password ' + user.password);
-    }).on('complete', login);
+    }).on('complete', verify);
+    
+    function verify() {
+      cm.verify(user.email, user.password).on('error', function() {
+        ok(false, "Verified that account was created.");
+      }).on('success', function() {
+        ok(true, "Verified that account was created.");
+      }).on('complete', login);
+    }
 
     function login() {
       cm.login({userid: user.email, password: user.password}).on('success', function(data){
@@ -621,14 +633,14 @@ $(function() {
     }
   });
 
-  var uploadKey = 'test_obj_' + noise(8);
-
+  module('Node.JS');
   // Test 12 (Node.JS): Verify that we can upload files
   asyncTest('Verify upload capability', function() {
     if (inBrowser) {
       ok(true, 'Test skipped.');
       start();
     } else {
+      var uploadKey = 'test_obj_' + noise(8);
       cm.upload(uploadKey, '../js/cloudmine.js', {contentType: 'text/cloudminetest'}).on('error', function() {
         ok(false, 'Upload cloudmine.js as ' + uploadKey);
       }).on('success', function() {
@@ -652,6 +664,7 @@ $(function() {
       ok(true, 'Test skipped.');
       start();
     } else {
+      var uploadKey = 'test_obj_' + noise(8);
       function hash(data) {
         var md5 = require('crypto').createHash('md5');
         md5.update(contents);
@@ -671,13 +684,17 @@ $(function() {
     }
   });
 
+  module('Browser');
+
   // Test 14: Verify that we can upload files through the browser.
-  asyncTest('DND verify upload capability', function() {
-    if (!inBrowser) {
-      ok(true, 'Test skipped.');
+  asyncTest('FileAPI binary upload via Drag & Drop', 5, function() {
+    if (!inBrowser || !FileReader) {
+      ok(true, 'Test skipped, required features not supported.');
       start();
     } else {
       if (FileReader) {
+        var uploadKey = 'test_obj_' + noise(8);
+        var filename = null;
         var dragContents = false;
         var elem = document.querySelector('#dnd');
         var button = elem.querySelector('button');
@@ -706,9 +723,10 @@ $(function() {
             ok(false, "Skipped uploading file.");
             start();
           } else {
+            filename = dragContents.name;
             var aborted = false;
             // FileReader may cause upload to abort.
-            cm.upload(uploadKey, dragContents, {contentType: 'text/cloudminetest'}).on('abort', function() {
+            cm.upload(uploadKey, dragContents).on('abort', function() {
               aborted = true;
               ok(false, "File reader aborted. If you are using chrome make sure you started with flags: --allow-file-access --allow-file-access-from-files");
             }).on('error', function(data) {
@@ -724,6 +742,30 @@ $(function() {
             ok(false, "File was uploaded to server");
           }).on('success', function() {
             ok(true, "File was uploaded to server");
+          }).on('complete', downloadFile);
+        }
+        
+        function downloadFile() {
+          cm.download(uploadKey, {filename: "Copy of " + filename}).on('success', function() {
+            ok(true, "Downloaded file to computer");
+          }).on('error', function() {
+            ok(false, "Downloaded file to computer");
+          }).on('complete', destroyFile);
+        }
+
+        function destroyFile() {
+          cm.destroy(uploadKey).on('error', function() {
+            ok(false, 'Delete file from server');
+          }).on('success', function() {
+            ok(true, 'Delete file from server');
+          }).on('complete', verifyDestroy);
+        }
+        
+        function verifyDestroy() {
+          cm.get(uploadKey).on('error', function() {
+            ok(true, 'File does not exist on server');
+          }).on('success', function() {
+            ok(false, 'File does not exist on server');
           }).on('complete', start);
         }
 
@@ -740,50 +782,7 @@ $(function() {
     }
   });
 
-  // Test 15: Verify that we can upload and download binary data.
-  var BinaryBuffer = this.Uint8Array || this.Buffer;
-  asyncTest("Binary Buffer Upload Test", function() {
-    if (!BinaryBuffer) {
-      ok(false, "No known binary buffers supported, skipping test.");
-      start();
-    } else {
-      var key = 'binary_buffer_' + noise(12);
-      var buffer = new BinaryBuffer(32);
-      for (var i = 65; i < 97; ++i) {
-        buffer[i-65] = String.fromCharCode(i);
-      }
-
-      cm.upload(key, buffer).on('error', function() {
-        ok(false, "Upload unnamed binary buffer to server"); 
-      }).on('success', function() {
-        ok(true, "Upload unnamed binary buffer to server");
-      }).on('complete', verifyData);
-
-      function verifyData() {
-        cm.download(key, {mode: 'raw'}).on('error', function() {
-          ok(false, 'Download unnamed binary buffer from server');
-        }).on('success', function(data) {
-          ok(true, 'Downloaded unnamed binary buffer from server');
-          var downloaded = new BinaryBuffer(data[key]);
-          var same = true;
-          for (var i = 0; same && i < downloaded.length; ++i) {
-            same &= downloaded[i] === buffer[i];
-          }
-          ok(same, "Downloaded buffer contains the same contents as the original buffer.");
-        }).on('complete', deleteData);
-      }
-
-      function deleteData() {
-        cm.destroy(key).on('success', function() {
-          ok(true, 'Deleted unnamed binary buffer from server.');
-        }).on('error', function() {
-          ok(false, 'Deleted unnamed binary buffer from server.');
-        }).on('complete', start);
-      }
-    }
-  });
-
-  // Test 16: Verify that we can download a file.
+  // Test 15: Verify that we can download a file.
   asyncTest('DND verify download capability', function() {
     if (!inBrowser) {
       ok(true, 'Test skipped.');
@@ -794,20 +793,71 @@ $(function() {
     }
   });
 
-  // Test 17: Verify that the file we uploaded is deleted.
-  asyncTest('Delete file capability', function() {
-    cm.destroy(uploadKey).on('error', function() {
-      ok(false, 'File does not exist on server');
-    }).on('success', function() {
-      ok(true, 'File does not exist on server');
-    }).on('complete', verifyDestroy);
+  module('Common');
 
-    function verifyDestroy() {
-      cm.get(uploadKey).on('error', function() {
-        ok(true, 'File does not exist on server');
+  // Test 16: Verify that we can upload and download binary data.
+  var BinaryBuffer = this.ArrayBuffer || this.Buffer;
+  asyncTest("Binary Buffer Upload Test", function() {
+    if (!BinaryBuffer) {
+      ok(false, "No known binary buffers supported, skipping test.");
+      start();
+    } else {
+      var key = 'binary_buffer_' + noise(12);
+      var buffer = new BinaryBuffer(32);
+      var charView = new Uint8Array(buffer);
+      for (var i = 65; i < 97; ++i) {
+        charView[i-65] = String.fromCharCode(i) & 0xFF;
+      }
+
+      // Upload the binary buffer to the server. Should automatically be base64 encoded.
+      cm.upload(key, buffer).on('error', function() {
+        ok(false, "Upload unnamed binary buffer to server"); 
       }).on('success', function() {
-        ok(false, 'File does not exist on server');
-      }).on('complete', start);
+        ok(true, "Upload unnamed binary buffer to server");
+      }).on('complete', downloadData);
+
+      var downloaded = null;
+      function downloadData() {
+        // filename: If present, download the file to the computer.
+        // mode: buffer should return an ArrayBuffer (Browser) or a Buffer (Node.js)
+        // mode: base64 should return the base64 encoded data
+        // mode: text should return a utf8 encoded string.
+        cm.download(key, {mode: 'buffer'}).on('error', function() {
+          ok(false, 'Download unnamed binary buffer from server');
+        }).on('success', function(data) {
+          ok(true, 'Downloaded unnamed binary buffer from server');
+          downloaded = data;
+          var downloaded = new BinaryBuffer(data.length);
+          var view = new Uint8Array(downloaded);
+          view.set(data);
+          var same = true;
+          for (var i = 0; same && i < downloaded.length; ++i) {
+            same &= downloaded[i] === buffer[i];
+          }
+          ok(same, "Downloaded buffer contains the same contents as the original buffer.");
+        }).on('complete', deleteData);
+      }
+
+      function verifyData() {
+        var downloadedChars = new Uint8Array(downloaded);
+        equal(downloadedChars.length, charView.length, "Binary buffers have the same length");
+        var same = true;
+        for (var i = 0; i < downloadedChars.length; ++i) {
+          
+        }
+        ok(same, "Binary buffers have the same contents");
+        deleteData();
+      }
+
+      function deleteData() {
+        console.log("Destroying data");
+        cm.destroy(key).on('success', function() {
+          ok(true, 'Deleted unnamed binary buffer from server.');
+        }).on('error', function() {
+          ok(false, 'Deleted unnamed binary buffer from server.');
+        }).on('complete', start);
+      }
     }
   });
+
 });
