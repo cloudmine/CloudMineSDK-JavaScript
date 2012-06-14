@@ -201,18 +201,3 @@ input:-moz-placeholder{
   display: none;
   margin-top:200px;
 }
-
-.error{
-  display: none;
-  border: none;
-  border-radius: 5px;
-  background: #ec2828;
-  font-size:20px;
-  color: #FFF;
-  white-space: nowrap;
-  padding: 0px 5px;
-}
-
-#empty_list{
-  color: #bfbfbf;
-}

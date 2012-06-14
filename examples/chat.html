@@ -8,7 +8,7 @@
           var appid = "327a12c8208b4297a06f8f5fb32cfecc";
           var apikey = "931732f754654d3c80521024eba8f8ec";
 
-          ws = new cloudmine.WebService({appid: appid, apikey: apikey});
+          cloudmine.init({app_id: appid, api_key: apikey});
 
           var opts = {
               // can be used to override user auth and params
@@ -29,7 +29,8 @@
                   };
 
                   // Call the CloudMine API to actually push the data to the CM servers.
-                  ws.update(key, data).on('success', function(){
+                  cloudmine.updateValue(key, data, function(){
+                      cloudmine.log("Saved: " + key + ": " + data);
                       updateChat();
                   }, opts);
 
@@ -43,12 +44,13 @@
               // Call the CloudMine API to grab all the data from the server. In this case
               // we want to get all the keys since they represent all the messages.
               var chat = '';
-              ws.get(null).on('success', function(response) {
+              cloudmine.getValues(null, function(response) {
                   var i, value;
                   // Basic string concatination to build the string
                   // to display to the user in the chat box.
-                  for (i in response){
-                      value = response[i];
+                  
+                   for (i in response.success){
+                      value = response.success[i];
                       chat += value.name + ': ' + value.message + "\n";
                   }
 
