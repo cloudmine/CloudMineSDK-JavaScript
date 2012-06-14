@@ -28,6 +28,26 @@ $(function() {
     apikey: '84c8c3f1223b4710b180d181cd6fb1df'
   });
 
+  // Code snippet used in test is the reverse function
+  // with: exit(reverse(data));
+  function reverse(data) {
+    if (data && typeof data == 'object' && data.length) {
+      var out = Array(data.length);
+      for (var i = 0; i < data.length; ++i) { out[i] = reverse(data[i]); }
+      return out;
+    } else if (data && typeof data == 'object') {
+      var out = {};
+      for (var key in data) { if (data.hasOwnProperty(key)) out[key] = reverse(data[key]); }
+      return out;
+    } else if (typeof data == 'string') {
+      var out = "";
+      for (var i = 0, c = data.length; i < data.length; ++i) { out += data[--c]; }
+      return out;
+    }
+
+    return data;
+  }
+
   function noise(count) {
     var out = [];
     while (count-- > 0) out.push('abcdefghijklmnopqrstuvwxyz123456789_'[parseInt(Math.random() * 26)]);
@@ -49,8 +69,7 @@ $(function() {
     return buffer;
   }
 
-  // Test 1: Register a user, then log them
-  asyncTest('Create user, verify creation, log in as them', 3, function() {
+  asyncTest('Register a new user, verify and log the user in', 3, function() {
     var user = {
       email: noise(5) + '@' + noise(5) + '.com',
       password: noise(5)
@@ -79,9 +98,7 @@ $(function() {
     }
   });
 
-
-  // Test 2: Create an object with set(), get that key, see if they match
-  asyncTest('Create object with set, get it, see if equal', 2, function() {
+  asyncTest('Set an object and compare value with existing data', 2, function() {
     var key = 'test_object1';
     var value = {
       integer: 321,
@@ -105,8 +122,7 @@ $(function() {
     }
   });
 
-  // Test 3: Create an object with update(), get that key, see if they match
-  asyncTest('Create object with update, get it, see if equal', 2, function() {
+  asyncTest('Create an object with update and compare with existing data', 2, function() {
     var key = 'test_object2';
     var value = {
       integer: 321,
@@ -130,8 +146,7 @@ $(function() {
     }
   });
 
-  // Test 4: Set an object, then update its attributes one at a time to see if they are changing
-  asyncTest('Set object and test to see if update works on it', 13, function() {
+  asyncTest('Create an object with set, update multiple times and compare to expected state', 13, function() {
     // Initial data state
     var state = {
       abc: '1'
@@ -230,7 +245,7 @@ $(function() {
   });
 
 
-  asyncTest('Set object, delete it, try to get it again.', 3, function() {
+  asyncTest('Create an object, delete it and attempt to access post-delete', 3, function() {
     var key = 'test_object4';
     var value = {
       'A': 'B',
@@ -265,8 +280,7 @@ $(function() {
   });
 
 
-  // Test 6: Let's fuck some shit up
-  asyncTest('401, 404 errors for object queries with bad API key and App IDs', 3, function() {
+  asyncTest('Trigger unauthorized and application not found errors via bad appid and bad apikey', 3, function() {
     var key = 'test_object5';
     cm.set(key, {'Britney': 'Spears'}).on('success', function() {
       ok(true, 'Can set key on safe API Key');
@@ -301,8 +315,7 @@ $(function() {
     }
   });
 
-  // Test 7: Search Files alters the query given, lets make sure we are building it right.
-  asyncTest('Verify query building for file search', 7, function() {
+  asyncTest('Sanity check file search query builder', 7, function() {
     // Synchronous test because we are hijacking the search function
     // which searchFiles depends on.
 
@@ -344,8 +357,7 @@ $(function() {
     start();
   });
 
-  // Test 8: Verify buildable queries actually execute on the server.
-  asyncTest('Verify built queries for file search', 7, function() {
+  asyncTest('Verify file search query builder succeeds on server', 7, function() {
     var remaining = 7;
     function performTest(query) {
       cm.searchFiles(query).on('error', function() {
@@ -366,195 +378,8 @@ $(function() {
     performTest('[color = "red", bad = "good"].location[blah = "blah"]');
   });
 
-  // Test 9: Verify that we can force the store into application-level data mode. 
-  asyncTest('Verify forced application-level data option.', 13, function() {
-    // Create a new store for this case using cm's properties.
-    var store = new cloudmine.WebService({
-      appid: cm.options.appid,
-      apikey: cm.options.apikey,
-      applevel: true
-    });
 
-    var key = 'test_object_' + noise(11);
-    var userObj = 'IAMA_UserDataInAppData';
-    var appObj = 'IAMA_AppLevelObject';
-    var privateUserObj = 'IAMA_UserLevelObject';
-    var user = {
-      userid: noise(5) + '@' + noise(5) + '.com',
-      password: noise(5)
-    };
-    
-    ok(!store.isLoggedIn(), 'User is not currently logged in.');
-    ok(store.isApplicationData(), 'Store will refer to application data');
-    store.set(key, appObj).on('success', function() {
-      ok(true, 'Successfully created test object');
-    }).on('error', function() {
-      ok(false, 'Successfully created test object');
-    }).on('complete', verifyValue);
-    
-    function verifyValue() {
-      store.get(key).on('success', function(data) {
-        deepEqual(data[key], appObj, 'Set object is the application object');
-      }).on('error', function() {
-        ok(false, 'Could not verify value of key');
-      }).on('complete', createUser);
-    }
-
-    function createUser() {
-      store.createUser(user).on('success', function() {
-        ok(true, 'Successfully created a new user.');
-      }).on('error', function() {
-        ok(false, 'Successfully created a new user.');
-      }).on('complete', loginUser);
-    }
-
-    function loginUser() {
-      store.login(user).on('success', function() {
-        ok(true, 'Logged in new user');
-      }).on('error', function() {
-        ok(false, 'Logged in new user');
-      }).on('complete', getUserValue);
-    }
-
-    function getUserValue() {
-      ok(store.isLoggedIn(), 'User is currently logged in.');
-      ok(store.isApplicationData(), 'Store will refer to application data');
-      store.get(key).on('success', function(data) {
-        deepEqual(data[key], appObj, 'Verify that we can see application data when logged in');
-      }).on('error', function() {
-        ok(false, 'Verify that we can see application data when logged in');
-      }).on('complete', setAppValue);
-    }
-
-    function setAppValue() {
-      store.set(key, userObj).on('success', function() {
-        ok(true, 'Successfully set value to application data while logged in as user');
-      }).on('error', function() {
-        ok(false, 'Successfully set value to application data while logged in as user');
-      }).on('complete', setUserValue);
-    }
-
-    function setUserValue() {
-      store.set(key, privateUserObj, {applevel: false}).on('success', function() {
-        ok(true, 'Successfully set value of user-level data while logged in as user');
-      }).on('error', function() {
-        ok(false, 'Successfully set value of user-level data while logged in as user');
-      }).on('complete', verifyAppValue);
-    }
-    
-    function verifyAppValue() {
-      store.get(key).on('success', function(data) {
-        deepEqual(data[key], userObj, 'Verify application-data is the user object we set it to.');
-      }).on('error', function() {
-        ok(false, 'Could not find value on application level.');
-      }).on('complete', verifyUserValue);
-    }
-
-    function verifyUserValue() {
-      store.get(key, {applevel: false}).on('success', function(data) {
-        deepEqual(data[key], privateUserObj, 'Verify user-level data is what we set it to.');
-      }).on('error', function() {
-        ok(false, 'Could not find value on user-level');
-      }).on('complete', start);
-    }
-  });
-
-  // Test 10: Verify that we can force the store into user-level data mode. 
-  asyncTest('Verify forced user-level data option.', 13, function() {
-    // Create a new store for this case using cm's properties.
-    var store = new cloudmine.WebService({
-      appid: cm.options.appid,
-      apikey: cm.options.apikey,
-      applevel: false
-    });
-
-    var key = 'test_object_' + noise(11);
-    var userObj = 'IAMA_UserDataInUserData';
-    var appObj = 'IAMA_AppDataInUserData';
-    var privateUserObj = 'IAMA_UserLevelObject';
-    var user = {
-      userid: noise(5) + '@' + noise(5) + '.com',
-      password: noise(5)
-    };
-    
-    ok(!store.isLoggedIn(), 'User is not currently logged in.');
-    ok(!store.isApplicationData(), 'Store will refer to user-level data');
-    store.set(key, appObj).on('success', function() {
-      ok(false, 'Could not create object while not logged in.');
-    }).on('error', function() {
-      ok(true, 'Could not create object while not logged in.');
-    }).on('complete', verifyValue);
-    
-    function verifyValue() {
-      store.get(key).on('success', function(data) {
-        ok(false, 'Could not get object while not logged in');
-      }).on('error', function() {
-        ok(true, 'Could not get object while not logged in');
-      }).on('complete', createUser);
-    }
-
-    function createUser() {
-      store.createUser(user).on('success', function() {
-        ok(true, 'Successfully created a new user.');
-      }).on('error', function() {
-        ok(false, 'Successfully created a new user.');
-      }).on('complete', loginUser);
-    }
-
-    function loginUser() {
-      store.login(user).on('success', function() {
-        ok(true, 'Logged in new user');
-      }).on('error', function() {
-        ok(false, 'Logged in new user');
-      }).on('complete', getUserValue);
-    }
-
-    function getUserValue() {
-      ok(store.isLoggedIn(), 'User is currently logged in.');
-      ok(!store.isApplicationData(), 'Store will refer to user-level data');
-      store.get(key).on('success', function(data) {
-        ok(false, 'Verify that the test object does not exist yet.');
-      }).on('error', function() {
-        ok(true, 'Verify that the test object does not exist yet.');
-      }).on('complete', setUserValue);
-    }
-
-    
-    function setUserValue() {
-      store.set(key, privateUserObj).on('success', function() {
-        ok(true, 'Successfully set value of user-level data while logged in as user');
-      }).on('error', function() {
-        ok(false, 'Successfully set value of user-level data while logged in as user');
-      }).on('complete', setAppValue);
-    }
-    
-    function setAppValue() {
-      store.set(key, appObj, {applevel: true}).on('success', function() {
-        ok(true, 'Successfully set value to application data while logged in as user');
-      }).on('error', function() {
-        ok(false, 'Successfully set value to application data while logged in as user');
-      }).on('complete', verifyAppValue);
-    }
-    
-    function verifyAppValue() {
-      store.get(key, {applevel: true}).on('success', function(data) {
-        deepEqual(data[key], appObj, 'Verify application-data is the application object we set it to.');
-      }).on('error', function() {
-        ok(false, 'Could not find value on application level.');
-      }).on('complete', verifyUserValue);
-    }
-
-    function verifyUserValue() {
-      store.get(key).on('success', function(data) {
-        deepEqual(data[key], privateUserObj, 'Verify user-level data is what we set it to.');
-      }).on('error', function() {
-        ok(false, 'Could not find value on user-level');
-      }).on('complete', start);
-    }
-  });
-
-  // Test 11: Verify that we can force the store into user-level data mode. 
-  asyncTest('Verify user-level data when logged in, app data otherwise.', 13, function() {
+  asyncTest('Normal behavior: action use user-level data when possible.', 13, function() {
     // Create a new store for this case using cm's properties.
     var store = new cloudmine.WebService({
       appid: cm.options.appid,
@@ -646,7 +471,375 @@ $(function() {
     }
   });
 
-  // Test (Node.JS): Verify that we can download files and the file we uploaded did not get corrupted.
+  asyncTest('Force usage of application-level data, even if logged in.', 13, function() {
+    // Create a new store for this case using cm's properties.
+    var store = new cloudmine.WebService({
+      appid: cm.options.appid,
+      apikey: cm.options.apikey,
+      applevel: true
+    });
+
+    var key = 'test_object_' + noise(11);
+    var userObj = 'IAMA_UserDataInAppData';
+    var appObj = 'IAMA_AppLevelObject';
+    var privateUserObj = 'IAMA_UserLevelObject';
+    var user = {
+      userid: noise(5) + '@' + noise(5) + '.com',
+      password: noise(5)
+    };
+    
+    ok(!store.isLoggedIn(), 'User is not currently logged in.');
+    ok(store.isApplicationData(), 'Store will refer to application data');
+    store.set(key, appObj).on('success', function() {
+      ok(true, 'Successfully created test object');
+    }).on('error', function() {
+      ok(false, 'Successfully created test object');
+    }).on('complete', verifyValue);
+    
+    function verifyValue() {
+      store.get(key).on('success', function(data) {
+        deepEqual(data[key], appObj, 'Set object is the application object');
+      }).on('error', function() {
+        ok(false, 'Could not verify value of key');
+      }).on('complete', createUser);
+    }
+
+    function createUser() {
+      store.createUser(user).on('success', function() {
+        ok(true, 'Successfully created a new user.');
+      }).on('error', function() {
+        ok(false, 'Successfully created a new user.');
+      }).on('complete', loginUser);
+    }
+
+    function loginUser() {
+      store.login(user).on('success', function() {
+        ok(true, 'Logged in new user');
+      }).on('error', function() {
+        ok(false, 'Logged in new user');
+      }).on('complete', getUserValue);
+    }
+
+    function getUserValue() {
+      ok(store.isLoggedIn(), 'User is currently logged in.');
+      ok(store.isApplicationData(), 'Store will refer to application data');
+      store.get(key).on('success', function(data) {
+        deepEqual(data[key], appObj, 'Verify that we can see application data when logged in');
+      }).on('error', function() {
+        ok(false, 'Verify that we can see application data when logged in');
+      }).on('complete', setAppValue);
+    }
+
+    function setAppValue() {
+      store.set(key, userObj).on('success', function() {
+        ok(true, 'Successfully set value to application data while logged in as user');
+      }).on('error', function() {
+        ok(false, 'Successfully set value to application data while logged in as user');
+      }).on('complete', setUserValue);
+    }
+
+    function setUserValue() {
+      store.set(key, privateUserObj, {applevel: false}).on('success', function() {
+        ok(true, 'Successfully set value of user-level data while logged in as user');
+      }).on('error', function() {
+        ok(false, 'Successfully set value of user-level data while logged in as user');
+      }).on('complete', verifyAppValue);
+    }
+    
+    function verifyAppValue() {
+      store.get(key).on('success', function(data) {
+        deepEqual(data[key], userObj, 'Verify application-data is the user object we set it to.');
+      }).on('error', function() {
+        ok(false, 'Could not find value on application level.');
+      }).on('complete', verifyUserValue);
+    }
+
+    function verifyUserValue() {
+      store.get(key, {applevel: false}).on('success', function(data) {
+        deepEqual(data[key], privateUserObj, 'Verify user-level data is what we set it to.');
+      }).on('error', function() {
+        ok(false, 'Could not find value on user-level');
+      }).on('complete', start);
+    }
+  });
+
+  asyncTest('Force usage of user-level data, even if not logged in.', 13, function() {
+    // Create a new store for this case using cm's properties.
+    var store = new cloudmine.WebService({
+      appid: cm.options.appid,
+      apikey: cm.options.apikey,
+      applevel: false
+    });
+
+    var key = 'test_object_' + noise(11);
+    var userObj = 'IAMA_UserDataInUserData';
+    var appObj = 'IAMA_AppDataInUserData';
+    var privateUserObj = 'IAMA_UserLevelObject';
+    var user = {
+      userid: noise(5) + '@' + noise(5) + '.com',
+      password: noise(5)
+    };
+    
+    ok(!store.isLoggedIn(), 'User is not currently logged in.');
+    ok(!store.isApplicationData(), 'Store will refer to user-level data');
+    store.set(key, appObj).on('success', function() {
+      ok(false, 'Could not create object while not logged in.');
+    }).on('error', function() {
+      ok(true, 'Could not create object while not logged in.');
+    }).on('complete', verifyValue);
+    
+    function verifyValue() {
+      store.get(key).on('success', function(data) {
+        ok(false, 'Could not get object while not logged in');
+      }).on('error', function() {
+        ok(true, 'Could not get object while not logged in');
+      }).on('complete', createUser);
+    }
+
+    function createUser() {
+      store.createUser(user).on('success', function() {
+        ok(true, 'Successfully created a new user.');
+      }).on('error', function() {
+        ok(false, 'Successfully created a new user.');
+      }).on('complete', loginUser);
+    }
+
+    function loginUser() {
+      store.login(user).on('success', function() {
+        ok(true, 'Logged in new user');
+      }).on('error', function() {
+        ok(false, 'Logged in new user');
+      }).on('complete', getUserValue);
+    }
+
+    function getUserValue() {
+      ok(store.isLoggedIn(), 'User is currently logged in.');
+      ok(!store.isApplicationData(), 'Store will refer to user-level data');
+      store.get(key).on('success', function(data) {
+        ok(false, 'Verify that the test object does not exist yet.');
+      }).on('error', function() {
+        ok(true, 'Verify that the test object does not exist yet.');
+      }).on('complete', setUserValue);
+    }
+
+    function setUserValue() {
+      store.set(key, privateUserObj).on('success', function() {
+        ok(true, 'Successfully set value of user-level data while logged in as user');
+      }).on('error', function() {
+        ok(false, 'Successfully set value of user-level data while logged in as user');
+      }).on('complete', setAppValue);
+    }
+    
+    function setAppValue() {
+      store.set(key, appObj, {applevel: true}).on('success', function() {
+        ok(true, 'Successfully set value to application data while logged in as user');
+      }).on('error', function() {
+        ok(false, 'Successfully set value to application data while logged in as user');
+      }).on('complete', verifyAppValue);
+    }
+    
+    function verifyAppValue() {
+      store.get(key, {applevel: true}).on('success', function(data) {
+        deepEqual(data[key], appObj, 'Verify application-data is the application object we set it to.');
+      }).on('error', function() {
+        ok(false, 'Could not find value on application level.');
+      }).on('complete', verifyUserValue);
+    }
+
+    function verifyUserValue() {
+      store.get(key).on('success', function(data) {
+        deepEqual(data[key], privateUserObj, 'Verify user-level data is what we set it to.');
+      }).on('error', function() {
+        ok(false, 'Could not find value on user-level');
+      }).on('complete', start);
+    }
+  });
+
+  asyncTest('Ensure code snippets execute properly for actions', 33, function() {
+    var opts = {snippet: 'reverse'};
+    var key = 'code_snip_test_' + noise(8);
+    var user = {userid: noise(32) + '@' + noise(32) + '.com', password: noise(32)};    
+    
+    var snipRan = false;
+    cm.createUser(user).on('success', function() {
+      ok(true, 'Created user for code snippet test');
+    }).on('error', function() {
+      ok(false, 'Created user for code snippet test');
+    }).on('complete', loginUser);
+
+    function loginUser() {
+      cm.login(user).on('success', function() {
+        ok(true, 'Logged in user');
+      }).on('error', function() {
+        ok(false, 'Logged in user');
+      }).on('complete', setUserData);
+    }
+
+    var userKey = noise(32);
+    function setUserData() {
+      snipRan = false;
+      var data = {answerToLifeTheUniverseEverything: 42, query: 'What is the ultimate question to the answer of life, the universe, and everything?', queryResult: null};
+      cm.set(userKey, data, opts).on('result', function() {
+        snipRan = true;
+      }).on('success', function() {
+        ok(true, 'Set user data for code snippet test');
+      }).on('error', function() {
+        ok(false, 'Set user data for code snippet test');
+      }).on('complete', function(data) {
+        ok(snipRan, 'Snippet ran as expected');
+        deepEqual(data.result ? reverse(data.result.success) : null, data.success, "Success data matches matches reversed output");
+        updateUserData();
+      });
+    }
+
+    function updateUserData() {
+      snipRan = false;
+      var data = {destination: 'restaurant at the end of the universe'};
+      cm.update(userKey, data, opts).on('result', function() {
+        snipRan = true;
+      }).on('success', function() {
+        ok(true, 'Update user data for code snippet test');
+      }).on('error', function() {
+        ok(false, 'Update user data for code snippet test');
+      }).on('complete', function(data) {
+        ok(snipRan, 'Snippet ran as expected');
+        deepEqual(data.result ? reverse(data.result.success) : null, data.success, "Success data matches matches reversed output");
+        getUserData();
+      });
+    }
+
+    function getUserData() {
+      snipRan = false;
+      cm.get(userKey, opts).on('result', function() {
+        snipRan = true;
+      }).on('success', function() {
+        ok(true, 'Retrieved user data for code snippet test');
+      }).on('error', function() {
+        ok(false, 'Retreived user data for code snippet test');
+      }).on('complete', function(data) {
+        ok(snipRan, 'Snippet ran as expected');
+        deepEqual(data.result ? reverse(data.result.success) : null, data.success, "Success data matches matches reversed output");
+        searchUserData();
+      });
+    }
+
+    function searchUserData() {
+      snipRan = false;
+      cm.search('[answerToLifeTheUniverseEverything = 42]', opts).on('result', function() {
+        snipRan = true;
+      }).on('success', function() {
+        ok(true, 'Searched user data for code snippet test');
+      }).on('error', function() {
+        ok(false, 'Searched user data for code snippet test');
+      }).on('complete', function(data) {
+        ok(snipRan, 'Snippet ran as expected');
+        deepEqual(data.result ? reverse(data.result.success) : null, data.success, "Success data matches matches reversed output");
+        deleteUserData();
+      });
+    }
+
+    function deleteUserData() {
+      snipRan = false;
+      cm.destroy(userKey, opts).on('result', function() {
+        snipRan = true;
+      }).on('success', function() {
+        ok(true, 'Deleted user data for code snippet test');
+      }).on('error', function() {
+        ok(false, 'Deleted user data for code snippet test');
+      }).on('complete', function(data) {
+        ok(snipRan, 'Snippet ran as expected');
+        deepEqual(data.result ? reverse(data.result.success) : null, data.success, "Success data matches matches reversed output");
+        logoutUser();
+      });
+    }
+
+    function logoutUser() {
+      cm.logout().on('success', function() {
+        ok(true, 'Logged out user');
+      }).on('error', function() {
+        ok(false, 'Logged out user');
+      }).on('complete', setAppData);
+    }
+
+    var appKey = noise(32);
+    function setAppData() {
+      snipRan = false;
+      var data = {solong: 'and thanks for all the fish', arthur: 'dent'};
+      cm.set(appKey, data, opts).on('result', function() {
+        snipRan = true;
+      }).on('success', function() {
+        ok(true, 'Set application data for code snippet test');
+      }).on('error', function() {
+        ok(false, 'Set application data for code snippet test');
+      }).on('complete', function(data) {
+        ok(snipRan, 'Snippet ran as expected');
+        deepEqual(data.result ? reverse(data.result.success) : null, data.success, "Success data matches matches reversed output");
+        updateAppData();
+      });
+    }
+
+    function updateAppData() {
+      snipRan = false;
+      var data = {canTheHeartOfGoldBrewTea: 'No, but it resembles something like tea, thicker, and does not taste like tea.'};
+      cm.update(appKey, data, opts).on('result', function() {
+        snipRan = true;
+      }).on('success', function() {
+        ok(true, 'Update application data for code snippet test');
+      }).on('error', function() {
+        ok(false, 'Update application data for code snippet test');
+      }).on('complete', function(data) {
+        ok(snipRan, 'Snippet ran as expected');
+        deepEqual(data.result ? reverse(data.result.success) : null, data.success, "Success data matches matches reversed output");
+        getAppData();
+      });
+    }
+
+    function getAppData() {
+      snipRan = false;
+      cm.get(appKey, opts).on('result', function() {
+        snipRan = true;
+      }).on('success', function() {
+        ok(true, 'Retrieved application data for code snippet test');
+      }).on('error', function() {
+        ok(false, 'Retreived application data for code snippet test');
+      }).on('complete', function(data) {
+        ok(snipRan, 'Snippet ran as expected');
+        deepEqual(data.result ? reverse(data.result.success) : null, data.success, "Success data matches matches reversed output");
+        searchAppData();
+      });
+    }
+
+    function searchAppData() {
+      snipRan = false;
+      cm.search('[arthur = "dent"]', opts).on('result', function() {
+        snipRan = true;
+      }).on('success', function() {
+        ok(true, 'Searched application data for code snippet test');
+      }).on('error', function() {
+        ok(false, 'Searched application data for code snippet test');
+      }).on('complete', function(data) {
+        ok(snipRan, 'Snippet ran as expected');
+        deepEqual(data.result ? reverse(data.result.success) : null, data.success, "Success data matches matches reversed output");
+        deleteAppData();
+      });
+    }
+    
+    function deleteAppData() {
+      snipRan = false;
+      cm.destroy(appKey, opts).on('result', function() {
+        snipRan = true;
+      }).on('success', function() {
+        ok(true, 'Deleted application data for code snippet test');
+      }).on('error', function() {
+        ok(false, 'Deleted application data for code snippet test');
+      }).on('complete', function(data) {
+        ok(snipRan, 'Snippet ran as expected');
+        deepEqual(data.result ? reverse(data.result.success) : null, data.success, "Success data matches matches reversed output");
+        start();
+      });
+    }
+  });
+
   asyncTest('Node.JS: Verify download capability', function() {
     if (inBrowser) {
       ok(true, 'Test skipped.');
@@ -672,7 +865,6 @@ $(function() {
     }
   });
 
-  // Test: Verify that we can upload files.
   asyncTest('Binary file upload test', 5, function() {
     var uploadKey = 'test_obj_' + noise(8);
     var fileHandle, filename;
@@ -774,7 +966,6 @@ $(function() {
     }
   });
 
-  // Test: Verify that we can upload and download binary data.
   asyncTest("Binary buffer upload test", 5, function() {
     if (!hasBuffers) {
       ok(false, "No known binary buffers supported, skipping test.");

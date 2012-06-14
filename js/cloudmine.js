@@ -1,5 +1,4 @@
 /* CloudMine JavaScript Library v0.9 cloudmine.me | cloudmine.me/license */ 
-/** @namespace cloudmine */
 (function() {
   /**
    * Construct a new WebService instance
@@ -465,7 +464,7 @@
         options: options,
         processResponse: APICall.basicResponse,
         headers: {
-          Authorization: "Basic " + (base64.encode(user.userid + ":" + user.oldpassword))
+          Authorization: "Basic " + (Base64.encode(user.userid + ":" + user.oldpassword))
         }
       });
     },
@@ -557,7 +556,7 @@
         apikey: this.options.apikey,
         options: options,
         headers: {
-          Authorization: "Basic " + (base64.encode("" + user.userid + ":" + user.password))
+          Authorization: "Basic " + (Base64.encode("" + user.userid + ":" + user.password))
         },
         processResponse: APICall.basicResponse
       }).on('success', function(data) {
@@ -626,7 +625,7 @@
         apikey: this.options.apikey,
         processResponse: APICall.basicResponse,
         headers: {
-          Authorization: "Basic " + (base64.encode(user.userid + ":" + user.password))
+          Authorization: "Basic " + (Base64.encode(user.userid + ":" + user.password))
         },
         options: options
       });
@@ -746,7 +745,8 @@
     this.type = this.config.type || 'GET';
     
     // Build the URL and headers
-    var query = (this.config.query ? ("?" + stringify(this.config.query)) : "");
+
+    var query = stringify(server_params(this.config.options, this.config.query));
     var root = '/', session = this.config.options.session_token, applevel = this.config.options.applevel;
     if (applevel === false || (applevel !== true && session != null)) {
       root = '/user/';
@@ -754,8 +754,8 @@
     }
     this.config.headers = merge(this.requestHeaders, this.config.headers);
     this.setContentType(config.contentType || 'application/json');
-    this.url = [apiroot, "/v1/app/", this.config.appid, root, this.config.action, query].join("");
-
+    this.url = [apiroot, "/v1/app/", this.config.appid, root, this.config.action, (query ? "?" + query : "")].join("");
+    
     var self = this, sConfig = this.config;
     
     /** @private */
@@ -1035,8 +1035,11 @@
         }
       }
 
-      // At least guarantee a success callback
-      if (isEmptyObject(out)) out.success = {};
+      // At least guarantee a success callback.
+      if (isEmptyObject(out)) {
+        if (this.config.options && this.config.options.snippet) out.result = {};
+        else out.success = {};
+      }
     } else {
       // Non-standard response. Just pass back the data we were given.
       out = {success: data};
@@ -1366,7 +1369,7 @@
   function getBlob(data, contentType) {
     var blob;
     if (!contentType) contentType = 'application/octet-stream';
-
+    data = new Uint8Array(data);
     try {
       // Binary in javascript is such a nightmare.
       blob = new Blob(data, {type: contentType});
@@ -1424,5 +1427,103 @@
   }
 
   // Base64 Library from http://www.webtoolkit.info
-  var base64 = {_keyStr:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",encode:function(a){var b="";var c,d,e,f,g,h,i;var j=0;a=base64._utf8_encode(a);while(j<a.length){c=a.charCodeAt(j++);d=a.charCodeAt(j++);e=a.charCodeAt(j++);f=c>>2;g=(c&3)<<4|d>>4;h=(d&15)<<2|e>>6;i=e&63;if(isNaN(d)){h=i=64}else if(isNaN(e)){i=64}b=b+this._keyStr.charAt(f)+this._keyStr.charAt(g)+this._keyStr.charAt(h)+this._keyStr.charAt(i)}return b},decode:function(a){var b="";var c,d,e;var f,g,h,i;var j=0;a=a.replace(/[^A-Za-z0-9\+\/\=]/g,"");while(j<a.length){f=this._keyStr.indexOf(a.charAt(j++));g=this._keyStr.indexOf(a.charAt(j++));h=this._keyStr.indexOf(a.charAt(j++));i=this._keyStr.indexOf(a.charAt(j++));c=f<<2|g>>4;d=(g&15)<<4|h>>2;e=(h&3)<<6|i;b=b+String.fromCharCode(c);if(h!=64){b=b+String.fromCharCode(d)}if(i!=64){b=b+String.fromCharCode(e)}}b=base64._utf8_decode(b);return b},_utf8_encode:function(a){a=a.replace(/\r\n/g,"\n");var b="";for(var c=0;c<a.length;c++){var d=a.charCodeAt(c);if(d<128){b+=String.fromCharCode(d)}else if(d>127&&d<2048){b+=String.fromCharCode(d>>6|192);b+=String.fromCharCode(d&63|128)}else{b+=String.fromCharCode(d>>12|224);b+=String.fromCharCode(d>>6&63|128);b+=String.fromCharCode(d&63|128)}}return b},_utf8_decode:function(a){var b="";var c=0;var d=c1=c2=0;while(c<a.length){d=a.charCodeAt(c);if(d<128){b+=String.fromCharCode(d);c++}else if(d>191&&d<224){c2=a.charCodeAt(c+1);b+=String.fromCharCode((d&31)<<6|c2&63);c+=2}else{c2=a.charCodeAt(c+1);c3=a.charCodeAt(c+2);b+=String.fromCharCode((d&15)<<12|(c2&63)<<6|c3&63);c+=3}}return b}};
+  var Base64 = {
+	  // private property
+	  _keyStr : "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",
+    
+	  // public method for encoding
+	  encode : function (input) {
+		  var output = "", chr1, chr2, chr3, enc1, enc2, enc3, enc4, i = 0;      
+		  input = Base64._utf8_encode(input);
+
+		  while (i < input.length) {
+			  chr1 = input.charCodeAt(i++);
+			  chr2 = input.charCodeAt(i++);
+			  chr3 = input.charCodeAt(i++);
+
+			  enc1 = chr1 >> 2;
+			  enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);
+			  enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);
+			  enc4 = chr3 & 63;
+        
+			  if (isNaN(chr2)) enc3 = enc4 = 64;
+			  else if (isNaN(chr3)) enc4 = 64;
+        
+			  output += this._keyStr.charAt(enc1) + this._keyStr.charAt(enc2) +
+			            this._keyStr.charAt(enc3) + this._keyStr.charAt(enc4);
+		  }
+      
+		  return output;
+	  },
+    
+	  // public method for decoding
+	  decode : function (input) {
+		  input = input.replace(/[^A-Za-z0-9\+\/\=]/g, "");
+		  var output = "", chr1, chr2, chr3;
+		  var enc1, enc2, enc3, enc4, i = 0;
+      
+		  while (i < input.length) {
+			  enc1 = this._keyStr.indexOf(input.charAt(i++));
+			  enc2 = this._keyStr.indexOf(input.charAt(i++));
+			  enc3 = this._keyStr.indexOf(input.charAt(i++));
+			  enc4 = this._keyStr.indexOf(input.charAt(i++));
+        
+			  chr1 = (enc1 << 2) | (enc2 >> 4);
+			  chr2 = ((enc2 & 15) << 4) | (enc3 >> 2);
+			  chr3 = ((enc3 & 3) << 6) | enc4;
+        
+			  output += String.fromCharCode(chr1);
+			  if (enc3 != 64) output += String.fromCharCode(chr2);
+			  if (enc4 != 64) output += String.fromCharCode(chr3);
+		  }
+      
+		  return Base64._utf8_decode(output);
+	  },
+    
+	  // private method for UTF-8 encoding
+	  _utf8_encode : function (string) {
+		  string = string.replace(/\r\n/g,"\n");
+		  var utftext = "";
+      
+		  for (var n = 0; n < string.length; n++) {
+			  var c = string.charCodeAt(n);
+        
+			  if (c < 128) utftext += String.fromCharCode(c);
+			  else if((c > 127) && (c < 2048)) {
+				  utftext += String.fromCharCode((c >> 6) | 192);
+				  utftext += String.fromCharCode((c & 63) | 128);
+			  } else {
+				  utftext += String.fromCharCode((c >> 12) | 224);
+				  utftext += String.fromCharCode(((c >> 6) & 63) | 128);
+				  utftext += String.fromCharCode((c & 63) | 128);
+			  }
+		  }
+      
+		  return utftext;
+	  },
+    
+	  // private method for UTF-8 decoding
+	  _utf8_decode : function (utftext) {
+		  var string = "", i = 0, c = c1 = c2 = 0;
+		  while (i < utftext.length) {
+			  c = utftext.charCodeAt(i);
+        
+			  if (c < 128) {
+				  string += String.fromCharCode(c);
+				  i++;
+			  } else if((c > 191) && (c < 224)) {
+				  c2 = utftext.charCodeAt(i+1);
+				  string += String.fromCharCode(((c & 31) << 6) | (c2 & 63));
+				  i += 2;
+			  } else {
+				  c2 = utftext.charCodeAt(i+1);
+				  c3 = utftext.charCodeAt(i+2);
+				  string += String.fromCharCode(((c & 15) << 12) | ((c2 & 63) << 6) | (c3 & 63));
+				  i += 3;
+			  }
+		  }
+      
+		  return string;
+	  }
+  }
 })();
