@@ -5,12 +5,10 @@
              - Easy and secure user management: Logging in or registering as a new user, with the session saved 
                for seven days or until the user logs out.
 
-   Global variables: - cloudmine:       instance of Cloudmine js library
-                     - todo:            object of functions for this app
-                     - priority_button: prototype for custom button that sets new todo item priority, 
-                                        called by todo.draw_item
+   Main objects in use: - cloudmine:       instance of Cloudmine js library
+                        - todo:            object of functions for this app
 
-   Cloudmine library functions implemented: login, logout, createUser, update, destroy
+   Cloudmine library functions implemented: login, logout, createUser, set, update, destroy
 */
 
 $(document).ready(function(){
