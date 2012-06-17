@@ -1,14 +1,14 @@
 /* 
-   To-do list: sample Cloudmine app
+   To-do list: sample CloudMine app
 
-   Features: - Simple data pushing: Creating new items, updating them as "done," and deleting them using Cloudmine object storage
+   Features: - Simple data pushing: Creating new items, updating them as "done," and deleting them using CloudMine object storage
              - Easy and secure user management: Logging in or registering as a new user, with the session saved 
                for seven days or until the user logs out.
 
-   Main objects in use: - cloudmine:       instance of Cloudmine js library
+   Main objects in use: - cloudmine:       instance of CloudMine js library
                         - todo:            object of functions for this app
 
-   Cloudmine library functions implemented: login, logout, createUser, set, update, destroy
+   CloudMine library functions implemented: login, logout, createUser, set, update, destroy
 */
 
 $(document).ready(function(){
@@ -66,7 +66,7 @@ $(document).ready(function(){
       init_vals['session_token'] = previous_session;
     }
 
-    // Initialize Cloudmine library using everything in init_vals
+    // Initialize CloudMine library using everything in init_vals
     cm = new cloudmine.WebService(init_vals);
 
     // If we found that cookie, let's go ahead and set up the list right away
@@ -78,7 +78,7 @@ $(document).ready(function(){
   
   /*
     Set up the todo object with all we need to make this to-do list work dynamically with no refreshes.
-    We'll mostly be using jQuery to manipulate DOM elements and our instance of the Cloudmine JS library - cm - to make all the data calls.
+    We'll mostly be using jQuery to manipulate DOM elements and our instance of the CloudMine JS library - cm - to make all the data calls.
   */
   todo = {
 
@@ -101,7 +101,7 @@ $(document).ready(function(){
       $('#register_button').attr('value', 'Creating account...');
       $('#login_button, #or').hide();
 
-      // Run the Cloudmine createUser call and chain on success and error callbacks.
+      // Run the CloudMine createUser call and chain on success and error callbacks.
       cm.createUser(userid, password)
         .on('success', function(response){ 
           todo.process_registration(response, { userid: userid, password: password }); 
@@ -151,7 +151,7 @@ $(document).ready(function(){
       $('#login_button').attr('value', 'Logging in...');
       $('#register_button, #or').hide();
 
-      // Run Cloudmine login request.
+      // Run CloudMine login request.
       cm.login(credentials)
         .on('success', function(data){ 
           todo.process_login(data);
@@ -166,7 +166,7 @@ $(document).ready(function(){
     /*
       process_login
       
-      Called by todo.login_user. Creates a cookie with the session_token we got back from Cloudmine 
+      Called by todo.login_user. Creates a cookie with the session_token we got back from CloudMine 
       and calls for this user's data for their to-do list.
       Parameter:
         response: response data from the server, passed in by todo.login_user
@@ -213,8 +213,8 @@ $(document).ready(function(){
       If it's creating the item, chain on a function to draw that item and put it in the UI when the call is successful.
     */
     push_item: function(data, unique_id){
-      if (unique_id == undefined){        // The unique_id will be the key for this object in Cloudmine's database.
-        unique_id = new Date().getTime(); // When creating objects with Cloudmine you get to specify their key yourself.
+      if (unique_id == undefined){        // The unique_id will be the key for this object in CloudMine's database.
+        unique_id = new Date().getTime(); // When creating objects with CloudMine you get to specify their key yourself.
         data = {                          // In our case, we'll use javascript's built-in new Date().getTime() to get an ID unique for the moment
           text: data.title,               // this item was created if a unique_id hasn't been specified (which means we're making a new item
           priority: data.priority,        // and not updating an existing one).
@@ -233,7 +233,7 @@ $(document).ready(function(){
         callback = function() {}
       }
 
-      // Make the Cloudmine library call to send the data to the cloud, along with the unique_id
+      // Make the CloudNine library call to send the data to the cloud, along with the unique_id
       
       cm.update(unique_id, data)
         .on('success', function(){
@@ -250,10 +250,10 @@ $(document).ready(function(){
     /*
       get_items
 
-      Called by todo.process_login. Retrieves all the user's to-do items from Cloudmine and calls todo.draw_list to build the elements that display the list.
+      Called by todo.process_login. Retrieves all the user's to-do items from CloudMine and calls todo.draw_list to build the elements that display the list.
     */
     get_items: function(){
-      // Calling the Cloudmine get() function with the argument null retrieves all data available.
+      // Calling the CloudMine get() function with the argument null retrieves all data available.
       cm.get(null).on('success', function(data){
         // Save the response data
         todo.data = data;
@@ -279,7 +279,7 @@ $(document).ready(function(){
         return
       }
       $('#new_item').val('');
-      todo.push_item(data); // Push data to Cloudmine
+      todo.push_item(data); // Push data to CloudMine
     },
 
     /*
@@ -288,7 +288,7 @@ $(document).ready(function(){
       Called by Delete button click on an item. Removes the item from the cloud with cm.destroy and then removes it from the UI.
       The callback on this one 
       Parameters:
-        key: The item's key in the Cloudmine db
+        key: The item's key in the CloudMine db
     */
     delete_item: function(key){
       cm.destroy(key)
@@ -399,7 +399,7 @@ $(document).ready(function(){
       toggle_item
 
       Called by a Click handler defined in todo.draw_item. 
-      Toggles an item between done and not done, both in the UI and the Cloudmine db.
+      Toggles an item between done and not done, both in the UI and the CloudMine db.
       Parameters:
         data: Item data, from which this function gets its done status and its id.
     */
@@ -474,7 +474,7 @@ $(document).ready(function(){
       Flashes a red error message.
       Parameters:
         view: 'login' or 'list': which view is the user on? Determines which DOM element is used to show the error.
-        message: The message to display, pulled straight from the Cloudmine server response.
+        message: The message to display, pulled straight from the CloudMine server response.
     */
     error: function(view, message){
       $('#error_' + view).css({display: 'inline-block'}).text('Error! ' + message);
@@ -533,7 +533,7 @@ $(document).ready(function(){
   todo.priority_button = priority_button // Attach the priority button object to the todo object
 
   /* 
-    After everything is defined, finally initialize Cloudmine.
+    After everything is defined, finally initialize CloudMine.
   */
 
   init_cloudmine();
