@@ -748,7 +748,7 @@
     this.requestData = this.config.data;
     this.requestHeaders = {
       'X-CloudMine-ApiKey': this.config.apikey,
-      'X-CloudMine-Agent': 'JS/0.9',
+      'X-CloudMine-Agent': 'JS/0.9'
     };
     this.responseHeaders = {};
     this.responseText = null;
