@@ -243,7 +243,6 @@
         later: true,
         encoding: 'binary',
         options: options,
-        appid: options.appid,
         processResponse: APICall.basicResponse
       });
 
@@ -327,7 +326,6 @@
         encoding: 'binary',
         options: options,
         query: query,
-        appid: options.appid,
       });
 
       // Download file directly to computer if given a filename.
