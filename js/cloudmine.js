@@ -683,6 +683,7 @@
     },
 
     /**
+     * @private
      * Use localStorage or a cookie to store user_data uuid for use as X-Cloudmine-UT request header.
      * Called by WebService constructor.
      */
