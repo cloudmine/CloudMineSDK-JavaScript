@@ -69,8 +69,6 @@
 
       return new APICall({
         action: 'text',
-        appid: this.options.appid,
-        apikey: this.options.apikey,
         type: 'GET',
         options: options,
         query: server_params(options, keys)
@@ -115,8 +113,6 @@
       return new APICall({
         action: 'text',
         type: 'POST',
-        appid: this.options.appid,
-        apikey: this.options.apikey,
         options: options,
         query: server_params(options),
         data: JSON.stringify(key)
@@ -160,8 +156,6 @@
       return new APICall({
         action: 'text',
         type: 'PUT',
-        appid: this.options.appid,
-        apikey: this.options.apikey,
         options: options,
         query: server_params(options),
         data: JSON.stringify(key)
@@ -184,8 +178,6 @@
       return new APICall({
         action: 'data',
         type: 'DELETE',
-        appid: this.options.appid,
-        apikey: this.options.apikey,
         options: options,
         query: server_params(options, keys)
       });
@@ -204,8 +196,6 @@
       return new APICall({
         action: 'search',
         type: 'GET',
-        appid: this.options.appid,
-        apikey: this.options.apikey,
         query: server_params(options, query),
         options: options
       });
@@ -254,7 +244,6 @@
         encoding: 'binary',
         options: options,
         appid: options.appid,
-        apikey: options.apikey,
         processResponse: APICall.basicResponse
       });
 
@@ -339,7 +328,6 @@
         options: options,
         query: query,
         appid: options.appid,
-        apikey: options.apikey
       });
 
       // Download file directly to computer if given a filename.
@@ -426,8 +414,6 @@
       return new APICall({
         action: 'account/create',
         type: 'POST',
-        appid: this.options.appid,
-        apikey: this.options.apikey,
         options: options,
         processResponse: APICall.basicResponse,
         data: payload
@@ -470,8 +456,6 @@
       return new APICall({
         action: 'account/password/change',
         type: 'POST',
-        appid: this.options.appid,
-        apikey: this.options.apikey,
         data: payload,
         options: options,
         processResponse: APICall.basicResponse,
@@ -497,8 +481,6 @@
       return new APICall({ 
         action: 'account/password/reset',
         type: 'POST',
-        appid: this.options.appid,
-        apikey: this.options.apikey,
         options: options,
         processResponse: APICall.basicResponse,
         data: payload
@@ -522,8 +504,6 @@
       return new APICall({
         action: "account/password/reset/" + token,
         type: 'POST',
-        appid: this.options.appid,
-        apikey: this.options.apikey,
         data: payload,
         processResponse: APICall.basicResponse,
         options: options
@@ -564,8 +544,6 @@
       return new APICall({
         action: 'account/login',
         type: 'POST',
-        appid: this.options.appid,
-        apikey: this.options.apikey,
         options: options,
         headers: {
           Authorization: "Basic " + (Base64.encode("" + user.userid + ":" + user.password))
@@ -593,8 +571,6 @@
       return new APICall({
         action: 'account/logout',
         type: 'POST',
-        appid: this.options.appid,
-        apikey: this.options.apikey,
         processResponse: APICall.basicResponse,
         headers: {
           'X-CloudMine-SessionToken': token
@@ -633,8 +609,6 @@
       return new APICall({
         action: 'account/login',
         type: 'POST',
-        appid: this.options.appid,
-        apikey: this.options.apikey,
         processResponse: APICall.basicResponse,
         headers: {
           Authorization: "Basic " + (Base64.encode(user.userid + ":" + user.password))
@@ -779,7 +753,7 @@
     this.hasErrors = false;
     this.requestData = this.config.data;
     this.requestHeaders = {
-      'X-CloudMine-ApiKey': this.config.apikey,
+      'X-CloudMine-ApiKey': this.config.options.apikey,
       'X-CloudMine-Agent': 'JS/0.9',
       'X-CloudMine-UT': this.config.options.user_token
     };
@@ -798,7 +772,7 @@
     }
     this.config.headers = merge(this.requestHeaders, this.config.headers);
     this.setContentType(config.contentType || 'application/json');
-    this.url = [apiroot, "/v1/app/", this.config.appid, root, this.config.action, (query ? "?" + query : "")].join("");
+    this.url = [apiroot, "/v1/app/", this.config.options.appid, root, this.config.action, (query ? "?" + query : "")].join("");
     
     var self = this, sConfig = this.config;
     
