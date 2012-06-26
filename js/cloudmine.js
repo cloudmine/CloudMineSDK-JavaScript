@@ -49,6 +49,8 @@
    */
   function WebService(options) {
     this.options = opts(this, options);
+    this._setupUserToken();
+    
   }
 
   /** @namespace WebService.prototype */
@@ -242,8 +244,8 @@
      */
     upload: function(key, file, options) {
       options = opts(this, options);
-      if (!options.filename) options.filename = key;
       if (!key) key = uuid();
+      if (!options.filename) options.filename = key;
 
       // Warning: may not necessarily use ajax to perform upload.
       var apicall = new APICall({
@@ -707,6 +709,37 @@
     isApplicationData: function() {
       if (this.options.applevel === true || this.options.applevel === false) return this.options.applevel;
       return this.options.session_token == null;
+    },
+
+    /**
+     * Use localStorage or a cookie to store user_data uuid for use as X-Cloudmine-UT request header.
+     * Called by WebService constructor.
+     */
+
+    _setupUserToken: function() {
+      if (isNode) return;
+      var user_token;
+      if (!!window.localStorage) {
+        user_token = localStorage.getItem('cmut');
+        if (!user_token){
+          user_token = uuid();
+          localStorage.setItem('cmut', user_token);
+        }
+      } else {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; ++i){
+          var cookie = cookies[i].split('=');
+          if (cookie[0] == 'cmut') {
+            user_token = cookie[1];
+            break;
+          }
+        }
+        if (user_token === undefined){
+          user_token = uuid();
+          document.cookie = 'cmut=' + user_token + '; expires=' + new Date(33333333333333).toUTCString() + '; path=/';
+        }
+      }
+      this.options.user_token = user_token;
     }
   };
   
@@ -1429,14 +1462,16 @@
   }
 
   // Export CloudMine objects.
-  var http, https, ajax, url, apiroot = "https://api.cloudmine.me";
+  var http, https, ajax, isNode, url, apiroot = "https://api.cloudmine.me";
   if (!this.window) {
+    isNode = true;
     ajax = NodeAJAX;
     url = require('url');
     http = require('http');
     https = require('https');
     module.exports = WebService;
   } else {
+    isNode = false;
     window.cloudmine = window.cloudmine || {};
     window.cloudmine.WebService = WebService;
     if (window.cloudmine.API) apiroot = window.cloudmine.API;
