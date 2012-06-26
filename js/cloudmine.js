@@ -50,7 +50,6 @@
   function WebService(options) {
     this.options = opts(this, options);
     this._setupUserToken();
-    
   }
 
   /** @namespace WebService.prototype */
