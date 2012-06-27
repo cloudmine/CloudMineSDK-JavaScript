@@ -109,7 +109,7 @@
         key = out;
       }
       options = opts(this, options);
-      
+
       return new APICall({
         action: 'text',
         type: 'POST',
@@ -250,11 +250,11 @@
         if (!options.contentType) options.contentType = type || defaultType;
         APICall.binaryUpload(apicall, data, options.filename, options.contentType).done();
       }
-      
+
       if (isString(file) || (Buffer && file instanceof Buffer)) {
         // Upload by filename
 
-        if (ajax == NodeAJAX) {
+        if (isNode) {
           if (isString(file)) file = require('fs').readFileSync(file);
           upload(file);
         }
@@ -267,7 +267,7 @@
       } else if (isBinary(file)) {
         // Binary files are base64 encoded from a buffer.
         var reader = new FileReader();
-        
+
         /** @private */
         reader.onabort = function() {
           apicall.setData("FileReader aborted").abort();
@@ -289,7 +289,7 @@
         } else {
           file = getBlob(file, options.contentType || defaultType);
         }
-        
+
         reader.readAsDataURL(file);
       } else NotSupported();
 
@@ -330,7 +330,7 @@
 
       // Download file directly to computer if given a filename.
       if (options.filename) {
-        if (ajax == NodeAJAX) {
+        if (isNode) {
           apicall.setProcessor(function(data) {
             response.success[key] = require('fs').writeFileSync(options.filename, data, 'binary');
             return response;
@@ -418,7 +418,7 @@
       });
     },
 
-    
+
     /**
      * Change a user's password
      * @param {object} data An object with userid, password, and oldpassword fields.
@@ -450,7 +450,7 @@
       var payload = JSON.stringify({
         password: user.password
       });
-      
+
       return new APICall({
         action: 'account/password/change',
         type: 'POST',
@@ -603,7 +603,7 @@
       else user = {userid: user, password: password};
       options = opts(this, options);
       options.applevel = true;
-      
+
       return new APICall({
         action: 'account/login',
         type: 'POST',
@@ -647,7 +647,7 @@
     getOption: function(option) {
       return (valid_params[option] ? this.options[option] : null);
     },
-    
+
     /**
      * Set a default option that is sent to the server
      * @param {string} option A default parameter to send to the server.
@@ -661,7 +661,7 @@
       }
       return false;
     },
-    
+
     /**
      * Set the application or user-level data mode for this store.
      * @param {boolean|undefined} If true, this store will only operate in application data.
@@ -682,33 +682,48 @@
       return this.options.session_token == null;
     },
 
+    /**
+     * @private
+     */
+
     _setupUserToken: function() {
-      if (isNode) return;
       var user_token;
-      if (!!window.localStorage) {
-        user_token = localStorage.getItem('cmut');
-        if (!user_token){
+      if (isNode) {
+        var fs = require('fs'), user_token_data;
+        try {
+          user_token = fs.readFileSync('.cmut', 'ascii');
+        } catch(e) {
           user_token = uuid();
-          localStorage.setItem('cmut', user_token);
+          try {
+            fs.writeFileSync('.cmut', user_token);
+          } catch(e) {}
         }
       } else {
-        var cookies = document.cookie.split(';');
-        for (var i = 0; i < cookies.length; ++i){
-          var cookie = cookies[i].split('=');
-          if (cookie[0] == 'cmut') {
-            user_token = cookie[1];
-            break;
+        if (window.localStorage) {
+          user_token = localStorage.getItem('cmut');
+          if (!user_token){
+            user_token = uuid();
+            localStorage.setItem('cmut', user_token);
           }
-        }
-        if (user_token === undefined){
-          user_token = uuid();
-          document.cookie = 'cmut=' + user_token + '; expires=' + new Date(33333333333333).toUTCString() + '; path=/';
+        } else {
+          var cookies = document.cookie.split(';');
+          for (var i = 0; i < cookies.length; ++i){
+            var cookie = cookies[i].split('=');
+            if (cookie[0] == 'cmut') {
+              user_token = cookie[1];
+              break;
+            }
+          }
+          if (user_token === undefined){
+            user_token = uuid();
+            document.cookie = 'cmut=' + user_token + '; expires=' + new Date(33333333333333).toUTCString() + '; path=/';
+          }
         }
       }
       this.options.user_token = user_token;
     }
   };
-  
+
   /**
    * <p>WebService will return an instance of this class that should be used to interact with
    * the API. Upon completion of the AJAX call, this object will fire the event handlers based on
@@ -754,7 +769,7 @@
     this.responseText = null;
     this.status = null;
     this.type = this.config.type || 'GET';
-    
+
     // Build the URL and headers
 
     var query = stringify(server_params(this.config.options, this.config.query));
@@ -766,9 +781,9 @@
     this.config.headers = merge(this.requestHeaders, this.config.headers);
     this.setContentType(config.contentType || 'application/json');
     this.url = [apiroot, "/v1/app/", this.config.options.appid, root, this.config.action, (query ? "?" + query : "")].join("");
-    
+
     var self = this, sConfig = this.config;
-    
+
     /** @private */
     this.config.complete = function(xhr, status) {
       var data;
@@ -850,7 +865,7 @@
      */
     trigger: function(event/*, arg1...*/) {
       var events = this._events[event];
-      
+
       if (events != null) {
         var args = slice(arguments, 1);
         each(events, function(event) {
@@ -938,7 +953,7 @@
       }
       return this;
     },
-    
+
     /**
      * If a synchronous ajax call is done (via setting: options.async = false), you must call this function
      * after you have attached all your event handlers. You should not attach event handlers after this
@@ -1018,7 +1033,7 @@
     }
 
     // Callback signature: function(responseData, response)
-    apicall.trigger('complete', data, apicall);      
+    apicall.trigger('complete', data, apicall);
   }
 
 
@@ -1082,7 +1097,7 @@
    * @param {string} contentType The content-type of the file. If not specified, it will guess if possible,
    *                             otherwise assume application/octet-stream.
    * @return {APICall} The apicall object that was given.
-   *               
+   * 
    * @private
    * @function
    * @memberOf APICall
@@ -1145,7 +1160,7 @@
     // Attach a content-length
     if (isArray(config.data)) opts.headers['content-length'] = Buffer.byteLength(config.data);
     else if (isString(config.data)) opts.headers['content-length'] = config.data.length;
-    
+
     // Fire request.
     var self = this, cbContext = config.context || this;
     this._textStatus = 'success';
@@ -1174,7 +1189,7 @@
           }
         }
 
-        
+
         if (self._textStatus == 'success' && self.status >= 200 && self.status < 300) {
           if (config.success) config.success.call(cbContext, data, 'success', self);
         } else if (config.error) {
@@ -1207,7 +1222,7 @@
     getResponseHeader: function(header) {
       return this._headers[header];
     },
-    
+
     /**
      * Get all the response headers.
      * @return {object} An object representing all the response headers.
@@ -1229,7 +1244,7 @@
       }
     }
   };
-  
+
   // Remap some of the CloudMine API query parameters.
   var valid_params = {
     limit: 'limit',
@@ -1372,7 +1387,7 @@
   function isFunction(item) {
     return typeof item === 'function';
   }
-  
+
   function isEmptyObject(item) {
     if (item) {
       for (var k in item) {
@@ -1418,7 +1433,7 @@
     }
     return obj;
   }
-  
+
   function NotSupported() {
     throw new Error("Unsupported operation", "cloudmine.js");
   }
@@ -1449,10 +1464,10 @@
   var Base64 = {
 	  // private property
 	  _keyStr : "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",
-    
+
 	  // public method for encoding
 	  encode : function (input) {
-		  var output = "", chr1, chr2, chr3, enc1, enc2, enc3, enc4, i = 0;      
+		  var output = "", chr1, chr2, chr3, enc1, enc2, enc3, enc4, i = 0;
 		  input = Base64._utf8_encode(input);
 
 		  while (i < input.length) {
@@ -1464,49 +1479,49 @@
 			  enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);
 			  enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);
 			  enc4 = chr3 & 63;
-        
+
 			  if (isNaN(chr2)) enc3 = enc4 = 64;
 			  else if (isNaN(chr3)) enc4 = 64;
-        
+
 			  output += this._keyStr.charAt(enc1) + this._keyStr.charAt(enc2) +
 			            this._keyStr.charAt(enc3) + this._keyStr.charAt(enc4);
 		  }
-      
+
 		  return output;
 	  },
-    
+
 	  // public method for decoding
 	  decode : function (input) {
 		  input = input.replace(/[^A-Za-z0-9\+\/\=]/g, "");
 		  var output = "", chr1, chr2, chr3;
 		  var enc1, enc2, enc3, enc4, i = 0;
-      
+
 		  while (i < input.length) {
 			  enc1 = this._keyStr.indexOf(input.charAt(i++));
 			  enc2 = this._keyStr.indexOf(input.charAt(i++));
 			  enc3 = this._keyStr.indexOf(input.charAt(i++));
 			  enc4 = this._keyStr.indexOf(input.charAt(i++));
-        
+
 			  chr1 = (enc1 << 2) | (enc2 >> 4);
 			  chr2 = ((enc2 & 15) << 4) | (enc3 >> 2);
 			  chr3 = ((enc3 & 3) << 6) | enc4;
-        
+
 			  output += String.fromCharCode(chr1);
 			  if (enc3 != 64) output += String.fromCharCode(chr2);
 			  if (enc4 != 64) output += String.fromCharCode(chr3);
 		  }
-      
+
 		  return Base64._utf8_decode(output);
 	  },
-    
+
 	  // private method for UTF-8 encoding
 	  _utf8_encode : function (string) {
 		  string = string.replace(/\r\n/g,"\n");
 		  var utftext = "";
-      
+
 		  for (var n = 0; n < string.length; n++) {
 			  var c = string.charCodeAt(n);
-        
+
 			  if (c < 128) utftext += String.fromCharCode(c);
 			  else if((c > 127) && (c < 2048)) {
 				  utftext += String.fromCharCode((c >> 6) | 192);
@@ -1517,16 +1532,16 @@
 				  utftext += String.fromCharCode((c & 63) | 128);
 			  }
 		  }
-      
+
 		  return utftext;
 	  },
-    
+
 	  // private method for UTF-8 decoding
 	  _utf8_decode : function (utftext) {
 		  var string = "", i = 0, c = c1 = c2 = 0;
 		  while (i < utftext.length) {
 			  c = utftext.charCodeAt(i);
-        
+
 			  if (c < 128) {
 				  string += String.fromCharCode(c);
 				  i++;
@@ -1541,7 +1556,7 @@
 				  i += 3;
 			  }
 		  }
-      
+ 
 		  return string;
 	  }
   }
