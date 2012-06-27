@@ -693,10 +693,18 @@
         try {
           user_token = fs.readFileSync('.cmut', 'ascii');
         } catch(e) {
-          user_token = uuid();
           try {
-            fs.writeFileSync('.cmut', user_token);
-          } catch(e) {}
+            user_token = fs.readFileSync('/tmp/.cmut', 'ascii')
+          } catch(e) {
+            user_token = uuid();
+            try {
+              fs.writeFileSync('.cmut', user_token);
+            } catch(e) {
+              try {
+                fs.writeFileSync('/tmp/.cmut', user_token);
+              } catch (e) {}
+            }
+          }
         }
       } else {
         if (window.localStorage) {
