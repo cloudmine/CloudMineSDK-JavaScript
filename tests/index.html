@@ -8,7 +8,7 @@
     <script type="text/javascript" src="../js/cloudmine.js"></script>
     <script type="text/javascript" src="tests.js"></script>
     <style>
-      #dnd {
+      .prompt {
         position: absolute;
         left: 0px;
         right: 0px;
@@ -21,13 +21,24 @@
         display: none;
       }
 
-      #dnd div {
+      .prompt > div {
         width: 50%;
         border-radius: 20px;
         background: white;
         padding: 10px;
         margin: auto;
         border: 3px solid rgba(0,0,0,0.3);
+      }
+
+      .prompt label {
+        display: inline-block;
+        width: 150px;
+      }
+      .prompt input {
+        width: 250px;
+      }
+      .prompt div + div {
+        margin-top: 10px;
       }
     </style>
   </head>
@@ -38,12 +49,52 @@
     <h2 id="qunit-userAgent"></h2>
     <ol id="qunit-tests"></ol>
     <div id="qunit-fixture"></div>
-    <div id="dnd">
+    <div class='prompt' id='key'>
+      <div>
+        <h2>Please enter your CloudMine account information</h2>
+        <div>
+          <label for='cm_appid'>Application ID</label>
+          <input id='cm_appid' type='text' placeholder='Application ID'>
+        </div>
+        <div>
+          <label for='cm_apikey'>API Key</label>
+          <input id='cm_apikey' type='text' placeholder='API Key'>
+        </div>
+        <button class='setkey'>Set APIKey</button>
+      </div>
+    </div>
+    <div class='prompt' id="dnd">
       <div>
         <h2>Drag a file into the browser</h2>
         <h5>Skipping test will cause subsequent failures</h5>
         <button class='skip'>Skip test</button>
       </div>
     </div>
+    <div>
+      <button class='forgetapp'>Forget Application ID and API Key</button>
+    </div>
+    <div>
+      <h3>Code snippet necessary for tests</h3>
+      <h4>Name: reverse</h4>
+      <pre class='code'>
+    function reverse(data) {
+      if (data && typeof data == 'object' && data.length) {
+        var out = Array(data.length);
+        for (var i = 0; i < data.length; ++i) { out[i] = reverse(data[i]); }
+        return out;
+      } else if (data && typeof data == 'object') {
+        var out = {};
+        for (var key in data) { if (data.hasOwnProperty(key)) out[key] = reverse(data[key]); }
+        return out;
+      } else if (typeof data == 'string') {
+        var out = "";
+        for (var i = 0, c = data.length; i < data.length; ++i) { out += data[--c]; }
+        return out;
+      }
+                                                             
+      return data;
+    }
+    exit(reverse(data));
+      </pre>
   </body>
 </html>

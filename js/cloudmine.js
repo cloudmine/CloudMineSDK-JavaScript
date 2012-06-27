@@ -1293,9 +1293,7 @@
 
   function server_params(options, map) {
     var key, value;
-    if (map == null) {
-      map = {};
-    }
+    if (map == null) map = {};
     for (key in valid_params) {
       value = valid_params[key];
       if (options[key] != null) {
@@ -1313,7 +1311,7 @@
   }
 
   function slice(array, x, y) {
-    return Array.prototype.slice.call(array, x, y);
+    return Array.prototype.slice.call(array, x || 0, y || array.length);
   }
 
   function each(item, callback, context) {
@@ -1405,7 +1403,8 @@
     var escape = ignore ? function(s) { return s; } : esc;
     for (var k in map) {
       if (map[k] != null && !isFunction(map[k])){
-        out.push(escape(k) + sep + escape(map[k]));
+        val = isObject(map[k]) ? JSON.stringify(map[k]) : map[k]
+        out.push(escape(k) + sep + escape(val));
       }
     }
     return out.join(eol || '&');

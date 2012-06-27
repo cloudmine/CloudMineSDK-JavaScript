@@ -6,32 +6,31 @@ var FileReader = base.FileReader;
 var Uint8Array = base.Uint8Array;
 var CanvasRenderingContext2D = base.CanvasRenderingContext2D;
 var hasBuffers = Buffer || (Uint8Array && ArrayBuffer); 
+var fs, path, crypto;
+
+// Oh thanks QUnit team. Reordering is not a feature, it is a bug.
+// Tests should run consistently in the same order every time.
+QUnit.config.reorder = false;
 
 // QUnit for Node: Redefine a few things.
 if (!base.window) {
-  function $(func) { func(); }
+  $ = function(func) { func(); }
   cloudmine = {WebService: module.require('../js/cloudmine.js')};
   module = QUnit.module;
   inBrowser = false;
+  fs = require('fs');
+  path = require('path');
+  crypto = require('crypto');
 }
 
 
 $(function() {
-  var cm = new cloudmine.WebService({
-    appid: '84e5c4a381e7424b8df62e055f0b69db',
-    apikey: '84c8c3f1223b4710b180d181cd6fb1df'
-  });
-  var cm_bad_apikey = new cloudmine.WebService({
-    appid: '84e5c4a381e7424b8df62e055f0b69db',
-    apikey: 'marc sucks lol'
-  });
-  var cm_bad_appid = new cloudmine.WebService({
-    appid: 'philly cheese steak',
-    apikey: '84c8c3f1223b4710b180d181cd6fb1df'
-  });
+  var cm, cm_bad_apikey, cm_bad_appid;
 
-  // Code snippet used in test is the reverse function
-  // with: exit(reverse(data));
+  function dom(selector) {
+    return document.querySelectorAll(selector);
+  }
+
   function reverse(data) {
     if (data && typeof data == 'object' && data.length) {
       var out = Array(data.length);
@@ -48,6 +47,17 @@ $(function() {
     }
 
     return data;
+  }
+
+  function hex() { return Math.round(Math.random() * 16).toString(16); }
+  function uuid() {
+    var out = Array(32), i;
+    out[14] = 4;
+    out[19] = ((Math.round(Math.random() * 16) & 3) | 8).toString(16);
+    for (i = 0; i < 14; ++i) { out[i] = hex(); }
+    for (i = 15; i < 19; ++i) { out[i] = hex(); }
+    for (i = 20; i < 32; ++i) { out[i] = hex(); }
+    return out.join('');
   }
 
   function noise(count) {
@@ -70,6 +80,123 @@ $(function() {
 
     return buffer;
   }
+
+  // Automatic cleanup (when possible)
+  // Cache objects as session: [objects]
+  var testObjects = {}, cleanupKey = '[[Application Data]]'
+  function track(key, service) {
+    session = service.options.session_token || cleanupKey;
+    if (!testObjects[session]) testObjects[session] = [];
+    if (testObjects[session].indexOf(key) == -1) testObjects[session].push(key);
+  }
+  function cleanup(session) {
+    if (typeof session == "object") session = session.options.session_token || cleanupKey;
+    if (testObjects[session]) {
+      cm.destroy(testObjects[session], {session_token: session == cleanupKey ? undefined : session});
+    }
+  }
+
+  if (inBrowser) {
+    dom('.forgetapp')[0].addEventListener('click', function() {
+      if (window.localStorage) localStorage.removeItem('cm_info');
+      location.reload();
+    }, false);
+  }
+
+  module("JS", {
+    setup: function() {
+      stop();
+
+      var info = {};
+      function finishSetup() {
+        if (!cm) {
+          cm = new cloudmine.WebService({
+            appid: info.appid || uuid(),
+            apikey: info.apikey || uuid()
+          });
+
+          if (!inBrowser) {
+            console.log("");
+            console.log("Using Application ID", info.appid);
+            console.log("Using API Key:", info.apikey);
+          }
+
+          cm_bad_appid = new cloudmine.WebService({ appid: uuid(), apikey: cm.options.apikey });
+          cm_bad_apikey = new cloudmine.WebService({ appid: cm.options.appid, apikey: uuid() });
+        }
+        start();
+      }
+
+      if (inBrowser) {
+        if (window.localStorage) info = JSON.parse(localStorage.getItem('cm_info') || "{}");
+        if (info.appid && info.apikey) finishSetup();
+        else {
+          var done = false;
+          var msg = dom('#key')[0];
+          var appidInput = dom('#key input#cm_appid')[0];
+          var apikeyInput = dom('#key input#cm_apikey')[0];
+          var doneButton = dom('#key button')[0];
+
+          function verifyOK() {
+            if (appidInput.value.length == 32 && apikeyInput.value.length == 32) {
+              doneButton.removeAttribute('disabled');
+            } else {
+              doneButton.setAttribute('disabled', true);
+            }
+          }
+
+          function doneClicked() {
+            if (doneButton.getAttribute('disabled') != true) {
+              done = true;
+              wait();
+            }
+          }
+
+          function wait() {
+            if (done) {
+              clearInterval(wait.interval);
+              wait.interval = undefined;
+              document.querySelector('#key').style.display = '';
+              info.appid = appidInput.value;
+              info.apikey = apikeyInput.value;
+
+              if (window.localStorage) localStorage.setItem('cm_info', JSON.stringify(info));
+              finishSetup();
+            }
+          }
+
+          doneButton.addEventListener('click', doneClicked, false);
+          appidInput.addEventListener('keyup', verifyOK, false);
+          apikeyInput.addEventListener('keyup', verifyOK, false);
+          
+          msg.style.display = 'block';
+          wait.interval = setInterval(wait, 100);
+        }
+      } else if (!process.env['CLOUDMINE_APPID'] || !process.env['CLOUDMINE_APIKEY']) {
+        console.log("");
+        if (!process.env['CLOUDMINE_APPID']) {
+          console.log("Please set environment variables: CLOUDMINE_APPID to the application id.");
+        }
+        if (!process.env['CLOUDMINE_APIKEY']) {
+          console.log("Please set environment variables: CLOUDMINE_APIKEY to the api key of your application.");
+        }
+        process.exit(1);
+      } else {
+        info.appid = process.env['CLOUDMINE_APPID'];
+        info.apikey = process.env['CLOUDMINE_APIKEY'];
+        finishSetup();
+      }
+    },
+
+    teardown: function() {
+      if (cm) {
+        for (var key in testObjects) {
+          cleanup(key);
+        }
+        testObjects = {};
+      }
+    }
+  });
 
   asyncTest('Register a new user, verify and log the user in', 3, function() {
     var user = {
@@ -108,8 +235,8 @@ $(function() {
       array: [3, '2', 1],
       object: { '3': 2, '1': 'a' }
     };
-    
     cm.set(key, value).on('success', function() {
+      track(key, cm);
       ok(true, 'Successfully set key');
     }).on('error', function() {
       ok(false, 'Successfully set key');
@@ -134,6 +261,7 @@ $(function() {
     };
     
     cm.update(key, value).on('success', function() {
+      track(key, cm);
       ok(true, 'Successfully created key');
     }).on('error', function() {
       ok(false, 'Successfully created key');
@@ -221,6 +349,7 @@ $(function() {
       if (config) {
         var jsonState = JSON.stringify(state);
         cm.update(key, config.change).on('success', function() {
+          track(key, cm);
           // Kick off validation check.
           ok(true, 'Successfully updated key with: ' + jsonState);
           cm.get(key).on('error', function() {
@@ -240,6 +369,7 @@ $(function() {
     // Kick off the initial set.
     var originalState = JSON.stringify(state);
     cm.set(key, state).on('success', function() {
+      track(key, cm);
       ok(true, 'Successfully created test key: ' + originalState);
     }).on('error', function() {
       ok(false, 'Failed to create test key: ' + originalState);
@@ -255,6 +385,7 @@ $(function() {
     };
 
     cm.set(key, value).on('success', function() {
+      track(key, cm);
       ok(true, 'Set key we want to delete');
     }).on('error', function() {
       ok(false, 'Set key we want to delete');
@@ -285,6 +416,7 @@ $(function() {
   asyncTest('Trigger unauthorized and application not found errors via bad appid and bad apikey', 3, function() {
     var key = 'test_object5';
     cm.set(key, {'Britney': 'Spears'}).on('success', function() {
+      track(key, cm);
       ok(true, 'Can set key on safe API Key');
     }).on('error', function() {
       ok(false, 'Can set key on safe API Key');
@@ -401,6 +533,7 @@ $(function() {
     ok(store.isApplicationData(), 'Store will refer to application-level data');
     
     store.set(key, appObj).on('success', function() {
+      track(key, cm);
       ok(true, 'Successfully created test object');
     }).on('error', function() {
       ok(false, 'Successfully created test object');
@@ -442,6 +575,7 @@ $(function() {
       ok(store.isLoggedIn(), 'User is currently logged in.');
       ok(!store.isApplicationData(), 'Store will refer to user-level data');
       store.set(key, privateUserObj).on('success', function() {
+        track(key, cm);
         ok(true, 'Successfully set value of user-level data while logged in as user');
       }).on('error', function() {
         ok(false, 'Successfully set value of user-level data while logged in as user');
@@ -450,6 +584,7 @@ $(function() {
 
     function setAppValue() {
       store.set(key, '2', {applevel: true}).on('success', function() {
+        track(key, cm);
         ok(true, 'Successfully set value to application data while logged in as user');
       }).on('error', function() {
         ok(false, 'Successfully set value to application data while logged in as user');
@@ -493,6 +628,7 @@ $(function() {
     ok(!store.isLoggedIn(), 'User is not currently logged in.');
     ok(store.isApplicationData(), 'Store will refer to application data');
     store.set(key, appObj).on('success', function() {
+      track(key, cm);
       ok(true, 'Successfully created test object');
     }).on('error', function() {
       ok(false, 'Successfully created test object');
@@ -534,6 +670,7 @@ $(function() {
 
     function setAppValue() {
       store.set(key, userObj).on('success', function() {
+        track(key, cm);
         ok(true, 'Successfully set value to application data while logged in as user');
       }).on('error', function() {
         ok(false, 'Successfully set value to application data while logged in as user');
@@ -542,6 +679,7 @@ $(function() {
 
     function setUserValue() {
       store.set(key, privateUserObj, {applevel: false}).on('success', function() {
+        track(key, cm);
         ok(true, 'Successfully set value of user-level data while logged in as user');
       }).on('error', function() {
         ok(false, 'Successfully set value of user-level data while logged in as user');
@@ -585,6 +723,7 @@ $(function() {
     ok(!store.isLoggedIn(), 'User is not currently logged in.');
     ok(!store.isApplicationData(), 'Store will refer to user-level data');
     store.set(key, appObj).on('success', function() {
+      track(key, cm);
       ok(false, 'Could not create object while not logged in.');
     }).on('error', function() {
       ok(true, 'Could not create object while not logged in.');
@@ -626,6 +765,7 @@ $(function() {
 
     function setUserValue() {
       store.set(key, privateUserObj).on('success', function() {
+        track(key, cm);
         ok(true, 'Successfully set value of user-level data while logged in as user');
       }).on('error', function() {
         ok(false, 'Successfully set value of user-level data while logged in as user');
@@ -634,6 +774,7 @@ $(function() {
     
     function setAppValue() {
       store.set(key, appObj, {applevel: true}).on('success', function() {
+        track(key, cm);
         ok(true, 'Successfully set value to application data while logged in as user');
       }).on('error', function() {
         ok(false, 'Successfully set value to application data while logged in as user');
@@ -658,7 +799,7 @@ $(function() {
   });
 
   asyncTest('Ensure code snippets execute properly for actions', 33, function() {
-    var opts = {snippet: 'reverse'};
+    var opts = {snippet: 'reverse', params: {a: 1, b: { c: 2 }}};
     var key = 'code_snip_test_' + noise(8);
     var user = {userid: noise(32) + '@' + noise(32) + '.com', password: noise(32)};    
     
@@ -684,12 +825,13 @@ $(function() {
       cm.set(userKey, data, opts).on('result', function() {
         snipRan = true;
       }).on('success', function() {
+        track(userKey, cm);
         ok(true, 'Set user data for code snippet test');
       }).on('error', function() {
         ok(false, 'Set user data for code snippet test');
       }).on('complete', function(data) {
         ok(snipRan, 'Snippet ran as expected');
-        deepEqual(data.result ? reverse(data.result.success) : null, data.success, "Success data matches matches reversed output");
+        deepEqual(data && data.result ? reverse(data.result.success) : null, data.success, "Success data matches matches reversed output");
         updateUserData();
       });
     }
@@ -700,12 +842,13 @@ $(function() {
       cm.update(userKey, data, opts).on('result', function() {
         snipRan = true;
       }).on('success', function() {
+        track(userKey, cm);
         ok(true, 'Update user data for code snippet test');
       }).on('error', function() {
         ok(false, 'Update user data for code snippet test');
       }).on('complete', function(data) {
         ok(snipRan, 'Snippet ran as expected');
-        deepEqual(data.result ? reverse(data.result.success) : null, data.success, "Success data matches matches reversed output");
+        deepEqual(data && data.result ? reverse(data.result.success) : null, data.success, "Success data matches matches reversed output");
         getUserData();
       });
     }
@@ -720,7 +863,7 @@ $(function() {
         ok(false, 'Retreived user data for code snippet test');
       }).on('complete', function(data) {
         ok(snipRan, 'Snippet ran as expected');
-        deepEqual(data.result ? reverse(data.result.success) : null, data.success, "Success data matches matches reversed output");
+        deepEqual(data && data.result ? reverse(data.result.success) : null, data.success, "Success data matches matches reversed output");
         searchUserData();
       });
     }
@@ -735,7 +878,7 @@ $(function() {
         ok(false, 'Searched user data for code snippet test');
       }).on('complete', function(data) {
         ok(snipRan, 'Snippet ran as expected');
-        deepEqual(data.result ? reverse(data.result.success) : null, data.success, "Success data matches matches reversed output");
+        deepEqual(data && data.result ? reverse(data.result.success) : null, data.success, "Success data matches matches reversed output");
         deleteUserData();
       });
     }
@@ -750,12 +893,13 @@ $(function() {
         ok(false, 'Deleted user data for code snippet test');
       }).on('complete', function(data) {
         ok(snipRan, 'Snippet ran as expected');
-        deepEqual(data.result ? reverse(data.result.success) : null, data.success, "Success data matches matches reversed output");
+        deepEqual(data && data.result ? reverse(data.result.success) : null, data.success, "Success data matches matches reversed output");
         logoutUser();
       });
     }
 
     function logoutUser() {
+      cleanup();
       cm.logout().on('success', function() {
         ok(true, 'Logged out user');
       }).on('error', function() {
@@ -770,12 +914,13 @@ $(function() {
       cm.set(appKey, data, opts).on('result', function() {
         snipRan = true;
       }).on('success', function() {
+        track(appKey, cm);
         ok(true, 'Set application data for code snippet test');
       }).on('error', function() {
         ok(false, 'Set application data for code snippet test');
       }).on('complete', function(data) {
         ok(snipRan, 'Snippet ran as expected');
-        deepEqual(data.result ? reverse(data.result.success) : null, data.success, "Success data matches matches reversed output");
+        deepEqual(data && data.result ? reverse(data.result.success) : null, data.success, "Success data matches matches reversed output");
         updateAppData();
       });
     }
@@ -786,12 +931,13 @@ $(function() {
       cm.update(appKey, data, opts).on('result', function() {
         snipRan = true;
       }).on('success', function() {
+        track(appKey, cm);
         ok(true, 'Update application data for code snippet test');
       }).on('error', function() {
         ok(false, 'Update application data for code snippet test');
       }).on('complete', function(data) {
         ok(snipRan, 'Snippet ran as expected');
-        deepEqual(data.result ? reverse(data.result.success) : null, data.success, "Success data matches matches reversed output");
+        deepEqual(data && data.result ? reverse(data.result.success) : null, data.success, "Success data matches matches reversed output");
         getAppData();
       });
     }
@@ -806,7 +952,7 @@ $(function() {
         ok(false, 'Retreived application data for code snippet test');
       }).on('complete', function(data) {
         ok(snipRan, 'Snippet ran as expected');
-        deepEqual(data.result ? reverse(data.result.success) : null, data.success, "Success data matches matches reversed output");
+        deepEqual(data && data.result ? reverse(data.result.success) : null, data.success, "Success data matches matches reversed output");
         searchAppData();
       });
     }
@@ -821,7 +967,7 @@ $(function() {
         ok(false, 'Searched application data for code snippet test');
       }).on('complete', function(data) {
         ok(snipRan, 'Snippet ran as expected');
-        deepEqual(data.result ? reverse(data.result.success) : null, data.success, "Success data matches matches reversed output");
+        deepEqual(data && data.result ? reverse(data.result.success) : null, data.success, "Success data matches matches reversed output");
         deleteAppData();
       });
     }
@@ -836,7 +982,7 @@ $(function() {
         ok(false, 'Deleted application data for code snippet test');
       }).on('complete', function(data) {
         ok(snipRan, 'Snippet ran as expected');
-        deepEqual(data.result ? reverse(data.result.success) : null, data.success, "Success data matches matches reversed output");
+        deepEqual(data && data.result ? reverse(data.result.success) : null, data.success, "Success data matches matches reversed output");
         start();
       });
     }
@@ -848,11 +994,10 @@ $(function() {
       ok(true, 'This test currently cannot be performed in browsers for files.');
       start();
     } else {
-      var fs = require('fs');
       var uploadKey = 'test_obj_' + noise(8);
       var downloadTo = 'binary_downloaded.png'
       function hash(contents) {
-        var md5 = require('crypto').createHash('md5');
+        var md5 = crypto.createHash('md5');
         md5.update(contents);
         var hash = md5.digest('hex');
         return hash;
@@ -860,6 +1005,7 @@ $(function() {
 
       var downloadedFile;
       var apicall = cm.upload(uploadKey, "binary.png").on('success', function() {
+        track(uploadKey, cm);
         ok(true, "Uploaded binary.png to " + uploadKey);
       }).on('error', function() {
         ok(false, "Uploaded binary.png to " + uploadKey);
@@ -874,7 +1020,7 @@ $(function() {
       }
 
       function compareHashes() {
-        var exists = require('path').existsSync(downloadTo); 
+        var exists = path.existsSync(downloadTo); 
         ok(exists, 'File was downloaded to the correct file name.');
         if (exists) {
           var originalHash = hash(fs.readFileSync('binary.png', 'binary'));
@@ -950,6 +1096,7 @@ $(function() {
       }).on('error', function(data) {
         if (!aborted) ok(false, "User specified file uploaded to server");
       }).on('success', function() {
+        track(uploadKey, cm);
         ok(true, "User specified file uploaded to server");
       }).on('complete', verifyUpload);
     }
@@ -1031,11 +1178,12 @@ $(function() {
       cm.upload(key, buffer).on('error', function() {
         ok(false, "Upload unnamed binary buffer to server"); 
       }).on('success', function() {
+        track(key, cm);
         ok(true, "Upload unnamed binary buffer to server");
       }).on('complete', downloadData);
     }
   });
- 
+  
   asyncTest("Canvas upload test", 2, function() {
     if (!CanvasRenderingContext2D) {
       expect(1);
@@ -1060,6 +1208,7 @@ $(function() {
       
       var key = "canvas_image_" + noise(12);
       cm.upload(key, ctx).on('success', function() {
+        track(key, cm);
         ok(true, 'Uploaded canvas to server');
       }).on('error', function() {
         ok(false, 'Uploaded canvas to server');
