@@ -691,20 +691,12 @@
       if (isNode) {
         var fs = require('fs'), user_token_data;
         try {
-          user_token = fs.readFileSync('.cmut', 'ascii');
+          user_token = fs.readFileSync('/tmp/.cmut', 'ascii');
         } catch(e) {
+          user_token = uuid();
           try {
-            user_token = fs.readFileSync('/tmp/.cmut', 'ascii')
-          } catch(e) {
-            user_token = uuid();
-            try {
-              fs.writeFileSync('.cmut', user_token);
-            } catch(e) {
-              try {
-                fs.writeFileSync('/tmp/.cmut', user_token);
-              } catch (e) {}
-            }
-          }
+            fs.writeFileSync('/tmp/.cmut', user_token);
+          } catch(e) {}
         }
       } else {
         if (window.localStorage) {
