@@ -1,0 +1,56 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+   "http://www.w3.org/TR/html4/strict.dtd">
+
+<html lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>To-Do Sample App</title>
+  <link rel="stylesheet" type="text/css" href="todo.css">
+  <script type="text/javascript" src="jquery-1.7.2.min.js"></script>
+  <script type="text/javascript" src="../../js/cloudmine.js"></script>
+  <script type="text/javascript" src="todo.js"></script>
+</head>
+<body>
+<div id="main">
+  <div id="header">
+    <div>
+       Cloudmine Sample App: <span class="black">To-Do List</span>
+     </div>
+  </div>
+  <div id="login">
+    <h2> Login or Register </h2>
+    <input type="text" id="login_email" placeholder="Email"/>
+    <br><br>
+    <input type="password" id="login_password" placeholder="Password"/><div class="grey">You can hit Enter to log in.</div>
+    <br><br>
+    <input type="submit" value="Login" id="login_button" />
+    <span id="or">or</span>
+    <input type="submit" value="Register" id="register_button" />
+    <div id="error_login" class="error"></div>
+  </div>
+
+  <div id="restoring_session">
+    Restoring session...
+  </div>
+
+  <div id="todo_header">
+    <h2>ToDo Items</h2>
+    <input type="submit" value="Logout" id="logout_button" />
+  </div>
+
+  <div id="todo">
+    <div id="empty_list">You haven't added any items yet.</div>
+  </div>
+
+  <div id="new">
+    <input type="text" id="new_item" placeholder="New...">
+    <br>
+    <div id="priority_buttons">Priority:</div>
+    <div id="due_in_hours">Due in <input type="text" id="due_in" maxlength="3"> hours. <div class="grey">(Optional)</div></div>
+    <br>
+    <input type="submit" value="Create" id="create_button" />
+    <div id="error_list" class="error"></div>
+  </div>
+</div>
+</body>
+</html>
