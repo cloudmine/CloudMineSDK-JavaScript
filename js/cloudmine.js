@@ -1040,9 +1040,18 @@
       if (!isEmptyObject(data.errors)) {
         out.errors = {};
         for (var k in data.errors) {
-          var error = data.errors[k];
-          if (!out.errors[error.code]) out.errors[error.code] = {}
-          out.errors[error.code][k] = {errors: [ error ]};
+          var error = data.errors[k], code = 400;
+
+          // Unfortunately, errors are a bit inconsistent.
+          if (error.code) {
+            code = error.code;
+            error = error.message || error;
+          } else if (isString(error)) {
+            code = errors[error.toLowerCase()] || 400;
+          }
+
+          if (!out.errors[code]) out.errors[code] = {}
+          out.errors[code][k] = {errors: [ error ]};
         }
       }
 
@@ -1261,6 +1270,15 @@
     404: 'notfound',
     409: 'conflict',
     500: 'servererror'
+  };
+
+  // Sometimes we only get a string back as an error.
+  var errors = {
+    'bad request': 400,
+    'permission denied': 401,
+    'unauthorized': 401,
+    'not found': 404,
+    'conflict': 409
   };
 
   // Scope external dependencies, if necessary.
