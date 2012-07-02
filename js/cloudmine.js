@@ -16,7 +16,7 @@
    *
    * <p>Example:
    * <pre class='code'>
-   * var ws = new cloudmine.WebService({appid: "abc", apikey: "abc"});
+   * var ws = new cloudmine.WebService({appid: "abc", apikey: "abc", appname: 'SampleApp', appversion: '1.0'});
    * ws.get("MyKey").on("success", function(data, apicall) {
    *    console.log("MyKey value: %o", data["MyKey"]);
    * }).on("error", function(data, apicall) {
@@ -34,6 +34,8 @@
    * @param {object} Default configuration for this WebService
    * @config {string} [appid] The application id for requests (Required)
    * @config {string} [apikey] The api key for requests (Required)
+   * @config {string} [appname] An alphanumeric identifier for your app, used for stats purposes
+   * @config {string} [appversion] A version identifier for you app, used for stats purposes
    * @config {boolean} [applevel] If true, always send requests to application.
    *                              If false, always send requests to user-level, trigger error if not logged in.
    *                              Otherwise, send requests to user-level if logged in.
@@ -708,8 +710,13 @@
       if (this.options.applevel === true || this.options.applevel === false) return this.options.applevel;
       return this.options.session_token == null;
     }
+
   };
-  
+
+  // Version information.
+  var version = '0.9-git';
+  WebService.VERSION = version;
+
   /**
    * <p>WebService will return an instance of this class that should be used to interact with
    * the API. Upon completion of the AJAX call, this object will fire the event handlers based on
@@ -741,6 +748,15 @@
     this.config = merge({}, defaultConfig, config);
     this._events = {};
 
+    var agent = 'JS/' + version;
+    var opts = this.config.options;
+    if (opts.appname) {
+      agent += ' ' + opts.appname.replace(agentInvalid, '_');
+      if (opts.appversion) {
+        agent += '/' + opts.appversion.replace(agentInvalid, '_');
+      }
+    }
+
     // Fields that are available at the completion of the api call.
     this.additionalData = this.config.callbackData;
     this.data = null;
@@ -748,8 +764,9 @@
     this.requestData = this.config.data;
     this.requestHeaders = {
       'X-CloudMine-ApiKey': this.config.apikey,
-      'X-CloudMine-Agent': 'JS/0.9'
+      'X-CloudMine-Agent': agent
     };
+    
     this.responseHeaders = {};
     this.responseText = null;
     this.status = null;
@@ -757,8 +774,8 @@
     
     // Build the URL and headers
 
-    var query = stringify(server_params(this.config.options, this.config.query));
-    var root = '/', session = this.config.options.session_token, applevel = this.config.options.applevel;
+    var query = stringify(server_params(opts, this.config.query));
+    var root = '/', session = opts.session_token, applevel = opts.applevel;
     if (applevel === false || (applevel !== true && session != null)) {
       root = '/user/';
       if (session != null) this.requestHeaders['X-CloudMine-SessionToken'] = session;
@@ -1292,6 +1309,7 @@
   var Buffer = base.Buffer;
   var CanvasRenderingContext2D = base.CanvasRenderingContext2D;
   var BinaryClasses = [ File, Buffer, CanvasRenderingContext2D, ArrayBuffer, base.Uint8Array, base.Uint8ClampedArray, base.Uint16Array, base.Uint32Array, base.Int8Array, base.Int16Array, base.Int32Array, base.Float32Array, base.Float64Array ];
+  var agentInvalid = /[^a-zA-Z0-9._-]/g;
 
   // Utility functions.
   function hex() { return Math.round(Math.random() * 16).toString(16); }
@@ -1416,7 +1434,7 @@
   }
 
   function stringify(map, sep, eol, ignore) {
-    var out = [];
+    var out = [], val;
     sep = sep || '=';
     var escape = ignore ? function(s) { return s; } : esc;
     for (var k in map) {

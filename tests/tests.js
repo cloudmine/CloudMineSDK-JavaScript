@@ -85,7 +85,7 @@ $(function() {
   // Cache objects as session: [objects]
   var testObjects = {}, cleanupKey = '[[Application Data]]'
   function track(key, service) {
-    session = service.options.session_token || cleanupKey;
+    var session = service.options.session_token || cleanupKey;
     if (!testObjects[session]) testObjects[session] = [];
     if (testObjects[session].indexOf(key) == -1) testObjects[session].push(key);
   }
@@ -112,7 +112,9 @@ $(function() {
         if (!cm) {
           cm = new cloudmine.WebService({
             appid: info.appid || uuid(),
-            apikey: info.apikey || uuid()
+            apikey: info.apikey || uuid(),
+            appname: 'UnitTests',
+            appversion: cloudmine.WebService.VERSION
           });
 
           if (!inBrowser) {
@@ -198,7 +200,7 @@ $(function() {
     }
   });
 
-  asyncTest('Register a new user, verify and log the user in', 3, function() {
+  asyncTest('Register a new user, verify user, cloudmine-agent, and log the user in', 4, function() {
     var user = {
       email: noise(5) + '@' + noise(5) + '.com',
       password: noise(5)
@@ -208,7 +210,12 @@ $(function() {
       ok(true, 'Created user ' + user.email + ' with password ' + user.password);
     }).on('error', function() {
       ok(false, 'Created user ' + user.email + ' with password ' + user.password);
-    }).on('complete', verify);
+    }).on('complete', function(data, apicall) {
+      equal(apicall.requestHeaders['X-CloudMine-Agent'],
+            'JS/' + cloudmine.WebService.VERSION + ' UnitTests/' + cloudmine.WebService.VERSION,
+            'CloudMine Agent exposes app name and version');
+      verify();
+    });
     
     function verify() {
       cm.verify(user.email, user.password).on('error', function() {
