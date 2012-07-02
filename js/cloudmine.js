@@ -1294,6 +1294,7 @@
     'bad request': 400,
     'permission denied': 401,
     'unauthorized': 401,
+    'key does not exist': 404,
     'not found': 404,
     'conflict': 409
   };
