@@ -355,7 +355,7 @@
           var iframe = document.createElement('iframe');
           iframe.style.display = 'none';
           iframe.src = apicall.url;
-          iframe.onload = detach;
+          iframe.onload = function() { setTimeout(detach, 5000); };
           detach.timer = setTimeout(detach, 60000);
           document.body.appendChild(iframe);
           response.success[key] = iframe;
