@@ -1489,7 +1489,7 @@
     url = require('url');
     http = require('http');
     https = require('https');
-    module.exports = WebService;
+    module.exports = { WebService: WebService };
   } else {
     isNode = false;
     window.cloudmine = window.cloudmine || {};
