@@ -692,33 +692,35 @@
       var user_token;
       if (isNode) {
         var fs = require('fs'), user_token_data;
+        var token_file = '/tmp/.cmut_' + this.options.appid;
         try {
-          user_token = fs.readFileSync('/tmp/.cmut', 'ascii');
+          user_token = fs.readFileSync(token_file, 'ascii');
         } catch(e) {
           user_token = uuid();
           try {
-            fs.writeFileSync('/tmp/.cmut', user_token);
+            fs.writeFileSync(token_file, user_token);
           } catch(e) {}
         }
       } else {
+        var token_key = 'cmut_' + this.options.appid;
         if (window.localStorage) {
-          user_token = localStorage.getItem('cmut');
+          user_token = localStorage.getItem(token_key);
           if (!user_token){
             user_token = uuid();
-            localStorage.setItem('cmut', user_token);
+            localStorage.setItem(token_key, user_token);
           }
         } else {
           var cookies = document.cookie.split(';');
           for (var i = 0; i < cookies.length; ++i){
             var cookie = cookies[i].split('=');
-            if (cookie[0] == 'cmut') {
+            if (cookie[0] === token_key) {
               user_token = cookie[1];
               break;
             }
           }
           if (user_token === undefined){
             user_token = uuid();
-            document.cookie = 'cmut=' + user_token + '; expires=' + new Date(33333333333333).toUTCString() + '; path=/';
+            document.cookie = token_key + '=' + user_token + '; expires=' + new Date(33333333333333).toUTCString() + '; path=/';
           }
         }
       }
