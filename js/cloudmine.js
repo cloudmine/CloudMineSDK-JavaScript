@@ -141,7 +141,7 @@
      * The data must be convertable to JSON.
      * Results may be affected by defaults and/or by the options parameter.
      * @param {string|null} key The key to affect. If given null, a random key will be assigned.
-     * @param {string|number|object} The object to store. 
+     * @param {string|number|object} value The object to store.
      * @return {APICall} An APICall instance for the web service request used to attach events.
      *
      * @function
@@ -693,7 +693,7 @@
     
     /**
      * Set the application or user-level data mode for this store.
-     * @param {boolean|undefined} If true, this store will only operate in application data.
+     * @param {boolean|undefined} state If true, this store will only operate in application data.
      *                            If false, this store will only operate in user-level data.
      *                            If null/undefined, this store will use user-level data if logged in,
      *                            application data otherwise.
