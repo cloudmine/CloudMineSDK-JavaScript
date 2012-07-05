@@ -15,7 +15,7 @@ QUnit.config.reorder = false;
 // QUnit for Node: Redefine a few things.
 if (!base.window) {
   $ = function(func) { func(); }
-  cloudmine = {WebService: module.require('../js/cloudmine.js')};
+  cloudmine = module.require('../js/cloudmine.js');
   module = QUnit.module;
   inBrowser = false;
   fs = require('fs');
@@ -201,6 +201,7 @@ $(function() {
   });
 
   asyncTest('Register a new user, verify user, cloudmine-agent, and log the user in', 4, function() {
+    console.log('Register a new user, verify user, cloudmine-agent, and log the user in');
     var user = {
       email: noise(5) + '@' + noise(5) + '.com',
       password: noise(5)
@@ -235,6 +236,7 @@ $(function() {
   });
 
   asyncTest('Set an object and compare value with existing data', 2, function() {
+    console.log('Set an object and compare value with existing data');
     var key = 'test_object1';
     var value = {
       integer: 321,
@@ -259,6 +261,7 @@ $(function() {
   });
 
   asyncTest('Create an object with update and compare with existing data', 2, function() {
+    console.log('Create an object with update and compare with existing data');
     var key = 'test_object2';
     var value = {
       integer: 321,
@@ -284,6 +287,7 @@ $(function() {
   });
 
   asyncTest('Create an object with set, update multiple times and compare to expected state', 13, function() {
+    console.log('Create an object with set, update multiple times and compare to expected state');
     // Initial data state
     var state = {
       abc: '1'
@@ -385,6 +389,7 @@ $(function() {
 
 
   asyncTest('Create an object, delete it and attempt to access post-delete', 3, function() {
+    console.log('Create an object, delete it and attempt to access post-delete');
     var key = 'test_object4';
     var value = {
       'A': 'B',
@@ -421,6 +426,7 @@ $(function() {
 
 
   asyncTest('Trigger unauthorized and application not found errors via bad appid and bad apikey', 3, function() {
+    console.log('Trigger unauthorized and application not found errors via bad appid and bad apikey');
     var key = 'test_object5';
     cm.set(key, {'Britney': 'Spears'}).on('success', function() {
       track(key, cm);
@@ -457,6 +463,7 @@ $(function() {
   });
 
   asyncTest('Sanity check file search query builder', 7, function() {
+    console.log('Sanity check file search query builder');
     // Synchronous test because we are hijacking the search function
     // which searchFiles depends on.
 
@@ -499,6 +506,7 @@ $(function() {
   });
 
   asyncTest('Verify file search query builder succeeds on server', 7, function() {
+    console.log('Verify file search query builder succeeds on server');
     var remaining = 7;
     function performTest(query) {
       cm.searchFiles(query).on('error', function() {
@@ -521,6 +529,7 @@ $(function() {
 
 
   asyncTest('Normal behavior: action use user-level data when possible.', 13, function() {
+    console.log('Normal behavior: action use user-level data when possible.');
     // Create a new store for this case using cm's properties.
     var store = new cloudmine.WebService({
       appid: cm.options.appid,
@@ -616,6 +625,7 @@ $(function() {
   });
 
   asyncTest('Force usage of application-level data, even if logged in.', 13, function() {
+    console.log('Force usage of application-level data, even if logged in.');
     // Create a new store for this case using cm's properties.
     var store = new cloudmine.WebService({
       appid: cm.options.appid,
@@ -711,6 +721,7 @@ $(function() {
   });
 
   asyncTest('Force usage of user-level data, even if not logged in.', 13, function() {
+    console.log('Force usage of user-level data, even if not logged in.');
     // Create a new store for this case using cm's properties.
     var store = new cloudmine.WebService({
       appid: cm.options.appid,
@@ -806,6 +817,7 @@ $(function() {
   });
 
   asyncTest('Ensure code snippets execute properly for actions', 33, function() {
+    console.log('Ensure code snippets execute properly for actions');
     var opts = {snippet: 'reverse', params: {a: 1, b: { c: 2 }}};
     var key = 'code_snip_test_' + noise(8);
     var user = {userid: noise(32) + '@' + noise(32) + '.com', password: noise(32)};    
@@ -996,6 +1008,7 @@ $(function() {
   });
 
   asyncTest('Verify download integrity.', 4, function() {
+    console.log('Verify download integrity.');
     if (inBrowser) {
       expect(1);
       ok(true, 'This test currently cannot be performed in browsers for files.');
@@ -1042,6 +1055,7 @@ $(function() {
   });
 
   asyncTest('Binary file upload test', 5, function() {
+    console.log('Binary file upload test');
     var uploadKey = 'test_obj_' + noise(8);
     var fileHandle, filename;
     
@@ -1142,6 +1156,7 @@ $(function() {
   });
 
   asyncTest("Binary buffer upload test", 5, function() {
+    console.log("Binary buffer upload test");
     if (!hasBuffers) {
       expect(1);
       ok(true, "No known binary buffers supported, skipping test.");
@@ -1192,6 +1207,7 @@ $(function() {
   });
   
   asyncTest("Canvas upload test", 2, function() {
+    console.log("Canvas upload test");
     if (!CanvasRenderingContext2D) {
       expect(1);
       ok(true, "Platform does not support Canvas data. Skipping test.");
