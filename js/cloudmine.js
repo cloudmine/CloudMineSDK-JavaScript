@@ -186,7 +186,7 @@
     },
 
     /**
-     * Search CloudMine for text objects
+     * Search CloudMine for text objects.
      * Results may be affected by defaults and/or by the options parameter.
      * @param {string} query Query parameters to search for.
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
@@ -212,18 +212,28 @@
      * @return {APICall} An APICall instance for the web service request used to attach events.
      */
     searchFiles: function(query, options) {
-      query = query || "";
-      var term = '[__type__ = "file"';
-      if (query.match(/^\[(.*?)\](.*)/)) {
-        var fields = RegExp.$1;
-        if (fields.length > 0) term += ", " + fields;
-        term += "]" + RegExp.$2;
-      } else {
-        if (query.length > 0) term += "]." + query;
-        else term += ']';
-      }
-
+      var term = buildSearchQuery(query, 'file');
       return this.search(term, options);
+    },
+
+
+    /**
+     * Search CloudMine user objects.
+     * Results may be affected by defaults and/or by the options parameter.
+     * @param {string} query Additional query parameters to search for.
+     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @return {APICall} An APICall instance for the web service request used to attach events.
+     */
+
+    searchUsers: function(query, options) {
+      options = opts(this, options);
+      query = buildSearchQuery(query);
+      return new APICall({
+        action: 'account/search',
+        type: 'GET',
+        query: server_params(options, {p: query != null ? query: ""}),
+        options: options
+      });
     },
 
     /**
@@ -385,7 +395,6 @@
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
      * @return {APICall} An APICall instance for the web service request used to attach events.
      *
-     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
      * @function
      * @name createUser
      * @memberOf WebService.prototype
@@ -397,7 +406,6 @@
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
      * @return {APICall} An APICall instance for the web service request used to attach events.
      *
-     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
      * @function
      * @name createUser^2
      * @memberOf WebService.prototype
@@ -417,6 +425,46 @@
         options: options,
         processResponse: APICall.basicResponse,
         data: payload
+      });
+    },
+
+    /**
+     * Update user object of logged in user.
+     * @param {object} data An object with a key and value field.
+     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @return {APICall} An APICall instance for the web service request used to attach events.
+     *
+     * @function
+     * @name createUser
+     * @memberOf WebService.prototype
+     */
+    /**
+     * Update user object of logged in user.
+     * @param {string} key The key which you are assigning to the user object.
+     * @param {string} value The value for the key which you are assigning to the user object.
+     * @return {APICall} An APICall instance for the web service request used to attach events.
+     *
+     * @function
+     * @name createUser^2
+     * @memberOf WebService.prototype
+     */
+
+    updateUser: function(key, value, options) {
+      if (isObject(key)) options = value;
+      else {
+        if (!key) key = uuid();
+        var out = {};
+        out[key] = value;
+        key = out;
+      }
+      options = opts(this, options);
+
+      return new APICall({
+        action: 'account',
+        type: 'POST',
+        options: options,
+        query: server_params(options),
+        data: JSON.stringify(key)
       });
     },
 
@@ -794,7 +842,7 @@
     var query = stringify(server_params(opts, this.config.query));
     var root = '/', session = opts.session_token, applevel = opts.applevel;
     if (applevel === false || (applevel !== true && session != null)) {
-      root = '/user/';
+      if (config.action !== 'account' && config.action !== 'account/search') root = '/user/';
       if (session != null) this.requestHeaders['X-CloudMine-SessionToken'] = session;
     }
     this.config.headers = merge(this.requestHeaders, this.config.headers);
@@ -1471,6 +1519,26 @@
       });
     }
     return obj;
+  }
+
+  function buildSearchQuery(query, type) {
+    query = query || "";
+    if (type === undefined) {
+      term = '[';
+    } else {
+      var term = '[__type__ = "' + type + '"';
+    }
+    if (query.match(/^\[(.*?)\](.*)/)) {
+      var fields = RegExp.$1;
+      if (fields.length > 0){
+        if (term.length > 1) term += ", ";
+        term += fields;
+      }
+      term += "]" + RegExp.$2;
+    } else {
+      term += ']';
+    }
+    return term
   }
 
   function NotSupported() {
