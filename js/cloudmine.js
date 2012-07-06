@@ -435,7 +435,7 @@
      * @return {APICall} An APICall instance for the web service request used to attach events.
      *
      * @function
-     * @name createUser
+     * @name updateUser
      * @memberOf WebService.prototype
      */
     /**
@@ -445,7 +445,7 @@
      * @return {APICall} An APICall instance for the web service request used to attach events.
      *
      * @function
-     * @name createUser^2
+     * @name updateUser^2
      * @memberOf WebService.prototype
      */
 
