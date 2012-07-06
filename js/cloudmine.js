@@ -51,8 +51,11 @@
    */
   function WebService(options) {
     this.options = opts(this, options);
-    this._setupUserToken();
+    setupUserToken(this);
   }
+
+  // Version information.
+  var version = '0.9-git';
 
   /** @namespace WebService.prototype */
   WebService.prototype = {
@@ -682,55 +685,9 @@
     isApplicationData: function() {
       if (this.options.applevel === true || this.options.applevel === false) return this.options.applevel;
       return this.options.session_token == null;
-    },
-
-    /**
-     * @private
-     */
-
-    _setupUserToken: function() {
-      var user_token;
-      if (isNode) {
-        var fs = require('fs'), user_token_data;
-        var token_file = '/tmp/.cmut_' + this.options.appid;
-        try {
-          user_token = fs.readFileSync(token_file, 'ascii');
-        } catch(e) {
-          user_token = uuid();
-          try {
-            fs.writeFileSync(token_file, user_token);
-          } catch(e) {}
-        }
-      } else {
-        var token_key = 'cmut_' + this.options.appid;
-        if (window.localStorage) {
-          user_token = localStorage.getItem(token_key);
-          if (!user_token){
-            user_token = uuid();
-            localStorage.setItem(token_key, user_token);
-          }
-        } else {
-          var cookies = document.cookie.split(';');
-          for (var i = 0; i < cookies.length; ++i){
-            var cookie = cookies[i].split('=');
-            if (cookie[0] === token_key) {
-              user_token = cookie[1];
-              break;
-            }
-          }
-          if (user_token === undefined){
-            user_token = uuid();
-            document.cookie = token_key + '=' + user_token + '; expires=' + new Date(33333333333333).toUTCString() + '; path=/';
-          }
-        }
-      }
-      this.options.user_token = user_token;
     }
-
   };
 
-  // Version information.
-  var version = '0.9-git';
   WebService.VERSION = version;
 
   /**
@@ -1337,7 +1294,6 @@
   // Scope external dependencies, if necessary.
   var base = this.window ? window : root;
   var defaultType = 'application/octet-stream';
-  var esc = base.encodeURIComponent || escape;
   var File = base.File;
   var FileReader = base.FileReader;
   var BlobBuilder = base.BlobBuilder || base.WebKitBlobBuilder || base.MozBlobBuilder || base.MSBlobBuilder;
@@ -1486,9 +1442,8 @@
   }
 
   function stringify(map, sep, eol, ignore) {
-    var out = [], val;
     sep = sep || '=';
-    var escape = ignore ? function(s) { return s; } : esc;
+    var out = [], val, escape = ignore ? nop : encodeURIComponent;
     for (var k in map) {
       if (map[k] != null && !isFunction(map[k])){
         val = isObject(map[k]) ? JSON.stringify(map[k]) : map[k]
@@ -1496,6 +1451,17 @@
       }
     }
     return out.join(eol || '&');
+  }
+
+  function unstringify(input, sep, eol, ignore) {
+    sep = sep || '=';
+    input = input.split(eol || '&');
+    var out = {}, unescape = ignore ? nop : decodeURIComponent;
+    for (var i = 0; i < input.length; ++i) {
+      var str = input[i].split(sep);
+      out[unescape(str[0])] = unescape(str[1]);
+    }
+    return out;
   }
 
   function merge(obj/*, in...*/) {
@@ -1508,11 +1474,46 @@
   }
 
   function NotSupported() {
-    throw new Error("Unsupported operation", "cloudmine.js");
+    throw new Error("Unsupported operation");
+  }
+
+  function nop(s) {
+    return s;
   }
 
   function NodeAJAX(url, config) {
     return new HttpRequest(url, config);
+  }
+
+  function setupUserToken(obj) {
+    var user_token, appid = obj.options.appid;
+    var dest = 'cmut_' + appid;
+    if (isNode) {
+      try {
+        dest = '/tmp/.' + dest;
+        var fs = require('fs');
+        if (require('path').existsSync(dest)) user_token = fs.readFileSync(dest, 'utf8');
+        fs.writeFileSync(dest, user_token);
+      } catch(e) {}
+
+      if (!user_token || user_token.replace(/\s+/g, '') === '') user_token = uuid();
+    } else {
+      if (window.localStorage) {
+        user_token = localStorage.getItem(dest) || uuid();
+        localStorage.setItem(dest, user_token);
+      } else {
+        cookies = unstringify(document.cookie, '=', ';', true);
+        if (cookies[dest]) user_token = cookies[dest];
+        if (!user_token) {
+          cookies[dest] = user_token = uuid();
+          cookies.expires = new Date(33333333333333).toUTCString();
+          cookies.path = '/';
+          document.cookie = stringify(cookies, '=', ';', true);
+        }
+      }
+    }
+
+    obj.options.user_token = user_token;
   }
 
   // Export CloudMine objects.
