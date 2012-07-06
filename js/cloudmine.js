@@ -393,7 +393,7 @@
      * @name createUser
      * @memberOf WebService.prototype
      */
-     /**
+    /**
      * Create a new user.
      * @param {string} user The userid to login as.
      * @param {string} password The password to login as.
@@ -462,9 +462,7 @@
         data: payload,
         options: options,
         processResponse: APICall.basicResponse,
-        headers: {
-          Authorization: "Basic " + (Base64.encode(user.userid + ":" + user.oldpassword))
-        }
+        headers: auth(user.userid, user.oldpassword)
       });
     },
 
@@ -548,9 +546,7 @@
         action: 'account/login',
         type: 'POST',
         options: options,
-        headers: {
-          Authorization: "Basic " + (Base64.encode("" + user.userid + ":" + user.password))
-        },
+        headers: auth(user.userid, user.password),
         processResponse: APICall.basicResponse
       }).on('success', function(data) {
         self.options.userid = data.userid;
@@ -613,10 +609,57 @@
         action: 'account/login',
         type: 'POST',
         processResponse: APICall.basicResponse,
-        headers: {
-          Authorization: "Basic " + (Base64.encode(user.userid + ":" + user.password))
-        },
+        headers: auth(user.userid, user.password),
         options: options
+      });
+    },
+
+    /**
+     * Delete a user.
+     * If a user id is specified, you must be using the master key privilege.
+     * If no user id is specified, you must enter the login credentials of the user.
+     * @param {object} data An object that may contain a userid field or username, and password fields.
+     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @return {APICall} An APICall instance for the web service request used to attach events.
+     *
+     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @function
+     * @name deleteUser
+     * @memberOf WebService.prototype
+     */
+    /**
+     * Delete a user.
+     * If a user id is specified, you must be using the master key privilege.
+     * If no user id is specified, you must enter the login credentials of the user.
+     * @param {string} user The user id to delete. If null, delete the account with the username and password.
+     * @param {string} username The username to delete. This must be set if userid is null.
+     * @param {string} password The password for the account. This must be set if userid is null.
+     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @return {APICall} An APICall instance for the web service request used to attach events.
+     *
+     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @function
+     * @name deleteUser^2
+     * @memberOf WebService.prototype
+     */
+    deleteUser: function(user, username, password, options) {
+      if (isObject(user)) options = username;
+      else user = {user: user, username: username, password: password}
+      options = opts(this, options);
+      options.applevel = true;
+
+      var headers = (user.userid != null) ? null : auth(user.username, user.password);
+      if (user.username) {
+        this.options.session_token = null;
+        this.options.username = null;
+      }
+
+      return new APICall({
+        action: 'account' + (user.userid ? '/' + user.userid : ''),
+        type: 'DELETE',
+        options: options,
+        processResponse: APICall.basicResponse,
+        headers: headers
       });
     },
 
@@ -740,7 +783,7 @@
       'X-CloudMine-Agent': agent,
       'X-CloudMine-UT': opts.user_token
     };
-   
+    
     this.responseHeaders = {};
     this.responseText = null;
     this.status = null;
@@ -982,7 +1025,7 @@
    * @private
    * @function
    * @memberOf APICall
-  */
+   */
   APICall.complete = function(apicall, data) {
     // Success results may have errors for certain keys
     if (data.errors) apicall.hasErrors = true;
@@ -1038,7 +1081,7 @@
    * @private
    * @function
    * @memberOf APICall
-  */
+   */
   APICall.textResponse = function(data, xhr, response) {
     var out = {};
     if (data.success || data.errors || data.meta || data.result) {
@@ -1084,7 +1127,7 @@
    * @private
    * @function
    * @memberOf APICall
-  */
+   */
   APICall.basicResponse = function(data, xhr, response) {
     var out = {success: {}};
     out.success = data;
@@ -1104,7 +1147,7 @@
    * @private
    * @function
    * @memberOf APICall
-  */
+   */
   APICall.binaryUpload = function(apicall, data, filename, contentType) {
     var boundary = uuid();
     if (Buffer && data instanceof Buffer) {
@@ -1317,6 +1360,12 @@
 
   function opts(scope, options) {
     return merge({}, scope.options, options);
+  }
+
+  function auth(user, pass, obj) {
+    if (!obj) obj = {};
+    obj.Authorization = "Basic " + Base64.encode(user + ":" + pass);
+    return obj;
   }
 
   function server_params(options, map) {
@@ -1558,7 +1607,7 @@
 			  else if (isNaN(chr3)) enc4 = 64;
 
 			  output += this._keyStr.charAt(enc1) + this._keyStr.charAt(enc2) +
-			            this._keyStr.charAt(enc3) + this._keyStr.charAt(enc4);
+			    this._keyStr.charAt(enc3) + this._keyStr.charAt(enc4);
 		  }
 
 		  return output;
@@ -1630,7 +1679,7 @@
 				  i += 3;
 			  }
 		  }
- 
+      
 		  return string;
 	  }
   }
