@@ -327,7 +327,7 @@
         later: true,
         encoding: 'binary',
         options: options,
-        query: query,
+        query: query
       });
 
       // Download file directly to computer if given a filename.
