@@ -229,9 +229,24 @@
     /**
      * Search CloudMine user objects by custom attributes.
      * Results may be affected by defaults and/or by the options parameter.
-     * @param {string} query Additional query parameters to search for.
+     * @param {string} query Additional query parameters to search for in [key="value", key="value"] format.
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
      * @return {APICall} An APICall instance for the web service request used to attach events.
+     *
+     * @function
+     * @name searchUsers
+     * @memberOf WebService.prototype
+     */
+    /**
+     * Search CloudMine user objects by custom attributes.
+     * Results may be affected by defaults and/or by the options parameter.
+     * @param {object} query Additional query parameters to search for in {key: value, key: value} format.
+     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @return {APICall} An APICall instance for the web service request used to attach events.
+     *
+     * @function
+     * @name searchUsers^2
+     * @memberOf WebService.prototype
      */
 
     searchUsers: function(query, options) {
@@ -256,6 +271,7 @@
     /**
      * Get all user objects.
      * Results may be affected by defaults and/or by the options parameter.
+     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
      * @return {APICall} An APICall instance for the web service request used to attach events.
      */
 
@@ -272,6 +288,7 @@
     /**
      * Get specific user by id.
      * @param {string} id User id being requested.
+     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
      * Results may be affected by defaults and/or by the options parameter.
      * @return {APICall} An APICall instance for the web service request used to attach events.
      */
