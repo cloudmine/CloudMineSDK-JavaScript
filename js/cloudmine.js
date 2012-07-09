@@ -236,10 +236,8 @@
 
     searchUsers: function(query, options) {
       if (isObject(query)){
-        console.log(query);
         queryString = '['
         for (var k in query){
-          console.log(k);
           queryString += k + '="' + query[k] + '", '
         }
         queryString += ']'
