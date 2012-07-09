@@ -45,7 +45,6 @@ $(function() {
       for (var i = 0, c = data.length; i < data.length; ++i) { out += data[--c]; }
       return out;
     }
-
     return data;
   }
 
@@ -1221,5 +1220,189 @@ $(function() {
         ok(false, 'Uploaded canvas to server');
       }).on('complete', downloadCanvas);
     }
+  });
+  asyncTest("User update/search test with strings as parameters", 5, function(){
+    var user = {
+      email: noise(5) + '@' + noise(5) + '.com',
+      password: noise(5)
+    };
+
+    var key = noise(10), value = noise(10),
+        key2 = noise(10), value2 = noise(10);
+
+    var nonExistingKey = noise(10), nonExistingValue = noise(10),
+        nonExistingKey2 = noise(10), nonExistingValue2 = noise(10);
+
+    function searchForNonExisting(){
+      cm.searchUsers('[' + nonExistingKey + '="' + nonExistingValue + '"]')
+        .on('success', function(response){
+          if (Object.keys(response).length == 0){
+            ok(true, 'Didn\'t find non-existing user for [' + nonExistingKey + '="' + nonExistingValue + '"]');
+          }
+        })
+        .on('error', function(response){
+          ok(false, 'Didn\'t find non-existing user for [' + nonExistingKey + '="' + nonExistingValue + '"]');
+        })
+        .on('complete', searchForNonExistingWithMultipleKeys);
+    }
+
+    function searchForNonExistingWithMultipleKeys(){
+      cm.searchUsers('[' + nonExistingKey + '="' + nonExistingValue + '", ' + nonExistingKey2 + '="' + nonExistingValue2 + '"]')
+        .on('success', function(response){
+          if (Object.keys(response).length == 0){
+            ok(true, 'Didn\'t find non-existing user for [' + nonExistingKey + '="' + nonExistingValue + '", ' + 
+                                                             nonExistingKey2 + '="' + nonExistingValue2 + '"]');
+          }
+        })
+        .on('error', function(response){
+          ok(false, 'Didn\'t find non-existing user for [' + nonExistingKey + '="' + nonExistingValue + '", ' + 
+                                                             nonExistingKey2 + '="' + nonExistingValue2 + '"]');
+        })
+        .on('complete', start);
+    }
+
+    function searchForExisting(){
+      ok(true, 'Updated user with [' + key + '="' + value + '"]. Logging out...')
+      cm.logout()
+        .on('success', function(){
+          cm.searchUsers('[' + key + '="' + value + '"]')
+            .on('success', function(response){
+              if (Object.keys(response).length == 1){
+                ok(true, 'Found the user for [' + key + '="' + value + '"]');
+              }
+            })
+            .on('error', function(response){
+                ok(false, 'Found the user for [' + key + '="' + value + '"]');
+            })
+            .on('complete', searchForExistingWithMultipleKeys);
+        });
+    }
+
+    function searchForExistingWithMultipleKeys(){
+      cm.searchUsers('[' + key + '="' + value + '"]')
+        .on('success', function(response){
+          if (Object.keys(response).length == 1){
+            ok(true, 'Found the user for [' + key + '="' + value + '", ' + key2 + '="' + value2 + '"]');
+          }
+        })
+        .on('error', function(response){
+          ok(false, 'Found the user for [' + key + '="' + value + '", ' + key2 + '="' + value2 + '"]');
+        })
+        .on('complete', searchForNonExisting);
+    }
+
+    function update(){
+      cm.updateUser(key2, value2) 
+        .on('success', function(){
+          cm.updateUser(key, value)
+            .on('success', searchForExisting)
+        });
+    }
+
+    function login(){
+      cm.login({userid: user.email, password: user.password})
+      .on('success', update);
+    }
+
+    cm.createUser({userid: user.email, password: user.password})
+      .on('success', login);
+  });
+
+  asyncTest("User update/search test with objects as parameters.", 5, function(){
+    var user = {
+      email: noise(5) + '@' + noise(5) + '.com',
+      password: noise(5)
+    },
+    query;
+
+    var key = noise(10), value = noise(10),
+        key2 = noise(10), value2 = noise(10);
+
+    var nonExistingKey = noise(10), nonExistingValue = noise(10),
+        nonExistingKey2 = noise(10), nonExistingValue2 = noise(10);
+
+    function searchForNonExisting(){
+      query = {};
+      query[nonExistingKey] = nonExistingValue;
+      cm.searchUsers(query)
+        .on('success', function(response){
+          if (Object.keys(response).length == 0){
+            ok(true, 'Didn\'t find non-existing user for {' + nonExistingKey + ': "' + nonExistingValue + '"}');
+          }
+        })
+        .on('error', function(response){
+          ok(false, 'Didn\'t find non-existing user for {' + nonExistingKey + ': "' + nonExistingValue + '"}');
+        })
+        .on('complete', searchForNonExistingWithMultipleKeys);
+    }
+
+    function searchForNonExistingWithMultipleKeys(){
+      query = {};
+      query[nonExistingKey] = nonExistingValue;
+      query[nonExistingKey2] = nonExistingValue2;
+      cm.searchUsers(query)
+        .on('success', function(response){
+          if (Object.keys(response).length == 0){
+            ok(true, 'Didn\'t find non-existing user for {' + nonExistingKey + ': "' + nonExistingValue + '", ' + 
+                                                             nonExistingKey2 + ': "' + nonExistingValue2 + '"}');
+          }
+        })
+        .on('error', function(response){
+          ok(false, 'Didn\'t find non-existing user for {' + nonExistingKey + ': "' + nonExistingValue + '", ' + 
+                                                            nonExistingKey2 + ': "' + nonExistingValue2 + '"}');
+        })
+        .on('complete', start);
+    }
+
+    function searchForExisting(){
+      ok(true, 'Updated user with {' + key + ': "' + value + '", ' + key2 + ': "' + value2 + '"}. Logging out...')
+      cm.logout()
+        .on('success', function(){
+          query = {};
+          query[key] = value;
+          cm.searchUsers(query)
+            .on('success', function(response){
+              if (Object.keys(response).length == 1){
+                ok(true, 'Found the user for {' + key + ': "' + value + '"}');
+              }
+            })
+            .on('error', function(response){
+              ok(false, 'Found the user for {' + key + ': "' + value + '"}');
+            })
+            .on('complete', searchForExistingWithMultipleKeys);
+        });
+    }
+
+    function searchForExistingWithMultipleKeys(){
+      query = {};
+      query[key] = value;
+      query[key2] = value2;
+      cm.searchUsers(query)
+        .on('success', function(response){
+          if (Object.keys(response).length == 1){
+            ok(true, 'Found the user for {' + key + ': "' + value + '", ' + key2 + ': "' + value2 + '"}');
+          }
+        })
+        .on('error', function(response){
+          ok(false, 'Found the user for {' + key + ': "' + value + '", ' + key2 + ': "' + value2 + '"}');
+        })
+        .on('complete', searchForNonExisting);
+    }
+
+    function update(){
+      query = {};
+      query[key] = value;
+      query[key2] = value2;
+      cm.updateUser(query) 
+        .on('success', searchForExisting);
+    }
+
+    function login(){
+      cm.login({userid: user.email, password: user.password})
+      .on('success', update);
+    }
+
+    cm.createUser({userid: user.email, password: user.password})
+      .on('success', login);
   });
 });

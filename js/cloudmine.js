@@ -212,7 +212,16 @@
      * @return {APICall} An APICall instance for the web service request used to attach events.
      */
     searchFiles: function(query, options) {
-      var term = buildSearchQuery(query, 'file');
+      query = query || "";
+      var term = '[__type__ = "file"';
+      if (query.match(/^\[(.*?)\](.*)/)) {
+        var fields = RegExp.$1;
+        if (fields.length > 0) term += ", " + fields;
+        term += "]" + RegExp.$2;
+      } else {
+        if (query.length > 0) term += "]." + query;
+        else term += ']';
+      }
       return this.search(term, options);
     },
 
@@ -226,8 +235,18 @@
      */
 
     searchUsers: function(query, options) {
+      if (isObject(query)){
+        console.log(query);
+        queryString = '['
+        for (var k in query){
+          console.log(k);
+          queryString += k + '="' + query[k] + '", '
+        }
+        queryString += ']'
+        queryString = queryString.replace(', ]', ']');
+        query = queryString;
+      }
       options = opts(this, options);
-      query = buildSearchQuery(query);
       return new APICall({
         action: 'account/search',
         type: 'GET',
@@ -470,7 +489,7 @@
 
 
     /**
-     * Change a user's password
+     * Change a user's passwor
      * @param {object} data An object with userid, password, and oldpassword fields.
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
      * @return {APICall} An APICall instance for the web service request used to attach events.
@@ -1519,26 +1538,6 @@
       });
     }
     return obj;
-  }
-
-  function buildSearchQuery(query, type) {
-    query = query || "";
-    if (type === undefined) {
-      term = '[';
-    } else {
-      var term = '[__type__ = "' + type + '"';
-    }
-    if (query.match(/^\[(.*?)\](.*)/)) {
-      var fields = RegExp.$1;
-      if (fields.length > 0){
-        if (term.length > 1) term += ", ";
-        term += fields;
-      }
-      term += "]" + RegExp.$2;
-    } else {
-      term += ']';
-    }
-    return term
   }
 
   function NotSupported() {
