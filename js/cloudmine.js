@@ -227,7 +227,7 @@
 
 
     /**
-     * Search CloudMine user objects.
+     * Search CloudMine user objects by custom attributes.
      * Results may be affected by defaults and/or by the options parameter.
      * @param {string} query Additional query parameters to search for.
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
@@ -251,6 +251,39 @@
         query: server_params(options, {p: query != null ? query: ""}),
         options: options
       });
+    },
+    
+    /**
+     * Get all user objects.
+     * Results may be affected by defaults and/or by the options parameter.
+     * @return {APICall} An APICall instance for the web service request used to attach events.
+     */
+
+    allUsers: function(options) {
+      options = opts(this, options);
+      return new APICall({
+        action: 'account',
+        type: 'GET',
+        query: server_params(options, ''),
+        options: options
+      }); 
+    },
+
+    /**
+     * Get specific user by id.
+     * @param {string} id User id being requested.
+     * Results may be affected by defaults and/or by the options parameter.
+     * @return {APICall} An APICall instance for the web service request used to attach events.
+     */
+
+    getUser: function(id, options) {
+      options = opts(this, options);
+      return new APICall({
+        action: 'account/' + id,
+        type: 'GET',
+        query: server_params(options, ''),
+        options: options
+      }); 
     },
 
     /**

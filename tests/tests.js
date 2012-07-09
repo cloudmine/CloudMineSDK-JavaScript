@@ -1393,6 +1393,7 @@ $(function() {
       query = {};
       query[key] = value;
       query[key2] = value2;
+      window.cm = cm;
       cm.updateUser(query) 
         .on('success', searchForExisting);
     }
@@ -1404,5 +1405,59 @@ $(function() {
 
     cm.createUser({userid: user.email, password: user.password})
       .on('success', login);
+  });
+
+  asyncTest("User search by ID", 2, function(){
+    var user = {
+      email: noise(5) + '@' + noise(5) + '.com',
+      password: noise(5)
+    }, 
+    id;
+
+    function search(response){
+      id = response.__id__;
+      cm.getUser(id)
+        .on('success', function(response){
+          if (Object.keys(response).length == 1){
+            ok(true, "Search for user by id, get one result");
+          } else { 
+            ok(false, "Search for user by id, get one result");
+          }
+        })
+        .on('error', function(){
+          ok(false, "Search for user by id");
+        })
+        .on('complete', searchNonExistent)
+    }
+
+    function searchNonExistent(response){
+      id = noise(32);
+      cm.getUser(id)
+        .on('success', function(response){
+          ok(false, "Search for non-existent user by id, get no results");
+        })
+        .on('error', function(){
+          ok(true, "Search for non-existent user by id, get no results");
+        })
+        .on('complete', start)
+    }
+
+    cm.createUser({userid: user.email, password: user.password})
+      .on('success', function(response){
+        search(response)
+      });
+  });
+
+
+  asyncTest("Get all users in app", 1, function(){
+    cm.allUsers()
+      .on('success', function(response){
+        var numberOfUsers = Object.keys(response).length;
+        ok(true, numberOfUsers + " users retrieved");
+      })
+      .on('error', function(response){
+        ok(false, "Error retrieveing users.");
+      })
+      .on('complete', start);
   });
 });
