@@ -1393,7 +1393,6 @@ $(function() {
       query = {};
       query[key] = value;
       query[key2] = value2;
-      window.cm = cm;
       cm.updateUser(query) 
         .on('success', searchForExisting);
     }
