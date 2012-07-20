@@ -52,6 +52,11 @@
   function WebService(options) {
     this.options = opts(this, options);
     this._setupUserToken();
+    if (!instance){ instance = this; }
+  }
+
+  WebService.instance = function(opts){
+    return (opts instanceof WebService) ? (instance = opts) : (instance || new WebService(opts));
   }
 
   /** @namespace WebService.prototype */
@@ -1318,6 +1323,7 @@
 
   // Scope external dependencies, if necessary.
   var base = this.window ? window : root;
+  var instance = null;
   var defaultType = 'application/octet-stream';
   var esc = base.encodeURIComponent || escape;
   var File = base.File;
@@ -1599,4 +1605,64 @@
 		  return string;
 	  }
   }
+
+  function Class(name, proto) {}
+
+  Class.extend = function(name, proto, isPrivate) {
+   // Create a new class that extends the previous class.
+    function Constructor(_) {
+      if (_ != Class) {
+        this.options = merge({}, this.options, {'class': name});
+        if (isFunction(this.initialize)){
+          this.initialize.apply(this, arguments);
+        }
+      }
+    }
+    Constructor.prototype = new this(Class);
+
+    // Copy references over, wrapping functions that existed in the parent class
+    for (key in proto) (function(fn, sfn){
+      Constructor.prototype[key] = !isFunction(fn) || !isFunction(sfn) ? fn : function() {
+        this._super = sfn;
+        return fn.apply(this, arguments);
+      }
+    })(proto[key], Constructor.prototype[key]);
+
+    // Override these methods, and provide a static extend method.
+    Constructor.prototype.constructor = Constructor;
+    Constructor.extend = this.extend || Class.extend;
+
+   // Expose the class unless we said not to.
+    if (!isPrivate) {
+      var scope = base, name = name.split(/./), segment, i;
+      for (i = 0; i < name.length-1; ++i) {
+        segment = name[i];
+        scope = (scope[segment] || (scope[segment] = {}))
+      }
+      scope[name[i+1]] = Constructor;
+    }
+    return Constructor;
+  }
+
+  var CMObject = Class.extend('CMObject', {
+    initialize: function(){
+      this.options.webservice = cloudmine.WebService.instance();
+    },
+    data: { },
+    save: function(){
+      var_self = this;
+      this.options.webservice.update();
+    },
+    fetch: function(query){
+      var _self = this;
+      this.options.webservice.get(query).on('success', function(response){
+        _self.data = response;
+      });
+    },
+    find: function(){
+    }
+  }, true);
+
+  window.cloudmine.Object = CMObject;
+
 })();
