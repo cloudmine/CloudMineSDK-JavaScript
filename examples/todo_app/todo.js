@@ -37,7 +37,7 @@ $(document).ready(function(){
     var cookies = document.cookie.split(';');
     for (var i in cookies){
       var cookie = cookies[i].split('=');
-      if (cookie[0] == 'cloudmineTodoSession' && cookie[1] != 'none'){
+       if (cookie[0].indexOf('cloudmineTodoSession') !=-1 && cookie[1] != 'none'){
         $('#login').hide();
         $('#restoring_session').show();
         return cookie[1];
