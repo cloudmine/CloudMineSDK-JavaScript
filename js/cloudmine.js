@@ -1433,6 +1433,50 @@
     return typeof item === 'function';
   }
 
+  function areEqual(a, b) {
+    // Takes two objects or two arrays are arguments
+    // Recursively compares them
+    if (isArray(a) && isArray(b)){
+      if (a.length == b.length){
+        for (var i = 0; i < a.length; ++ i){
+          if (isObject(a[i]) || isArray(a[i])){
+            if (!areEqual(a[i], b[i])){
+              return false;
+            }
+          } else if (a[i] !== b[i]){
+            return false;
+          }
+        }
+        return true;
+      } else {
+        return false;
+      }
+    } else if (isObject(a) && isObject(b)){
+      if (areEqual(Object.keys(a), Object.keys(b))){
+        var keys = Object.keys(a);
+        for (var i = 0; i < keys.length; ++ i){
+          var key = keys[i];
+          if (isObject(a[key]) || isArray(a[key])){
+            if (!areEqual(a[key], b[key])){
+              return false;
+            }
+          } else {
+            if (a[key] !== b[key]){
+              return false;
+            }
+          }
+        }
+        return true;
+      } else {
+        return false;
+      }
+    } else {
+      return false;
+    }
+  }
+
+  window.areEqual = areEqual;
+
   function isEmptyObject(item) {
     if (item) {
       for (var k in item) {
@@ -1477,6 +1521,16 @@
       });
     }
     return obj;
+  }
+
+  function noproto(object){
+    var newObject = {};
+    for (var key in object){
+      if (object.hasOwnProperty(key)){
+        newObject[key] = object[key];
+      }
+    }
+    return newObject;
   }
 
   function NotSupported() {
@@ -1637,7 +1691,7 @@
       var scope = base, name = name.split(/./), segment, i;
       for (i = 0; i < name.length-1; ++i) {
         segment = name[i];
-        scope = (scope[segment] || (scope[segment] = {}))
+        scope = (scope[segment] || (scope[segment] = {}));
       }
       scope[name[i+1]] = Constructor;
     }
@@ -1645,23 +1699,80 @@
   }
 
   var CMObject = Class.extend('CMObject', {
-    initialize: function(){
-      this.options.webservice = cloudmine.WebService.instance();
+    initialize: function(key, data, SpecifiedWebService){
+      // Let the user specify a custom WebService or resort to instance()
+      this.options.WebService = SpecifiedWebService ? SpecifiedWebService : cloudmine.WebService.instance();
+      // Save object's CloudMine key
+      this.options.key = key;
+      // Save object's CloudMine data (provided by WebService)
+      for (var key in data){
+        this[key] = data[key];
+      }
+      // Save serverData for modified comparison
+      this.options.serverData = data;
     },
-    data: { },
+    options: {
+      serverData: {},
+    },
+    // Returns Object of all data
+    toJSON: function(){
+      var data = {};
+      for (var key in this){
+        if (this.hasOwnProperty(key) && !isFunction(this[key]) && key !== 'options' && key !== 'key'){
+          data[key] = this[key];          
+        }
+      }
+      return data;
+    },
+    // Save local changes to remote copy
     save: function(){
-      var_self = this;
-      this.options.webservice.update();
-    },
-    fetch: function(query){
-      var _self = this;
-      this.options.webservice.get(query).on('success', function(response){
-        _self.data = response;
+      var self = this;
+      this.options.WebService.update(this.options.key, this.toJSON()).on('success', function(response){
+        response = self.parse(response);
+        self.options.serverData = self.toJSON();
       });
     },
-    find: function(){
+    // Customizable parsing method that runs on all server responses before being committed to the object
+    parse: function(data){
+      return data;
+    },
+    // Fetch the newest data from the server, merge it in with what we already have.
+    // Preserves local changes by using merge()
+    fetch: function(){
+      var self = this;
+      this.options.WebService.get(this.options.key).on('success', function(response){
+        response = self.parse(response);
+        // noproto just runs a hasOwnProperty check on each key. This avoids duplicating the superclass methods (such as this one)
+        var merged = merge({}, noproto(self), response[self.options.key]);
+        for (var key in merged){
+          self[key] = merged[key];
+        }
+        self.options.serverData = response[self.options.key];
+      });
+    },
+    // Returns bool
+    modified: function(){
+      for (var key in this.toJSON()){
+        if (JSON.stringify(this[key]) !== JSON.stringify(this.options.serverData[key])){
+          return true;
+        }
+      }
+      return false;
+    },
+    // Returns array of changed keys
+    modifiedFields: function(){
+      var changed = [];
+      for (var key in this.toJSON()){
+        if (JSON.stringify(this[key]) !== JSON.stringify(this.options.serverData[key])){
+          changed.push(key);
+        }
+      }
+      return changed;
     }
   }, true);
+  CMObject.find = function(){ // use cm.ws.instance 
+    
+  }
 
   window.cloudmine.Object = CMObject;
 
