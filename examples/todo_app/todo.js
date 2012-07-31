@@ -538,6 +538,8 @@ $(document).ready(function(){
 
   init_cloudmine();
 
+  window.cm = cm;
+
 // Uncomment the next line to make the todo object available globally (for testing/playing around)
 //  window.todo = todo;
 

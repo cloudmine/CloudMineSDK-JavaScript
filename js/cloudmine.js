@@ -225,7 +225,6 @@
       return this.search(term, options);
     },
 
-
     /**
      * Search CloudMine user objects by custom attributes.
      * Results may be affected by defaults and/or by the options parameter.
@@ -250,14 +249,20 @@
      */
 
     searchUsers: function(query, options) {
-      if (isObject(query)){
-        queryString = '['
-        for (var k in query){
-          queryString += k + '="' + query[k] + '", '
+      if (isObject(query)) {
+        queryList = [];
+        for (var k in query) {
+          if (query.hasOwnProperty(k)) {
+            var val = query[k]
+            if (typeof(val) == 'string') {
+              queryList.push(k + ' = "' + val + '"')
+            // typeof(/regex/) returns "object" for some reason, so use instanceof for that case
+            } else if (val instanceof RegExp || typeof(val) == 'number') {
+              queryList.push(k + ' = ' + val)
+            }
+          }
         }
-        queryString += ']'
-        queryString = queryString.replace(', ]', ']');
-        query = queryString;
+        query = '[' + queryList.join(',') + ']';
       }
       options = opts(this, options);
       return new APICall({
