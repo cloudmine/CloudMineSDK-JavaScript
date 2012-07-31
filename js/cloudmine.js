@@ -250,7 +250,7 @@
 
     searchUsers: function(query, options) {
       if (isObject(query)) {
-        queryList = [];
+        var queryList = [];
         for (var k in query) {
           if (query.hasOwnProperty(k)) {
             var val = query[k]
@@ -542,7 +542,7 @@
 
 
     /**
-     * Change a user's passwor
+     * Change a user's password
      * @param {object} data An object with userid, password, and oldpassword fields.
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
      * @return {APICall} An APICall instance for the web service request used to attach events.
