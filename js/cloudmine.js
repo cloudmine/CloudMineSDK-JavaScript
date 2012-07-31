@@ -186,7 +186,7 @@
     },
 
     /**
-     * Search CloudMine for text objects
+     * Search CloudMine for text objects.
      * Results may be affected by defaults and/or by the options parameter.
      * @param {string} query Query parameters to search for.
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
@@ -222,8 +222,90 @@
         if (query.length > 0) term += "]." + query;
         else term += ']';
       }
-
       return this.search(term, options);
+    },
+
+    /**
+     * Search CloudMine user objects by custom attributes.
+     * Results may be affected by defaults and/or by the options parameter.
+     * @param {string} query Additional query parameters to search for in [key="value", key="value"] format.
+     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @return {APICall} An APICall instance for the web service request used to attach events.
+     *
+     * @function
+     * @name searchUsers
+     * @memberOf WebService.prototype
+     */
+    /**
+     * Search CloudMine user objects by custom attributes.
+     * Results may be affected by defaults and/or by the options parameter.
+     * @param {object} query Additional query parameters to search for in {key: value, key: value} format.
+     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @return {APICall} An APICall instance for the web service request used to attach events.
+     *
+     * @function
+     * @name searchUsers^2
+     * @memberOf WebService.prototype
+     */
+
+    searchUsers: function(query, options) {
+      if (isObject(query)) {
+        var queryList = [];
+        for (var k in query) {
+          if (query.hasOwnProperty(k)) {
+            var val = query[k]
+            if (typeof(val) == 'string') {
+              queryList.push(k + ' = "' + val + '"')
+            // typeof(/regex/) returns "object" for some reason, so use instanceof for that case
+            } else if (val instanceof RegExp || typeof(val) == 'number') {
+              queryList.push(k + ' = ' + val)
+            }
+          }
+        }
+        query = '[' + queryList.join(',') + ']';
+      }
+      options = opts(this, options);
+      return new APICall({
+        action: 'account/search',
+        type: 'GET',
+        query: server_params(options, {p: query != null ? query: ""}),
+        options: options
+      });
+    },
+    
+    /**
+     * Get all user objects.
+     * Results may be affected by defaults and/or by the options parameter.
+     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @return {APICall} An APICall instance for the web service request used to attach events.
+     */
+
+    allUsers: function(options) {
+      options = opts(this, options);
+      return new APICall({
+        action: 'account',
+        type: 'GET',
+        query: server_params(options, ''),
+        options: options
+      }); 
+    },
+
+    /**
+     * Get specific user by id.
+     * @param {string} id User id being requested.
+     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * Results may be affected by defaults and/or by the options parameter.
+     * @return {APICall} An APICall instance for the web service request used to attach events.
+     */
+
+    getUser: function(id, options) {
+      options = opts(this, options);
+      return new APICall({
+        action: 'account/' + id,
+        type: 'GET',
+        query: server_params(options, ''),
+        options: options
+      }); 
     },
 
     /**
@@ -385,7 +467,6 @@
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
      * @return {APICall} An APICall instance for the web service request used to attach events.
      *
-     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
      * @function
      * @name createUser
      * @memberOf WebService.prototype
@@ -397,7 +478,6 @@
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
      * @return {APICall} An APICall instance for the web service request used to attach events.
      *
-     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
      * @function
      * @name createUser^2
      * @memberOf WebService.prototype
@@ -417,6 +497,46 @@
         options: options,
         processResponse: APICall.basicResponse,
         data: payload
+      });
+    },
+
+    /**
+     * Update user object of logged in user.
+     * @param {object} data An object with a key and value field.
+     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @return {APICall} An APICall instance for the web service request used to attach events.
+     *
+     * @function
+     * @name updateUser
+     * @memberOf WebService.prototype
+     */
+    /**
+     * Update user object of logged in user.
+     * @param {string} key The key which you are assigning to the user object.
+     * @param {string} value The value for the key which you are assigning to the user object.
+     * @return {APICall} An APICall instance for the web service request used to attach events.
+     *
+     * @function
+     * @name updateUser^2
+     * @memberOf WebService.prototype
+     */
+
+    updateUser: function(key, value, options) {
+      if (isObject(key)) options = value;
+      else {
+        if (!key) key = uuid();
+        var out = {};
+        out[key] = value;
+        key = out;
+      }
+      options = opts(this, options);
+
+      return new APICall({
+        action: 'account',
+        type: 'POST',
+        options: options,
+        query: server_params(options),
+        data: JSON.stringify(key)
       });
     },
 
@@ -792,7 +912,7 @@
     // Build the URL and headers
     var query = stringify(server_params(opts, this.config.query));
     var root = '/', session = opts.session_token, applevel = opts.applevel;
-    if (applevel === false || (applevel !== true && session != null)) {
+    if (applevel === false || (applevel !== true && session != null) && config.action.split('/')[0] !== 'account') {
       root = '/user/';
       if (session != null) this.requestHeaders['X-CloudMine-SessionToken'] = session;
     }
