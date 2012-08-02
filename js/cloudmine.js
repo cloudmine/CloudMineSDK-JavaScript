@@ -200,7 +200,6 @@
     search: function(query, options) {
       options = opts(this, options);
       if (isObject(query)){
-        debugger;
         query = buildSearchQuery(query);
       }
       query = {q: query != null ? query : ""}
