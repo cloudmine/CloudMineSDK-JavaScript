@@ -79,7 +79,6 @@
         type: 'GET',
         options: options,
         query: server_params(options, keys),
-        processResponse: APICall.objectResponse
       });
     },
 
@@ -200,6 +199,10 @@
      */
     search: function(query, options) {
       options = opts(this, options);
+      if (isObject(query)){
+        debugger;
+        query = buildSearchQuery(query);
+      }
       query = {q: query != null ? query : ""}
       return new APICall({
         action: 'search',
@@ -219,17 +222,7 @@
      */
     searchFiles: function(query, options) {
       query = query || "";
-      var term = '[__type__ = "file"';
-      if (query.match(/^\[(.*?)\](.*)/)) {
-        var fields = RegExp.$1;
-        if (fields.length > 0) term += ", " + fields;
-        term += "]" + RegExp.$2;
-      } else {
-        if (query.length > 0) term += "]." + query;
-        else term += ']';
-      }
-
-      return this.search(term, options);
+      return this.search(buildSearchQuery(query, {__type__: 'file'}), options);
     },
 
     /**
@@ -1313,7 +1306,7 @@
     later: false,
     processData: false,
     dataType: 'text',
-    processResponse: APICall.textResponse,
+    processResponse: APICall.objectResponse,
     crossDomain: true,
     cache: false
   };
@@ -1541,6 +1534,22 @@
     return obj;
   }
 
+  function buildSearchQuery(query, mandatory){
+    var queryList = [];
+    mandatory = mandatory || {};
+    query = ownProperties(merge({}, query, mandatory));
+    for (var k in query) {
+      var val = query[k]
+      if (typeof(val) == 'string') {
+        queryList.push(k + ' = "' + val + '"')
+      // typeof(/regex/) returns "object" for some reason, so use instanceof for that case
+      } else if (val instanceof RegExp || typeof(val) == 'number') {
+        queryList.push(k + ' = ' + val)
+      }
+    }
+    return '[' + queryList.join(',') + ']';
+  }
+
   function ownProperties(object){
     var newObject = {};
     for (var key in object){
@@ -1750,12 +1759,15 @@
         self.options.serverData = self.toJSON();
       });
     },
+    /*
     saveAs: function(key){
       var self = this;
       this.options.WebService.set(key, self.toJSON()).on('success', function(response){
         newObject = new cloudmine.Object(key, response);
+        // Don't know how to return this new object with the current APICall design
       });
     },
+    */
     // Customizable parsing method that runs on all server responses before being committed to the object
     parse: function(data){
       return data;
@@ -1764,14 +1776,12 @@
     // Preserves local changes by using merge()
     fetch: function(){
       var self = this;
-      return this.options.WebService.get(this.options.key).on('success', function(response){
-        response = self.parse(response);
-        // ownProperties just runs a hasOwnProperty check on each key. This avoids duplicating the prototype methods (such as this one)
-        var merged = merge({}, ownProperties(self), response[self.options.key]);
-        for (var key in merged){
-          self[key] = merged[key];
-        }
-        self.options.serverData = response[self.options.key];
+      this.options.WebService.get(this.options.key).on('success', function(response){
+        var data = self.parse(response.success[self.options.key]),
+            merged = merge({}, ownProperties(self), ownProperties(data));
+        for (var key in merged) self[key] = merged[key];
+        // Commit the server data to the object for further modified() checks.
+        self.options.serverData = data;
       });
     },
     // Returns bool
