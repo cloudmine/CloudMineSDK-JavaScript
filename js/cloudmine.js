@@ -1416,7 +1416,7 @@
     later: false,
     processData: false,
     dataType: 'text',
-    processResponse: APICall.objectResponse,
+    processResponse: APICall.basicResponse,
     crossDomain: true,
     cache: false
   };
