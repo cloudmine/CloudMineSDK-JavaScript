@@ -1119,7 +1119,6 @@
   APICall.basicResponse = function(data, xhr, response) {
     var out = {success: {}};
     out.success = data;
-    console.log(out);
     return out;
   }
 
