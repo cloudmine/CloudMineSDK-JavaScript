@@ -78,7 +78,8 @@
         action: 'text',
         type: 'GET',
         options: options,
-        query: server_params(options, keys)
+        query: server_params(options, keys),
+        processResponse: APICall.objectResponse
       });
     },
 
@@ -1118,6 +1119,24 @@
   APICall.basicResponse = function(data, xhr, response) {
     var out = {success: {}};
     out.success = data;
+    console.log(out);
+    return out;
+  }
+
+  /**
+   * Process data into CMObjects, return them under their keys.
+   * 
+   * @private
+   * @function
+   * @memberOf APICall
+  */
+  APICall.objectResponse = function(data, xhr, response) {
+    var out = {success: {}},
+        data = ownProperties(data);
+    for (var key in data.success){
+      data.success[key] = new cloudmine.Object(key, data.success[key]);
+    }
+    out.success = data;
     return out;
   }
 
@@ -1523,7 +1542,7 @@
     return obj;
   }
 
-  function noproto(object){
+  function ownProperties(object){
     var newObject = {};
     for (var key in object){
       if (object.hasOwnProperty(key)){
@@ -1732,6 +1751,12 @@
         self.options.serverData = self.toJSON();
       });
     },
+    saveAs: function(key){
+      var self = this;
+      this.options.WebService.set(key, self.toJSON()).on('success', function(response){
+        newObject = new cloudmine.Object(key, response);
+      });
+    },
     // Customizable parsing method that runs on all server responses before being committed to the object
     parse: function(data){
       return data;
@@ -1740,10 +1765,10 @@
     // Preserves local changes by using merge()
     fetch: function(){
       var self = this;
-      this.options.WebService.get(this.options.key).on('success', function(response){
+      return this.options.WebService.get(this.options.key).on('success', function(response){
         response = self.parse(response);
-        // noproto just runs a hasOwnProperty check on each key. This avoids duplicating the superclass methods (such as this one)
-        var merged = merge({}, noproto(self), response[self.options.key]);
+        // ownProperties just runs a hasOwnProperty check on each key. This avoids duplicating the prototype methods (such as this one)
+        var merged = merge({}, ownProperties(self), response[self.options.key]);
         for (var key in merged){
           self[key] = merged[key];
         }
@@ -1771,7 +1796,7 @@
     }
   }, true);
   CMObject.find = function(){ // use cm.ws.instance 
-    
+   
   }
 
   window.cloudmine.Object = CMObject;
