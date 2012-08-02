@@ -249,19 +249,7 @@
 
     searchUsers: function(query, options) {
       if (isObject(query)) {
-        var queryList = [];
-        for (var k in query) {
-          if (query.hasOwnProperty(k)) {
-            var val = query[k]
-            if (typeof(val) == 'string') {
-              queryList.push(k + ' = "' + val + '"')
-            // typeof(/regex/) returns "object" for some reason, so use instanceof for that case
-            } else if (val instanceof RegExp || typeof(val) == 'number') {
-              queryList.push(k + ' = ' + val)
-            }
-          }
-        }
-        query = '[' + queryList.join(',') + ']';
+        query = buildSearchQuery(query);
       }
       options = opts(this, options);
       return new APICall({
