@@ -900,8 +900,10 @@
 
     var query = stringify(server_params(opts, this.config.query));
     var root = '/', session = opts.session_token, applevel = opts.applevel;
-    if (applevel === false || (applevel !== true && session != null) && config.action.split('/')[0] !== 'account') {
-      root = '/user/';
+    if (applevel === false || (applevel !== true && session != null)) {
+      if (config.action.split('/')[0] !== 'account'){
+        root = '/user/';
+      }
       if (session != null) this.requestHeaders['X-CloudMine-SessionToken'] = session;
     }
     this.config.headers = merge(this.requestHeaders, this.config.headers);
