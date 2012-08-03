@@ -221,7 +221,8 @@
      */
     searchFiles: function(query, options) {
       query = query || "";
-      return this.search(buildSearchQuery(query, {__type__: 'file'}), options);
+      query = buildSearchQuery(query, '__type__ = "file"');
+      return this.search(query, options);
     },
 
     /**
@@ -1434,7 +1435,7 @@
     later: false,
     processData: false,
     dataType: 'text',
-    processResponse: APICall.basicResponse,
+    processResponse: APICall.textResponse,
     crossDomain: true,
     cache: false
   };
@@ -1569,11 +1570,11 @@
   }
 
   function isObject(item) {
-    return item && typeof item === "object"
+    return typeof item === "object"
   }
 
   function isString(item) {
-    return item && typeof item === "string"
+    return typeof item === "string"
   }
 
   function isBinary(item) {
@@ -1676,20 +1677,69 @@
     return obj;
   }
 
+  function appendToSearchQueryString(query, addition){
+    if (query === '[]' || query === ''){
+      segments = [addition];
+    } else {
+      segments = [addition].concat((query.substring(1, query.length - 1)).split(', '));
+    }
+    return '[' + segments.join(', ') + ']';
+  }
+
+  function objectToStringQuery(query){
+    var string = '[';
+    for (var key in ownProperties(query)){
+      string += key + ' = "' + query[key] + '", ';
+    }
+    return string.substring(0, string.length - 2) + ']';
+
+  }
+
+  // Takes an object or string with another optional object or string to add to it. Returns a correctly formatted search query.
   function buildSearchQuery(query, mandatory){
-    var queryList = [];
-    mandatory = mandatory || {};
-    query = ownProperties(merge({}, query, mandatory));
-    for (var k in query) {
-      var val = query[k]
-      if (typeof(val) == 'string') {
-        queryList.push(k + ' = "' + val + '"')
-      // typeof(/regex/) returns "object" for some reason, so use instanceof for that case
-      } else if (val instanceof RegExp || typeof(val) == 'number') {
-        queryList.push(k + ' = ' + val)
+    if (mandatory === undefined){
+      mandatory = '';
+    }
+    if (isObject(query)){
+      var queryList = [];
+      mandatory = mandatory || {};
+      query = ownProperties(merge({}, query, mandatory));
+      for (var k in query) {
+        var val = query[k]
+        if (typeof(val) == 'string') {
+          queryList.push(k + ' = "' + val + '"')
+        // typeof(/regex/) returns "object" for some reason, so use instanceof for that case
+        } else if (val instanceof RegExp || typeof(val) == 'number') {
+          queryList.push(k + ' = ' + val)
+        }
+      }
+      return '[' + queryList.join(',') + ']';
+    } else if (isString(query)){
+      if (isObject(mandatory)){
+        mandatory = objectToStringQuery(mandatory);
+      }
+      var segments = query.match(/[\.\w]*?\[?[^\[]*\]/gi);
+      if (!segments){
+        query = '[' + mandatory + ']';
+      } else {
+        if (segments.length > 1){
+          for (var i = 0; i < segments.length; ++ i){
+            if (segments[i][0] == '['){
+              segments[i] = appendToSearchQueryString(segments[i], mandatory);
+              break;
+            }
+          }
+          query = segments.join('');
+        } else {
+          if (query[0] === '['){
+            query = appendToSearchQueryString(query, mandatory);
+          } else {
+            query = (query[0] === '.') ? '[__type__ = "file"]' + query : '[__type__ = "file"].' + query;
+          }
+        }
       }
     }
-    return '[' + queryList.join(',') + ']';
+    return query;
   }
 
   function ownProperties(object){
