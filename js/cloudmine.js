@@ -1734,7 +1734,7 @@
           if (query[0] === '['){
             query = appendToSearchQueryString(query, mandatory);
           } else {
-            query = (query[0] === '.') ? '[__type__ = "file"]' + query : '[__type__ = "file"].' + query;
+            query = (query[0] === '.') ? '[' + mandatory + ']' + query : '[' + mandatory + '].' + query;
           }
         }
       }
