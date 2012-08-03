@@ -78,7 +78,7 @@
         action: 'text',
         type: 'GET',
         options: options,
-        query: server_params(options, keys),
+        query: server_params(options, keys)
       });
     },
 
@@ -1595,8 +1595,6 @@
       return false;
     }
   }
-
-  window.areEqual = areEqual;
 
   function isEmptyObject(item) {
     if (item) {
