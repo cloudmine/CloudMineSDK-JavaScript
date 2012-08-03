@@ -396,7 +396,7 @@
         later: true,
         encoding: 'binary',
         options: options,
-        query: query,
+        query: query
       });
 
       // Download file directly to computer if given a filename.
@@ -897,7 +897,6 @@
     this.type = this.config.type || 'GET';
 
     // Build the URL and headers
-
     var query = stringify(server_params(opts, this.config.query));
     var root = '/', session = opts.session_token, applevel = opts.applevel;
     if (applevel === false || (applevel !== true && session != null)) {
@@ -906,7 +905,13 @@
       }
       if (session != null) this.requestHeaders['X-CloudMine-SessionToken'] = session;
     }
-    this.config.headers = merge(this.requestHeaders, this.config.headers);
+    
+    // Merge in headers in case-insensitive (if necessary) manner.
+    for (var key in this.config.headers) {
+      mapInsensitive(this.requestHeaders, key, this.config.headers[key]);
+    }
+    this.config.headers = this.requestHeaders;
+
     this.setContentType(config.contentType || 'application/json');
     this.url = [apiroot, "/v1/app/", this.config.options.appid, root, this.config.action, (query ? "?" + query : "")].join("");
 
@@ -1036,8 +1041,8 @@
       type = type || defaultType;
       if (this.config) {
         this.config.contentType = type;
-        this.requestHeaders['content-type'] = type;
-        this.config.headers['content-type'] = type;
+        mapInsensitive(this.requestHeaders, 'content-type', type);
+        mapInsensitive(this.config.headers, 'content-type', type);
       }
       return this;
     },
@@ -1050,13 +1055,20 @@
     abort: function() {
       if (this.xhr) {
         this.xhr.abort();
-        this.xhr = undefined;
-        delete this.xhr;
       } else if (this.config) {
         this.config.complete.call(this, this.xhr, 'abort');
+      }
+
+      // Cleanup leftover state.
+      if (this.xhr) {
+        this.xhr = undefined;
+        delete this.xhr;
+      }
+      if (this.config) {
         this.config = undefined;
         delete this.config;
       }
+
       return this;
     },
 
@@ -1094,16 +1106,22 @@
           var self = this;
           setTimeout(function() {
             APICall.complete(self, response);
-            self.config = undefined;
-            delete self.config;
           }, 1);
         } else {
           this.xhr = ajax(this.url, this.config);
-          this.config = undefined;
-          delete this.config;
         }
       }
       return this;
+    },
+    
+    /**
+     * Get a response header using case insensitive searching
+     * Note: It is faster to use the exact casing as no searching is necessary when matching.
+     * @param {string} key The header to retrieve, case insensitive.
+     * @return {string|null} The value of the header, or null
+     */
+    getHeader: function(key) {
+      return mapInsensitive(this.responseHeaders, key);
     }
   };
 
@@ -1532,6 +1550,22 @@
       });
     }
     return out;
+  }
+
+  function mapInsensitive(map, name, value) {
+    // Find the closest name if we haven't referenced it directly.
+    if (map[name] == null) {
+      var lower = name.toLowerCase();
+      for (var k in map) {
+        if (k.toLowerCase() === lower) {
+          name = k;
+          break;
+        }
+      }
+    }
+
+    if (value !== undefined) map[name] = value;
+    return map[name];
   }
 
   function isObject(item) {
