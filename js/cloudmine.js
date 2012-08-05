@@ -40,6 +40,7 @@
    *                              If false, always send requests to user-level, trigger error if not logged in.
    *                              Otherwise, send requests to user-level if logged in.
    * @config {integer} [limit] Set the default result limit for requests
+   * @config {integer} [sort] Set the field on which to sort results
    * @config {integer} [skip] Set the default number of results to skip for requests
    * @config {boolean} [count] Return the count of results for request.
    * @config {string} [snippet] Run the specified code snippet during the request.
@@ -1294,6 +1295,7 @@
   // Remap some of the CloudMine API query parameters.
   var valid_params = {
     limit: 'limit',
+    sort: 'sort',
     skip: 'skip',
     snippet: 'f', // Run code snippet on the data
     params: 'params', // Only applies to code snippets, parameters for the code snippet (JSON).
