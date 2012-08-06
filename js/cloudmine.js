@@ -56,10 +56,6 @@
     if (!instance){ instance = this; }
   }
 
-  WebService.instance = function(opts){
-    return (opts instanceof WebService) ? (instance = opts) : (instance || new WebService(opts));
-  }
-
   /** @namespace WebService.prototype */
   WebService.prototype = {
     /**
@@ -200,10 +196,7 @@
      */
     search: function(query, options) {
       options = opts(this, options);
-      if (isObject(query)){
-        query = buildSearchQuery(query);
-      }
-      query = {q: query != null ? query : ""}
+      query = {q: query != null ? buildSearchQuery(query) : ''}
       return new APICall({
         action: 'search',
         type: 'GET',
@@ -221,7 +214,7 @@
      * @return {APICall} An APICall instance for the web service request used to attach events.
      */
     searchFiles: function(query, options) {
-      query = query || "";
+      query = query || '';
       query = buildSearchQuery(query, '__type__ = "file"');
       return this.search(query, options);
     },
@@ -250,14 +243,12 @@
      */
 
     searchUsers: function(query, options) {
-      if (isObject(query)) {
-        query = buildSearchQuery(query);
-      }
+      query = {p: query != null ? buildSearchQuery(query) : ''}
       options = opts(this, options);
       return new APICall({
         action: 'account/search',
         type: 'GET',
-        query: server_params(options, {p: query != null ? query: ""}),
+        query: server_params(options, query),
         options: options
       });
     },
@@ -1246,23 +1237,6 @@
   }
 
   /**
-   * Process data into CMObjects, return them under their keys.
-   * 
-   * @private
-   * @function
-   * @memberOf APICall
-  */
-  APICall.objectResponse = function(data, xhr, response) {
-    var out = {success: {}},
-        data = ownProperties(data);
-    for (var key in data.success){
-      data.success[key] = new cloudmine.Object(key, data.success[key]);
-    }
-    out.success = data;
-    return out;
-  }
-
-  /**
    * Convert binary data in browsers to a transmitable version and assign it to the given
    * api call.
    * @param {APICall} apicall The APICall to affect, it should have later: true.
@@ -1591,9 +1565,10 @@
     return typeof item === 'function';
   }
 
+  // Takes two objects or two arrays are arguments
+  // Recursively compares them
+  // Not in use right now
   function areEqual(a, b) {
-    // Takes two objects or two arrays are arguments
-    // Recursively compares them
     if (isArray(a) && isArray(b)){
       if (a.length == b.length){
         for (var i = 0; i < a.length; ++ i){
@@ -1679,68 +1654,75 @@
     return obj;
   }
 
-  function appendToSearchQueryString(query, addition){
-    if (query === '[]' || query === ''){
-      segments = [addition];
-    } else {
-      segments = [addition].concat((query.substring(1, query.length - 1)).split(', '));
+  // Helper methods for buildSearchQuery
+
+  function stripOfBrackets(query){
+    if (query[0] === '[') query = query.substring(1);
+    if (query[query.length - 1] === ']') query = query.substring(0, query.length - 1);
+    return query;
+  }
+
+  function ensureSyntax(query){
+    if (isObject(query)) query = objectToStringQuery(query);
+    if (query.indexOf('[') > 0){
+      if (query[0] !== '.') return '.' + query
+      else return query
     }
+    return '[' + stripOfBrackets(query) + ']';
+  }
+
+  function appendToSearchQueryString(query, addition){
+    addition = stripOfBrackets(addition || '');
+    query = stripOfBrackets(query || '');
+    if (query === '[]' || query === '' || query === null) segments = [addition];
+    else segments = [addition].concat(query.split(', '));
+    if (segments[0] === '') segments = segments.splice(1);
     return '[' + segments.join(', ') + ']';
   }
 
   function objectToStringQuery(query){
     var string = '[';
-    for (var key in ownProperties(query)){
-      string += key + ' = "' + query[key] + '", ';
-    }
+    for (var key in ownProperties(query)) string += key + ' = "' + query[key] + '", ';
     return string.substring(0, string.length - 2) + ']';
-
   }
 
-  // Takes an object or string with another optional object or string to add to it. Returns a correctly formatted search query.
-  function buildSearchQuery(query, mandatory){
-    if (mandatory === undefined){
-      mandatory = '';
+  function searchQuerySegmentsObject(array) {
+    var obj = {};
+    for (var i = 0; i < array.length; ++ i){
+      var key = array[i].match(/\.\w*/);
+      key = (key === null) ? '.generic' : key[0];
+      obj[key.substring(1)] = array[i].replace(key, '');
     }
-    if (isObject(query)){
-      var queryList = [];
-      mandatory = mandatory || {};
-      query = ownProperties(merge({}, query, mandatory));
-      for (var k in query) {
-        var val = query[k]
-        if (typeof(val) == 'string') {
-          queryList.push(k + ' = "' + val + '"')
-        // typeof(/regex/) returns "object" for some reason, so use instanceof for that case
-        } else if (val instanceof RegExp || typeof(val) == 'number') {
-          queryList.push(k + ' = ' + val)
-        }
-      }
-      return '[' + queryList.join(',') + ']';
-    } else if (isString(query)){
-      if (isObject(mandatory)){
-        mandatory = objectToStringQuery(mandatory);
-      }
-      var segments = query.match(/[\.\w]*?\[?[^\[]*\]/gi);
-      if (!segments){
-        query = '[' + mandatory + ']';
-      } else {
-        if (segments.length > 1){
-          for (var i = 0; i < segments.length; ++ i){
-            if (segments[i][0] == '['){
-              segments[i] = appendToSearchQueryString(segments[i], mandatory);
-              break;
-            }
-          }
-          query = segments.join('');
-        } else {
-          if (query[0] === '['){
-            query = appendToSearchQueryString(query, mandatory);
-          } else {
-            query = (query[0] === '.') ? '[' + mandatory + ']' + query : '[' + mandatory + '].' + query;
-          }
-        }
-      }
+    return obj;
+  }
+
+  function mergeQuerySegmentsObjects(/*, obj... */){
+    var obj = {};
+    for (var i = 0; i < arguments.length; ++ i){
+      for (var key in ownProperties(arguments[i])) obj[key] = appendToSearchQueryString(obj[key] || '', arguments[i][key]);
     }
+    return obj;
+  }
+
+  // Take as many objects or strings and make a search query.
+  // Usage: supply the user's input as the query, and hard-code additional parameters as mandatory (such as __type__ = "file")
+  function buildSearchQuery(/* obj/str... */){
+    allQueries = {};
+    for (var i = 0; i < arguments.length; ++ i){
+      var query = arguments[i];
+      if (query === '' || query === '[]' || !query) continue;
+      query = ensureSyntax(query);
+      querySegmentsObj = searchQuerySegmentsObject(query.match(/[\.\w]*?\[?[^\[]*\]/gi));
+      allQueries = mergeQuerySegmentsObjects(allQueries, querySegmentsObj);
+    }
+    query = '';
+    if (allQueries.generic !== undefined) query += allQueries.generic;
+    for (var key in ownProperties(allQueries)){
+      if (key === 'generic') continue;
+      query += '.' + key + allQueries[key];
+    }
+    // Make sure we don't start with a period.
+    if (query[0] === '.') query = query.substring(1);
     return query;
   }
 
@@ -1876,132 +1858,8 @@
 				  i += 3;
 			  }
 		  }
- 
 		  return string;
 	  }
   }
-
-  function Class(name, proto) {}
-
-  Class.extend = function(name, proto, isPrivate) {
-   // Create a new class that extends the previous class.
-    function Constructor(_) {
-      if (_ != Class) {
-        this.options = merge({}, this.options, {'class': name});
-        if (isFunction(this.initialize)){
-          this.initialize.apply(this, arguments);
-        }
-      }
-    }
-    Constructor.prototype = new this(Class);
-
-    // Copy references over, wrapping functions that existed in the parent class
-    for (key in proto) (function(fn, sfn){
-      Constructor.prototype[key] = !isFunction(fn) || !isFunction(sfn) ? fn : function() {
-        this._super = sfn;
-        return fn.apply(this, arguments);
-      }
-    })(proto[key], Constructor.prototype[key]);
-
-    // Override these methods, and provide a static extend method.
-    Constructor.prototype.constructor = Constructor;
-    Constructor.extend = this.extend || Class.extend;
-
-   // Expose the class unless we said not to.
-    if (!isPrivate) {
-      var scope = base, name = name.split(/./), segment, i;
-      for (i = 0; i < name.length-1; ++i) {
-        segment = name[i];
-        scope = (scope[segment] || (scope[segment] = {}));
-      }
-      scope[name[i+1]] = Constructor;
-    }
-    return Constructor;
-  }
-
-  var CMObject = Class.extend('CMObject', {
-    initialize: function(key, data, SpecifiedWebService){
-      // Let the user specify a custom WebService or resort to instance()
-      this.options.WebService = SpecifiedWebService ? SpecifiedWebService : cloudmine.WebService.instance();
-      // Save object's CloudMine key
-      this.options.key = key;
-      // Save object's CloudMine data (provided by WebService)
-      for (var key in data){
-        this[key] = data[key];
-      }
-      // Save serverData for modified comparison
-      this.options.serverData = data;
-    },
-    options: {
-      serverData: {},
-    },
-    // Returns Object of all data
-    toJSON: function(){
-      var data = {};
-      for (var key in this){
-        if (this.hasOwnProperty(key) && !isFunction(this[key]) && key !== 'options' && key !== 'key'){
-          data[key] = this[key];          
-        }
-      }
-      return data;
-    },
-    // Save local changes to remote copy
-    save: function(){
-      var self = this;
-      this.options.WebService.update(this.options.key, this.toJSON()).on('success', function(response){
-        response = self.parse(response);
-        self.options.serverData = self.toJSON();
-      });
-    },
-    /*
-    saveAs: function(key){
-      var self = this;
-      this.options.WebService.set(key, self.toJSON()).on('success', function(response){
-        newObject = new cloudmine.Object(key, response);
-        // Don't know how to return this new object with the current APICall design
-      });
-    },
-    */
-    // Customizable parsing method that runs on all server responses before being committed to the object
-    parse: function(data){
-      return data;
-    },
-    // Fetch the newest data from the server, merge it in with what we already have.
-    // Preserves local changes by using merge()
-    fetch: function(){
-      var self = this;
-      this.options.WebService.get(this.options.key).on('success', function(response){
-        var data = self.parse(response.success[self.options.key]),
-            merged = merge({}, ownProperties(self), ownProperties(data));
-        for (var key in merged) self[key] = merged[key];
-        // Commit the server data to the object for further modified() checks.
-        self.options.serverData = data;
-      });
-    },
-    // Returns bool
-    modified: function(){
-      for (var key in this.toJSON()){
-        if (JSON.stringify(this[key]) !== JSON.stringify(this.options.serverData[key])){
-          return true;
-        }
-      }
-      return false;
-    },
-    // Returns array of changed keys
-    modifiedFields: function(){
-      var changed = [];
-      for (var key in this.toJSON()){
-        if (JSON.stringify(this[key]) !== JSON.stringify(this.options.serverData[key])){
-          changed.push(key);
-        }
-      }
-      return changed;
-    }
-  }, true);
-  CMObject.find = function(){ // use cm.ws.instance 
-   
-  }
-
-  window.cloudmine.Object = CMObject;
 
 })();
