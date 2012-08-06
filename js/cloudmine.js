@@ -1555,6 +1555,7 @@
   }
 
   function isArray(item) {
+    if (item === null) return false;
     return isObject(item) && item.length != null
   }
 
@@ -1736,6 +1737,8 @@
     if (query[0] === '.') query = query.substring(1);
     return query;
   }
+
+  window.b = buildSearchQuery;
 
   function ownProperties(object){
     var newObject = {};
