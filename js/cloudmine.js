@@ -53,7 +53,6 @@
   function WebService(options) {
     this.options = opts(this, options);
     this._setupUserToken();
-    if (!instance){ instance = this; }
   }
 
   /** @namespace WebService.prototype */
@@ -214,7 +213,6 @@
      * @return {APICall} An APICall instance for the web service request used to attach events.
      */
     searchFiles: function(query, options) {
-      query = query || '';
       query = buildSearchQuery(query, '__type__ = "file"');
       return this.search(query, options);
     },
