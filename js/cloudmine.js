@@ -1654,14 +1654,16 @@
     return obj;
   }
 
-  // Helper methods for buildSearchQuery
+  // Helper methods for buildSearchQuery:
 
+  // Strip a query of its brackets
   function stripOfBrackets(query){
     if (query[0] === '[') query = query.substring(1);
     if (query[query.length - 1] === ']') query = query.substring(0, query.length - 1);
     return query;
   }
 
+  // Make sure a query segment is properly formatted with a single set of brackets and a period before any keywords like "location"
   function ensureSyntax(query){
     if (isObject(query)) query = objectToStringQuery(query);
     if (query.indexOf('[') > 0){
@@ -1670,7 +1672,8 @@
     }
     return '[' + stripOfBrackets(query) + ']';
   }
-
+  
+  // Merges string queries properly
   function appendToSearchQueryString(query, addition){
     addition = stripOfBrackets(addition || '');
     query = stripOfBrackets(query || '');
@@ -1680,12 +1683,22 @@
     return '[' + segments.join(', ') + ']';
   }
 
+  // Converts an object to a string query
   function objectToStringQuery(query){
     var string = '[';
-    for (var key in ownProperties(query)) string += key + ' = "' + query[key] + '", ';
+    for (var key in ownProperties(query)) 
+      if (typeof query[key] == 'string'){
+        string += key + ' = "' + query[key] + '", ';
+      } else if (typeof query[key] == 'number' || query[key] instanceof RegExp){
+        string += key + ' = ' + query[key] + ', ';
+      }
     return string.substring(0, string.length - 2) + ']';
   }
 
+  // Breaks up a query into an object using "generic" for non-prefixed segments and segment names for the other keys
+  // EX: [red = "blue"].location[apple = "orange"] becomes { generic: '[red = "blue"]', location: '[apple = "orange"]' }
+  // Used in mergeQuerySegmentsObject when merging two or more query strings that have overlapping segments 
+  // (such as two strings with .location[] parameters)
   function searchQuerySegmentsObject(array) {
     var obj = {};
     for (var i = 0; i < array.length; ++ i){
@@ -1696,6 +1709,7 @@
     return obj;
   }
 
+  // Take objects derived from searchQuerySegmentsObject and merge them together into one object.
   function mergeQuerySegmentsObjects(/*, obj... */){
     var obj = {};
     for (var i = 0; i < arguments.length; ++ i){
@@ -1704,13 +1718,13 @@
     return obj;
   }
 
-  // Take as many objects or strings and make a search query.
+  // Take arbitrary number of objects or strings and make a search query.
   // Usage: supply the user's input as the query, and hard-code additional parameters as mandatory (such as __type__ = "file")
   function buildSearchQuery(/* obj/str... */){
     allQueries = {};
     for (var i = 0; i < arguments.length; ++ i){
       var query = arguments[i];
-      if (query === '' || query === '[]' || !query) continue;
+      if (query === '[]' || !query) continue;
       query = ensureSyntax(query);
       querySegmentsObj = searchQuerySegmentsObject(query.match(/[\.\w]*?\[?[^\[]*\]/gi));
       allQueries = mergeQuerySegmentsObjects(allQueries, querySegmentsObj);
