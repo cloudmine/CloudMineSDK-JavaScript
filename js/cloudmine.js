@@ -1437,7 +1437,6 @@
 
   // Scope external dependencies, if necessary.
   var base = this.window ? window : root;
-  var instance = null;
   var defaultType = 'application/octet-stream';
   var esc = base.encodeURIComponent || escape;
   var File = base.File;
