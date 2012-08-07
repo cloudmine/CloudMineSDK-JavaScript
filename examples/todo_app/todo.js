@@ -54,8 +54,8 @@ $(document).ready(function(){
 
     // Set up an object with our App id and API key
     var init_vals = {
-      appid: '6a8585a1167a4d0bb59909f91e10179c',
-      apikey: 'badc3c5838db4b34b699eebde9846cae'
+      appid: '0a93fa8190b44eb8926c2c1babe8f1ba',
+      apikey: '51b28b3a94a8434bb0bc64c34636fe1d'
     }
 
     // Perform the check for the session cookie
