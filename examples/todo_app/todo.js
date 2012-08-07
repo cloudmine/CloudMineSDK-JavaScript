@@ -54,8 +54,8 @@ $(document).ready(function(){
 
     // Set up an object with our App id and API key
     var init_vals = {
-      appid: '84e5c4a381e7424b8df62e055f0b69db',
-      apikey: '84c8c3f1223b4710b180d181cd6fb1df'
+      appid: '0a93fa8190b44eb8926c2c1babe8f1ba',
+      apikey: '51b28b3a94a8434bb0bc64c34636fe1d'
     }
 
     // Perform the check for the session cookie
@@ -328,7 +328,7 @@ $(document).ready(function(){
       todo.data[item_data.__id__] = item_data;
 
       item_text = ''; // By default, start with an empty string.
-      if (item_data.deadline.timestamp != null){ // Parse how much time is left to complete this task.
+      if (item_data.hasOwnProperty('deadline')){ // Parse how much time is left to complete this task.
         parsed_deadline = todo.parse_remaining_time(item_data.deadline.timestamp); 
         if (parsed_deadline <= 0){
           item_text += '<span class="overdue">Overdue</span>'; // If time is up, put a bold "Overdue" flag on the item.
