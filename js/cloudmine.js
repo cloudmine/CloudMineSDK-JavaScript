@@ -227,6 +227,46 @@
     },
 
     /**
+     * Search using CloudMine's geoquery API.
+     * @param {object} target The CloudMine object.
+     * @param {string} radius Distance around the target.
+     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @return {APICall} An APICall instance for the web service request used to attach events.
+     */
+
+    searchGeo: function(target, radius, options) {
+      var self = this;
+      var geopoint = null;
+      if (radius !== undefined){
+        if (isObject(radius)){
+          options = radius;
+          radius = undefined;
+        } else {
+          var units = radius.match(/\w*/)[0];
+        }
+      }
+      options = merge({}, {distance: true, units: units}, options);
+
+      if (target.__type__ === 'geopoint') {
+        geopoint = target;
+      } else {
+        for (var key in ownProperties(target)){
+          if (target[key].__type__ === 'geopoint'){
+            geopoint = target[key];
+            break;
+          }
+        }
+      }
+      if (geopoint === null){
+        throw new Error('No geopoint property found');
+      } else {
+        var lat = geopoint.latitude || geopoint.lat || geopoint. x;
+        var lng = geopoint.longitude || geopoint.lng || geopoint. y;
+        return this.search('[location near (' + lat + ', ' + lng + ')' + (radius === undefined ? '' : ', ' + radius) + ']', options);
+      }
+    },
+
+    /**
      * Upload a file stored in CloudMine.
      * @param {string} key The binary file's object key.
      * @param {file|string} file FileAPI: A HTML5 FileAPI File object, Node.js: The filename to upload.
@@ -682,6 +722,12 @@
     isApplicationData: function() {
       if (this.options.applevel === true || this.options.applevel === false) return this.options.applevel;
       return this.options.session_token == null;
+    },
+
+    geopoint: function(lat, lng) {
+      return { __type__: 'geopoint',
+               latitude: lat,
+               longitude: lng };
     },
 
     /**
@@ -1299,7 +1345,8 @@
     params: 'params', // Only applies to code snippets, parameters for the code snippet (JSON).
     dontwait: 'async', // Only applies to code snippets, don't wait for results.
     resultsonly: 'result_only', // Only applies to code snippets, only show results from code snippet.
-    count: 'count'
+    count: 'count',
+    distance: 'distance'
   };
 
   // Default jQuery ajax configuration.
@@ -1505,6 +1552,16 @@
       });
     }
     return obj;
+  }
+
+  function ownProperties(object){
+    var newObject = {};
+    for (var key in object){
+      if (object.hasOwnProperty(key)){
+        newObject[key] = object[key];
+      }
+    }
+    return newObject;
   }
 
   function NotSupported() {
