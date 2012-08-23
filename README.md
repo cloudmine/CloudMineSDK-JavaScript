@@ -1,3 +1,4 @@
+[![build status](https://secure.travis-ci.org/cloudmine/cloudmine-js.png)](http://travis-ci.org/cloudmine/cloudmine-js)
 # CloudMine JavaScript SDK
 
 [CloudMine](https://cloudmine.me) is a backend-as-a-service platform for mobile and web developers to rapidly build and quickly scale their apps. Build and scale iOS, Android, Windows Phone, and web apps on our secure and managed backend.
