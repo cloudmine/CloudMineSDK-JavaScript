@@ -187,7 +187,7 @@
     },
 
     /**
-     * Search CloudMine for text objects
+     * Search CloudMine for text objects.
      * Results may be affected by defaults and/or by the options parameter.
      * @param {string} query Query parameters to search for.
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
@@ -195,7 +195,7 @@
      */
     search: function(query, options) {
       options = opts(this, options);
-      query = {q: query != null ? query : ""}
+      query = {q: query != null ? buildSearchQuery(query) : ''}
       return new APICall({
         action: 'search',
         type: 'GET',
@@ -213,18 +213,77 @@
      * @return {APICall} An APICall instance for the web service request used to attach events.
      */
     searchFiles: function(query, options) {
-      query = query || "";
-      var term = '[__type__ = "file"';
-      if (query.match(/^\[(.*?)\](.*)/)) {
-        var fields = RegExp.$1;
-        if (fields.length > 0) term += ", " + fields;
-        term += "]" + RegExp.$2;
-      } else {
-        if (query.length > 0) term += "]." + query;
-        else term += ']';
-      }
+      query = buildSearchQuery(query, '__type__ = "file"');
+      return this.search(query, options);
+    },
 
-      return this.search(term, options);
+    /**
+     * Search CloudMine user objects by custom attributes.
+     * Results may be affected by defaults and/or by the options parameter.
+     * @param {string} query Additional query parameters to search for in [key="value", key="value"] format.
+     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @return {APICall} An APICall instance for the web service request used to attach events.
+     *
+     * @function
+     * @name searchUsers
+     * @memberOf WebService.prototype
+     */
+    /**
+     * Search CloudMine user objects by custom attributes.
+     * Results may be affected by defaults and/or by the options parameter.
+     * @param {object} query Additional query parameters to search for in {key: value, key: value} format.
+     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @return {APICall} An APICall instance for the web service request used to attach events.
+     *
+     * @function
+     * @name searchUsers^2
+     * @memberOf WebService.prototype
+     */
+
+    searchUsers: function(query, options) {
+      query = {p: query != null ? buildSearchQuery(query) : ''}
+      options = opts(this, options);
+      return new APICall({
+        action: 'account/search',
+        type: 'GET',
+        query: server_params(options, query),
+        options: options
+      });
+    },
+    
+    /**
+     * Get all user objects.
+     * Results may be affected by defaults and/or by the options parameter.
+     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @return {APICall} An APICall instance for the web service request used to attach events.
+     */
+
+    allUsers: function(options) {
+      options = opts(this, options);
+      return new APICall({
+        action: 'account',
+        type: 'GET',
+        query: server_params(options, ''),
+        options: options
+      }); 
+    },
+
+    /**
+     * Get specific user by id.
+     * @param {string} id User id being requested.
+     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * Results may be affected by defaults and/or by the options parameter.
+     * @return {APICall} An APICall instance for the web service request used to attach events.
+     */
+
+    getUser: function(id, options) {
+      options = opts(this, options);
+      return new APICall({
+        action: 'account/' + id,
+        type: 'GET',
+        query: server_params(options, ''),
+        options: options
+      }); 
     },
 
     /**
@@ -426,7 +485,6 @@
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
      * @return {APICall} An APICall instance for the web service request used to attach events.
      *
-     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
      * @function
      * @name createUser
      * @memberOf WebService.prototype
@@ -438,7 +496,6 @@
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
      * @return {APICall} An APICall instance for the web service request used to attach events.
      *
-     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
      * @function
      * @name createUser^2
      * @memberOf WebService.prototype
@@ -458,6 +515,46 @@
         options: options,
         processResponse: APICall.basicResponse,
         data: payload
+      });
+    },
+
+    /**
+     * Update user object of logged in user.
+     * @param {object} data An object with a key and value field.
+     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @return {APICall} An APICall instance for the web service request used to attach events.
+     *
+     * @function
+     * @name updateUser
+     * @memberOf WebService.prototype
+     */
+    /**
+     * Update user object of logged in user.
+     * @param {string} key The key which you are assigning to the user object.
+     * @param {string} value The value for the key which you are assigning to the user object.
+     * @return {APICall} An APICall instance for the web service request used to attach events.
+     *
+     * @function
+     * @name updateUser^2
+     * @memberOf WebService.prototype
+     */
+
+    updateUser: function(key, value, options) {
+      if (isObject(key)) options = value;
+      else {
+        if (!key) key = uuid();
+        var out = {};
+        out[key] = value;
+        key = out;
+      }
+      options = opts(this, options);
+
+      return new APICall({
+        action: 'account',
+        type: 'POST',
+        options: options,
+        query: server_params(options),
+        data: JSON.stringify(key)
       });
     },
 
@@ -840,7 +937,9 @@
     var query = stringify(server_params(opts, this.config.query));
     var root = '/', session = opts.session_token, applevel = opts.applevel;
     if (applevel === false || (applevel !== true && session != null)) {
-      root = '/user/';
+      if (config.action.split('/')[0] !== 'account'){
+        root = '/user/';
+      }
       if (session != null) this.requestHeaders['X-CloudMine-SessionToken'] = session;
     }
     
@@ -1491,11 +1590,11 @@
   }
 
   function isObject(item) {
-    return item && typeof item === "object"
+    return typeof item === "object"
   }
 
   function isString(item) {
-    return item && typeof item === "string"
+    return typeof item === "string"
   }
 
   function isBinary(item) {
@@ -1503,11 +1602,55 @@
   }
 
   function isArray(item) {
+    if (item === null) return false;
     return isObject(item) && item.length != null
   }
 
   function isFunction(item) {
     return typeof item === 'function';
+  }
+
+  // Takes two objects or two arrays are arguments
+  // Recursively compares them
+  // Not in use right now
+  function areEqual(a, b) {
+    if (isArray(a) && isArray(b)){
+      if (a.length == b.length){
+        for (var i = 0; i < a.length; ++ i){
+          if (isObject(a[i]) || isArray(a[i])){
+            if (!areEqual(a[i], b[i])){
+              return false;
+            }
+          } else if (a[i] !== b[i]){
+            return false;
+          }
+        }
+        return true;
+      } else {
+        return false;
+      }
+    } else if (isObject(a) && isObject(b)){
+      if (areEqual(Object.keys(a), Object.keys(b))){
+        var keys = Object.keys(a);
+        for (var i = 0; i < keys.length; ++ i){
+          var key = keys[i];
+          if (isObject(a[key]) || isArray(a[key])){
+            if (!areEqual(a[key], b[key])){
+              return false;
+            }
+          } else {
+            if (a[key] !== b[key]){
+              return false;
+            }
+          }
+        }
+        return true;
+      } else {
+        return false;
+      }
+    } else {
+      return false;
+    }
   }
 
   function isEmptyObject(item) {
@@ -1555,6 +1698,97 @@
     }
     return obj;
   }
+
+  // Strip a query of its brackets
+  function stripOfBrackets(query){
+    if (query[0] === '[') query = query.substring(1);
+    if (query[query.length - 1] === ']') query = query.substring(0, query.length - 1);
+    return query;
+  }
+
+  // Make sure a query segment is properly formatted with a single set of brackets and a period before any keywords like "location"
+  function ensureSyntax(query) {
+    if (isObject(query)) query = objectToStringQuery(query);
+    if (query.indexOf('[') > 0) {
+      if (query[0] !== '.') return '.' + query
+      else return query
+    }
+    return '[' + stripOfBrackets(query) + ']';
+  }
+  
+  // Merges string queries properly
+  function appendToSearchQueryString(query, addition) {
+    addition = stripOfBrackets(addition || '');
+    query = stripOfBrackets(query || '');
+    if (query === '[]' || query === '' || query === null) segments = [addition];
+    else segments = [addition].concat(query.split(', '));
+    if (segments[0] === '') segments = segments.splice(1);
+    return '[' + segments.join(', ') + ']';
+  }
+
+  // Converts an object to a string query
+  function objectToStringQuery(query){
+    var string = '[';
+    for (var key in ownProperties(query)) { 
+      if (typeof query[key] == 'string') {
+        string += key + ' = "' + query[key] + '", ';
+      } else if (typeof query[key] == 'number' || query[key] instanceof RegExp) {
+        string += key + ' = ' + query[key] + ', ';
+      }
+    }
+
+    return string.substring(0, string.length - 2) + ']';
+  }
+
+  // Breaks up a query into an object using "generic" for non-prefixed segments and segment names for the other keys
+  // EX: [red = "blue"].location[apple = "orange"] becomes { generic: '[red = "blue"]', location: '[apple = "orange"]' }
+  // Used in mergeQuerySegmentsObject when merging two or more query strings that have overlapping segments 
+  // (such as two strings with .location[] parameters)
+  function searchQuerySegmentsObject(array) {
+    var obj = {};
+    for (var i = 0; i < array.length; ++ i){
+      var key = array[i].match(/\.\w*/);
+      key = (key === null) ? '.generic' : key[0];
+      obj[key.substring(1)] = array[i].replace(key, '');
+    }
+    return obj;
+  }
+
+  // Take objects derived from searchQuerySegmentsObject and merge them together into one object.
+  function mergeQuerySegmentsObjects(/*, obj... */) {
+    var obj = {};
+    for (var i = 0; i < arguments.length; ++ i){
+      for (var key in ownProperties(arguments[i])) {
+        obj[key] = appendToSearchQueryString(obj[key] || '', arguments[i][key]);
+      }
+    }
+    return obj;
+  }
+
+  // Take arbitrary number of objects or strings and make a search query.
+  // Usage: supply the user's input as the query, and hard-code additional parameters as mandatory (such as __type__ = "file")
+  function buildSearchQuery(/* obj/str... */){
+    allQueries = {};
+    for (var i = 0; i < arguments.length; ++ i){
+      var query = arguments[i];
+      if (query === '[]' || !query) continue;
+      query = ensureSyntax(query);
+      querySegmentsObj = searchQuerySegmentsObject(query.match(/[\.\w]*?\[?[^\[]*\]/gi));
+      allQueries = mergeQuerySegmentsObjects(allQueries, querySegmentsObj);
+    }
+
+    query = '';
+    if (allQueries.generic !== undefined) query += allQueries.generic;
+    for (var key in ownProperties(allQueries)) {
+      if (key === 'generic') continue;
+      query += '.' + key + allQueries[key];
+    }
+
+    // Make sure we don't start with a period.
+    if (query[0] === '.') query = query.substring(1);
+    return query;
+  }
+
 
   function ownProperties(object){
     var newObject = {};
@@ -1688,8 +1922,8 @@
 				  i += 3;
 			  }
 		  }
- 
 		  return string;
 	  }
   }
+
 })();
