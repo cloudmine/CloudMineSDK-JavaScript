@@ -1,4 +1,4 @@
-/* CloudMine JavaScript Library v0.9 cloudmine.me | cloudmine.me/license */ 
+/* CloudMine JavaScript Library v0.9.1 cloudmine.me | cloudmine.me/license */ 
 (function() {
   /**
    * Construct a new WebService instance
@@ -918,6 +918,8 @@
     }
   };
 
+  // Version information.
+  var version = '0.9.1';
   WebService.VERSION = version;
 
   /**
@@ -1658,6 +1660,22 @@
     return typeof item === 'function';
   }
 
+  function objectKeys(obj) {
+    if (typeof Object.keys == "function") {
+      return Object.keys(obj);
+    } else if (typeof obj == "object") {
+      var keys = [];
+      for (var key in obj) {
+        if (obj.hasOwnProperty(key)) {
+          keys.push(key);
+        }
+      }
+      return keys;
+    }
+
+    throw new TypeError("Object.keys used on non-object");
+  }
+
   // Takes two objects or two arrays are arguments
   // Recursively compares them
   // Not in use right now
@@ -1678,8 +1696,8 @@
         return false;
       }
     } else if (isObject(a) && isObject(b)){
-      if (areEqual(Object.keys(a), Object.keys(b))){
-        var keys = Object.keys(a);
+      if (areEqual(objectKeys(a), objectKeys(b))){
+        var keys = objectKeys(a);
         for (var i = 0; i < keys.length; ++ i){
           var key = keys[i];
           if (isObject(a[key]) || isArray(a[key])){
@@ -1776,6 +1794,7 @@
   
   // Merges string queries properly
   function appendToSearchQueryString(query, addition) {
+    var segments;
     addition = stripOfBrackets(addition || '');
     query = stripOfBrackets(query || '');
     if (query === '[]' || query === '' || query === null) segments = [addition];
@@ -1826,12 +1845,12 @@
   // Take arbitrary number of objects or strings and make a search query.
   // Usage: supply the user's input as the query, and hard-code additional parameters as mandatory (such as __type__ = "file")
   function buildSearchQuery(/* obj/str... */){
-    allQueries = {};
+    var allQueries = {};
     for (var i = 0; i < arguments.length; ++ i){
       var query = arguments[i];
       if (query === '[]' || !query) continue;
       query = ensureSyntax(query);
-      querySegmentsObj = searchQuerySegmentsObject(query.match(/[\.\w]*?\[?[^\[]*\]/gi));
+      var querySegmentsObj = searchQuerySegmentsObject(query.match(/[\.\w]*?\[?[^\[]*\]/gi));
       allQueries = mergeQuerySegmentsObjects(allQueries, querySegmentsObj);
     }
 

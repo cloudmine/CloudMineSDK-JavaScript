@@ -11,6 +11,7 @@ var fs, path, crypto, dom;
 // Oh thanks QUnit team. Reordering is not a feature, it is a bug.
 // Tests should run consistently in the same order every time.
 QUnit.config.reorder = false;
+this.console = this.console || { log: function() {} };
 
 // QUnit for Node: Redefine a few things.
 if (!base.window) {
@@ -72,6 +73,22 @@ $(function() {
     }
 
     return buffer;
+  }
+
+  function keys(obj) {
+    if (typeof Object.keys == "function") {
+      return Object.keys(obj);
+    } else if (typeof obj == "object") {
+      var keys = [];
+      for (var key in obj) {
+        if (obj.hasOwnProperty(key)) {
+          keys.push(key);
+        }
+      }
+      return keys;
+    }
+
+    throw new TypeError("Object.keys used on non-object");
   }
 
   // Automatic cleanup (when possible)
@@ -242,7 +259,7 @@ $(function() {
 
   asyncTest('Set an object and compare value with existing data', 2, function() {
     console.log('Set an object and compare value with existing data');
-    var key = 'test_object1';
+    var key = 'test_' + noise(5);
     var value = {
       integer: 321,
       string: '321',
@@ -267,7 +284,7 @@ $(function() {
 
   asyncTest('Create an object with update and compare with existing data', 2, function() {
     console.log('Create an object with update and compare with existing data');
-    var key = 'test_object2';
+    var key = 'test_' + noise(5);
     var value = {
       integer: 321,
       string: '321',
@@ -358,7 +375,7 @@ $(function() {
     ];
 
     // Expect a set and verification for every test.
-    var key = 'test_object3';
+    var key = 'test_' + noise(5);
     var index = -1;
     function nextTest() {
       var config = tests[++index];
@@ -395,7 +412,7 @@ $(function() {
 
   asyncTest('Create an object, delete it and attempt to access post-delete', 3, function() {
     console.log('Create an object, delete it and attempt to access post-delete');
-    var key = 'test_object4';
+    var key = 'test_' + noise(5);
     var value = {
       'A': 'B',
       'C': 'D'
@@ -432,7 +449,7 @@ $(function() {
 
   asyncTest('Trigger unauthorized and application not found errors via bad appid and bad apikey', 3, function() {
     console.log('Trigger unauthorized and application not found errors via bad appid and bad apikey');
-    var key = 'test_object5';
+    var key = 'test_' + noise(5);
     cm.set(key, {'Britney': 'Spears'}).on('success', function() {
       track(key, cm);
       ok(true, 'Can set key on safe API Key');
@@ -1258,7 +1275,7 @@ $(function() {
     function searchForNonExisting(){
       cm.searchUsers('[' + nonExistingKey + '="' + nonExistingValue + '"]')
         .on('success', function(response){
-          if (Object.keys(response).length == 0){
+          if (keys(response).length == 0) {
             ok(true, 'Didn\'t find non-existing user for [' + nonExistingKey + '="' + nonExistingValue + '"]');
           }
         })
@@ -1271,7 +1288,7 @@ $(function() {
     function searchForNonExistingWithMultipleKeys(){
       cm.searchUsers('[' + nonExistingKey + '="' + nonExistingValue + '", ' + nonExistingKey2 + '="' + nonExistingValue2 + '"]')
         .on('success', function(response){
-          if (Object.keys(response).length == 0){
+          if (keys(response).length == 0){
             ok(true, 'Didn\'t find non-existing user for [' + nonExistingKey + '="' + nonExistingValue + '", ' + 
                                                              nonExistingKey2 + '="' + nonExistingValue2 + '"]');
           }
@@ -1289,7 +1306,7 @@ $(function() {
         .on('success', function(){
           cm.searchUsers('[' + key + '="' + value + '"]')
             .on('success', function(response){
-              if (Object.keys(response).length == 1){
+              if (keys(response).length == 1){
                 ok(true, 'Found the user for [' + key + '="' + value + '"]');
               }
             })
@@ -1303,7 +1320,7 @@ $(function() {
     function searchForExistingWithMultipleKeys(){
       cm.searchUsers('[' + key + '="' + value + '"]')
         .on('success', function(response){
-          if (Object.keys(response).length == 1){
+          if (keys(response).length == 1){
             ok(true, 'Found the user for [' + key + '="' + value + '", ' + key2 + '="' + value2 + '"]');
           }
         })
@@ -1348,7 +1365,7 @@ $(function() {
       query[nonExistingKey] = nonExistingValue;
       cm.searchUsers(query)
         .on('success', function(response){
-          if (Object.keys(response).length == 0){
+          if (keys(response).length == 0){
             ok(true, 'Didn\'t find non-existing user for {' + nonExistingKey + ': "' + nonExistingValue + '"}');
           }
         })
@@ -1364,7 +1381,7 @@ $(function() {
       query[nonExistingKey2] = nonExistingValue2;
       cm.searchUsers(query)
         .on('success', function(response){
-          if (Object.keys(response).length == 0){
+          if (keys(response).length == 0){
             ok(true, 'Didn\'t find non-existing user for {' + nonExistingKey + ': "' + nonExistingValue + '", ' + 
                                                              nonExistingKey2 + ': "' + nonExistingValue2 + '"}');
           }
@@ -1384,7 +1401,7 @@ $(function() {
           query[key] = value;
           cm.searchUsers(query)
             .on('success', function(response){
-              if (Object.keys(response).length == 1){
+              if (keys(response).length == 1){
                 ok(true, 'Found the user for {' + key + ': "' + value + '"}');
               }
             })
@@ -1401,7 +1418,7 @@ $(function() {
       query[key2] = value2;
       cm.searchUsers(query)
         .on('success', function(response){
-          if (Object.keys(response).length == 1){
+          if (keys(response).length == 1){
             ok(true, 'Found the user for {' + key + ': "' + value + '", ' + key2 + ': "' + value2 + '"}');
           }
         })
@@ -1439,7 +1456,7 @@ $(function() {
       id = response.__id__;
       cm.getUser(id)
         .on('success', function(response){
-          if (Object.keys(response).length == 1){
+          if (keys(response).length == 1){
             ok(true, "Search for user by id, get one result");
           } else { 
             ok(false, "Search for user by id, get one result");
@@ -1473,7 +1490,7 @@ $(function() {
   asyncTest("Get all users in app", 1, function(){
     cm.allUsers()
       .on('success', function(response){
-        var numberOfUsers = Object.keys(response).length;
+        var numberOfUsers = keys(response).length;
         ok(true, numberOfUsers + " users retrieved");
       })
       .on('error', function(response){
