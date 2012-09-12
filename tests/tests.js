@@ -6,7 +6,7 @@ var FileReader = base.FileReader;
 var Uint8Array = base.Uint8Array;
 var CanvasRenderingContext2D = base.CanvasRenderingContext2D;
 var hasBuffers = Buffer || (Uint8Array && ArrayBuffer); 
-var fs, path, crypto;
+var fs, path, crypto, dom;
 
 // Oh thanks QUnit team. Reordering is not a feature, it is a bug.
 // Tests should run consistently in the same order every time.
@@ -23,14 +23,8 @@ if (!base.window) {
   crypto = require('crypto');
 }
 
-
 $(function() {
   var cm, cm_bad_apikey, cm_bad_appid;
-
-  function dom(selector) {
-    return document.querySelectorAll(selector);
-  }
-
   function reverse(data) {
     if (data && typeof data == 'object' && data.length) {
       var out = Array(data.length);
@@ -96,10 +90,6 @@ $(function() {
   }
 
   if (inBrowser) {
-    dom('.forgetapp')[0].addEventListener('click', function() {
-      if (window.localStorage) localStorage.removeItem('cm_info');
-      location.reload();
-    }, false);
   }
 
   module("JS", {
@@ -199,7 +189,7 @@ $(function() {
     }
   });
 
-  asyncTest('Register a new user, verify user, cloudmine-agent, and log the user in', 4, function() {
+  asyncTest('Register a new user, verify user, cloudmine-agent, login the user, delete user.', 6, function() {
     console.log('Register a new user, verify user, cloudmine-agent, and log the user in');
     var user = {
       email: noise(5) + '@' + noise(5) + '.com',
@@ -226,10 +216,26 @@ $(function() {
     }
 
     function login() {
-      cm.login({userid: user.email, password: user.password}).on('success', function(data){
+      cm.login({userid: user.email, password: user.password}).on('success', function(data) {
         ok(data.hasOwnProperty('session_token'), 'Has session token');
       }).on('error', function() {
         ok(false, 'Could not login.');
+      }).on('complete', destroy);
+    }
+
+    function destroy() {
+      cm.deleteUser({username: user.email, password: user.password}).on('error', function() {
+        ok(false, 'User was destroyed');
+      }).on('success', function() {
+        ok(true, 'User was destroyed');
+      }).on('complete', verifyDestroy);
+    }
+
+    function verifyDestroy() {
+      cm.verify(user.email, user.password).on('success', function() {
+        ok(false, 'Verified that account was destroyed.');
+      }).on('error', function() {
+        ok(true, 'Verified that account was destroyed.');
       }).on('complete', start);
     }
   });
