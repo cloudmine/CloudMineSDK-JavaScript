@@ -2,7 +2,7 @@
           "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 	<head>
-		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<meta http-equiv="content-type" content="text/html; charset=utf8" />
 		<meta name="generator" content="JsDoc Toolkit" />
 		
 		<title>CloudMine - Javascript Library Documentation</title>
@@ -206,6 +206,15 @@ access the results of the method called.</div>
 						      <tr>
 							      <td class="attributes">&nbsp;</td>
 							      <td class="nameDescription">
+								      <div class="fixedFont"><b><a href="../symbols/WebService.html#allUsers">allUsers</a></b>(options)
+								      </div>
+								      <div class="description">Get all user objects.</div>
+							      </td>
+						      </tr>
+					      
+						      <tr>
+							      <td class="attributes">&nbsp;</td>
+							      <td class="nameDescription">
 								      <div class="fixedFont"><b><a href="../symbols/WebService.html#changePassword">changePassword</a></b>(data, options)
 								      </div>
 								      <div class="description">Change a user's password</div>
@@ -233,7 +242,7 @@ access the results of the method called.</div>
 						      <tr>
 							      <td class="attributes">&nbsp;</td>
 							      <td class="nameDescription">
-								      <div class="fixedFont"><b><a href="../symbols/WebService.html#createUser">createUser</a></b>(data, options, options)
+								      <div class="fixedFont"><b><a href="../symbols/WebService.html#createUser">createUser</a></b>(data, options)
 								      </div>
 								      <div class="description">Create a new user.</div>
 							      </td>
@@ -242,9 +251,27 @@ access the results of the method called.</div>
 						      <tr>
 							      <td class="attributes">&nbsp;</td>
 							      <td class="nameDescription">
-								      <div class="fixedFont"><b><a href="../symbols/WebService.html#createUser^2">createUser</a></b>(user, password, options, options)
+								      <div class="fixedFont"><b><a href="../symbols/WebService.html#createUser^2">createUser</a></b>(user, password, options)
 								      </div>
 								      <div class="description">Create a new user.</div>
+							      </td>
+						      </tr>
+					      
+						      <tr>
+							      <td class="attributes">&nbsp;</td>
+							      <td class="nameDescription">
+								      <div class="fixedFont"><b><a href="../symbols/WebService.html#deleteUser">deleteUser</a></b>(data, options)
+								      </div>
+								      <div class="description">Delete a user.</div>
+							      </td>
+						      </tr>
+					      
+						      <tr>
+							      <td class="attributes">&nbsp;</td>
+							      <td class="nameDescription">
+								      <div class="fixedFont"><b><a href="../symbols/WebService.html#deleteUser^2">deleteUser</a></b>(userid, password, options)
+								      </div>
+								      <div class="description">Delete a user.</div>
 							      </td>
 						      </tr>
 					      
@@ -290,6 +317,15 @@ access the results of the method called.</div>
 								      <div class="fixedFont"><b><a href="../symbols/WebService.html#getSessionToken">getSessionToken</a></b>()
 								      </div>
 								      <div class="description">Get the current session token.</div>
+							      </td>
+						      </tr>
+					      
+						      <tr>
+							      <td class="attributes">&nbsp;</td>
+							      <td class="nameDescription">
+								      <div class="fixedFont"><b><a href="../symbols/WebService.html#getUser">getUser</a></b>(id, options)
+								      </div>
+								      <div class="description">Get specific user by id.</div>
 							      </td>
 						      </tr>
 					      
@@ -359,10 +395,18 @@ access the results of the method called.</div>
 						      <tr>
 							      <td class="attributes">&nbsp;</td>
 							      <td class="nameDescription">
+								      <div class="fixedFont"><b><a href="../symbols/WebService.html#run">run</a></b>(snippet, params, options)
+								      </div>
+								      <div class="description">Run a code snippet directly.</div>
+							      </td>
+						      </tr>
+					      
+						      <tr>
+							      <td class="attributes">&nbsp;</td>
+							      <td class="nameDescription">
 								      <div class="fixedFont"><b><a href="../symbols/WebService.html#search">search</a></b>(query, options)
 								      </div>
-								      <div class="description">Search CloudMine for text objects
-Results may be affected by defaults and/or by the options parameter.</div>
+								      <div class="description">Search CloudMine for text objects.</div>
 							      </td>
 						      </tr>
 					      
@@ -372,6 +416,33 @@ Results may be affected by defaults and/or by the options parameter.</div>
 								      <div class="fixedFont"><b><a href="../symbols/WebService.html#searchFiles">searchFiles</a></b>(query, options)
 								      </div>
 								      <div class="description">Search CloudMine explicitly querying for files.</div>
+							      </td>
+						      </tr>
+					      
+						      <tr>
+							      <td class="attributes">&nbsp;</td>
+							      <td class="nameDescription">
+								      <div class="fixedFont"><b><a href="../symbols/WebService.html#searchGeo">searchGeo</a></b>(target, radius, options)
+								      </div>
+								      <div class="description">Search using CloudMine's geoquery API.</div>
+							      </td>
+						      </tr>
+					      
+						      <tr>
+							      <td class="attributes">&nbsp;</td>
+							      <td class="nameDescription">
+								      <div class="fixedFont"><b><a href="../symbols/WebService.html#searchUsers">searchUsers</a></b>(query, options)
+								      </div>
+								      <div class="description">Search CloudMine user objects by custom attributes.</div>
+							      </td>
+						      </tr>
+					      
+						      <tr>
+							      <td class="attributes">&nbsp;</td>
+							      <td class="nameDescription">
+								      <div class="fixedFont"><b><a href="../symbols/WebService.html#searchUsers^2">searchUsers</a></b>(query, options)
+								      </div>
+								      <div class="description">Search CloudMine user objects by custom attributes.</div>
 							      </td>
 						      </tr>
 					      
@@ -417,6 +488,24 @@ Results may be affected by defaults and/or by the options parameter.</div>
 								      <div class="fixedFont"><b><a href="../symbols/WebService.html#update^2">update</a></b>(key, value, options)
 								      </div>
 								      <div class="description">Create new data, and merge existing data.</div>
+							      </td>
+						      </tr>
+					      
+						      <tr>
+							      <td class="attributes">&nbsp;</td>
+							      <td class="nameDescription">
+								      <div class="fixedFont"><b><a href="../symbols/WebService.html#updateUser">updateUser</a></b>(data, options)
+								      </div>
+								      <div class="description">Update user object of logged in user.</div>
+							      </td>
+						      </tr>
+					      
+						      <tr>
+							      <td class="attributes">&nbsp;</td>
+							      <td class="nameDescription">
+								      <div class="fixedFont"><b><a href="../symbols/WebService.html#updateUser^2">updateUser</a></b>(key, value)
+								      </div>
+								      <div class="description">Update user object of logged in user.</div>
 							      </td>
 						      </tr>
 					      
@@ -626,6 +715,50 @@ ws.get("MyKey").on("success", function(data, apicall) {
 				    </h1>
 				  </header>
 				  
+					  <a name="allUsers"> </a>
+					  <div class="fixedFont">
+					    
+					    <span class="light">{<a href="../symbols/APICall.html">APICall</a>}</span>
+					    <b>allUsers</b>(options)
+					    
+					  </div>
+					  <div class="description">
+						  Get all user objects.
+Results may be affected by defaults and/or by the options parameter.
+						  
+						  
+					  </div>
+					  
+					  
+					  
+						
+							<dl class="detailList">
+							  <dt class="heading">Parameters:</dt>
+							  
+								  <dt>
+									  <span class="light fixedFont">{object}</span> <b>options</b>
+									  
+								  </dt>
+								  <dd>Override defaults set on WebService. See WebService constructor for parameters.</dd>
+							  
+							</dl>
+						
+						
+						
+					
+					
+						<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{<a href="../symbols/APICall.html">APICall</a>}</span> An APICall instance for the web service request used to attach events.</dd>
+							
+						</dl>
+					
+					
+					
+
+					<hr />
+				
 					  <a name="changePassword"> </a>
 					  <div class="fixedFont">
 					    
@@ -795,7 +928,7 @@ ws.get("MyKey").on("success", function(data, apicall) {
 					  <div class="fixedFont">
 					    
 					    <span class="light">{<a href="../symbols/APICall.html">APICall</a>}</span>
-					    <b>createUser</b>(data, options, options)
+					    <b>createUser</b>(data, options)
 					    
 					  </div>
 					  <div class="description">
@@ -815,12 +948,6 @@ ws.get("MyKey").on("success", function(data, apicall) {
 									  
 								  </dt>
 								  <dd>An object with a userid and password field.</dd>
-							  
-								  <dt>
-									  <span class="light fixedFont">{object}</span> <b>options</b>
-									  
-								  </dt>
-								  <dd>Override defaults set on WebService. See WebService constructor for parameters.</dd>
 							  
 								  <dt>
 									  <span class="light fixedFont">{object}</span> <b>options</b>
@@ -850,7 +977,7 @@ ws.get("MyKey").on("success", function(data, apicall) {
 					  <div class="fixedFont">
 					    
 					    <span class="light">{<a href="../symbols/APICall.html">APICall</a>}</span>
-					    <b>createUser</b>(user, password, options, options)
+					    <b>createUser</b>(user, password, options)
 					    
 					  </div>
 					  <div class="description">
@@ -882,6 +1009,110 @@ ws.get("MyKey").on("success", function(data, apicall) {
 									  
 								  </dt>
 								  <dd>Override defaults set on WebService. See WebService constructor for parameters.</dd>
+							  
+							</dl>
+						
+						
+						
+					
+					
+						<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{<a href="../symbols/APICall.html">APICall</a>}</span> An APICall instance for the web service request used to attach events.</dd>
+							
+						</dl>
+					
+					
+					
+
+					<hr />
+				
+					  <a name="deleteUser"> </a>
+					  <div class="fixedFont">
+					    
+					    <span class="light">{<a href="../symbols/APICall.html">APICall</a>}</span>
+					    <b>deleteUser</b>(data, options)
+					    
+					  </div>
+					  <div class="description">
+						  Delete a user.
+If you are using the master api key, omit the user password to delete the user.
+If you are not using the master api key, provide the user name and password in the corresponding
+userid and password fields.
+						  
+						  
+					  </div>
+					  
+					  
+					  
+						
+							<dl class="detailList">
+							  <dt class="heading">Parameters:</dt>
+							  
+								  <dt>
+									  <span class="light fixedFont">{object}</span> <b>data</b>
+									  
+								  </dt>
+								  <dd>An object that may contain a userid field and optionally a password field.</dd>
+							  
+								  <dt>
+									  <span class="light fixedFont">{object}</span> <b>options</b>
+									  
+								  </dt>
+								  <dd>Override defaults set on WebService. See WebService constructor for parameters.</dd>
+							  
+							</dl>
+						
+						
+						
+					
+					
+						<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{<a href="../symbols/APICall.html">APICall</a>}</span> An APICall instance for the web service request used to attach events.</dd>
+							
+						</dl>
+					
+					
+					
+
+					<hr />
+				
+					  <a name="deleteUser^2"> </a>
+					  <div class="fixedFont">
+					    
+					    <span class="light">{<a href="../symbols/APICall.html">APICall</a>}</span>
+					    <b>deleteUser</b>(userid, password, options)
+					    
+					  </div>
+					  <div class="description">
+						  Delete a user.
+If you are using the master api key, omit the user password to delete the user.
+If you are not using the master api key, provide the user name and password in the corresponding
+userid and password fields.
+						  
+						  
+					  </div>
+					  
+					  
+					  
+						
+							<dl class="detailList">
+							  <dt class="heading">Parameters:</dt>
+							  
+								  <dt>
+									  <span class="light fixedFont">{string}</span> <b>userid</b>
+									  
+								  </dt>
+								  <dd>The username to delete. If using a master key use a user id.</dd>
+							  
+								  <dt>
+									  <span class="light fixedFont">{string}</span> <b>password</b>
+									  
+								  </dt>
+								  <dd>The password for the account. Omit if using a master key.</dd>
 							  
 								  <dt>
 									  <span class="light fixedFont">{object}</span> <b>options</b>
@@ -1138,6 +1369,56 @@ Results may be affected by defaults and/or by the options parameter.
 							<dt class="heading">Returns:</dt>
 							
 								<dd><span class="light fixedFont">{string}</span> The current session token, if logged in.</dd>
+							
+						</dl>
+					
+					
+					
+
+					<hr />
+				
+					  <a name="getUser"> </a>
+					  <div class="fixedFont">
+					    
+					    <span class="light">{<a href="../symbols/APICall.html">APICall</a>}</span>
+					    <b>getUser</b>(id, options)
+					    
+					  </div>
+					  <div class="description">
+						  Get specific user by id.
+						  
+						  
+					  </div>
+					  
+					  
+					  
+						
+							<dl class="detailList">
+							  <dt class="heading">Parameters:</dt>
+							  
+								  <dt>
+									  <span class="light fixedFont">{string}</span> <b>id</b>
+									  
+								  </dt>
+								  <dd>User id being requested.</dd>
+							  
+								  <dt>
+									  <span class="light fixedFont">{object}</span> <b>options</b>
+									  
+								  </dt>
+								  <dd>Override defaults set on WebService. See WebService constructor for parameters.
+Results may be affected by defaults and/or by the options parameter.</dd>
+							  
+							</dl>
+						
+						
+						
+					
+					
+						<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{<a href="../symbols/APICall.html">APICall</a>}</span> An APICall instance for the web service request used to attach events.</dd>
 							
 						</dl>
 					
@@ -1438,6 +1719,62 @@ Results may be affected by defaults and/or by the options parameter.
 
 					<hr />
 				
+					  <a name="run"> </a>
+					  <div class="fixedFont">
+					    
+					    <span class="light">{<a href="../symbols/APICall.html">APICall</a>}</span>
+					    <b>run</b>(snippet, params, options)
+					    
+					  </div>
+					  <div class="description">
+						  Run a code snippet directly.
+Default http method is 'GET', to change the method set the method option for options.
+						  
+						  
+					  </div>
+					  
+					  
+					  
+						
+							<dl class="detailList">
+							  <dt class="heading">Parameters:</dt>
+							  
+								  <dt>
+									  <span class="light fixedFont">{string}</span> <b>snippet</b>
+									  
+								  </dt>
+								  <dd>The name of the code snippet to run.</dd>
+							  
+								  <dt>
+									  <span class="light fixedFont">{object}</span> <b>params</b>
+									  
+								  </dt>
+								  <dd>Data to send to the code snippet (optional).</dd>
+							  
+								  <dt>
+									  <span class="light fixedFont">{object}</span> <b>options</b>
+									  
+								  </dt>
+								  <dd>Override defaults set on WebService. See WebService constructor for parameters.</dd>
+							  
+							</dl>
+						
+						
+						
+					
+					
+						<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{<a href="../symbols/APICall.html">APICall</a>}</span> An APICall instance for the web service request used to attach events.</dd>
+							
+						</dl>
+					
+					
+					
+
+					<hr />
+				
 					  <a name="search"> </a>
 					  <div class="fixedFont">
 					    
@@ -1446,7 +1783,7 @@ Results may be affected by defaults and/or by the options parameter.
 					    
 					  </div>
 					  <div class="description">
-						  Search CloudMine for text objects
+						  Search CloudMine for text objects.
 Results may be affected by defaults and/or by the options parameter.
 						  
 						  
@@ -1514,6 +1851,161 @@ Results may be affected by defaults and/or by the options parameter.
 									  
 								  </dt>
 								  <dd>Additional query parameters to search for.</dd>
+							  
+								  <dt>
+									  <span class="light fixedFont">{object}</span> <b>options</b>
+									  
+								  </dt>
+								  <dd>Override defaults set on WebService. See WebService constructor for parameters.</dd>
+							  
+							</dl>
+						
+						
+						
+					
+					
+						<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{<a href="../symbols/APICall.html">APICall</a>}</span> An APICall instance for the web service request used to attach events.</dd>
+							
+						</dl>
+					
+					
+					
+
+					<hr />
+				
+					  <a name="searchGeo"> </a>
+					  <div class="fixedFont">
+					    
+					    <span class="light">{<a href="../symbols/APICall.html">APICall</a>}</span>
+					    <b>searchGeo</b>(target, radius, options)
+					    
+					  </div>
+					  <div class="description">
+						  Search using CloudMine's geoquery API.
+						  
+						  
+					  </div>
+					  
+					  
+					  
+						
+							<dl class="detailList">
+							  <dt class="heading">Parameters:</dt>
+							  
+								  <dt>
+									  <span class="light fixedFont">{object}</span> <b>target</b>
+									  
+								  </dt>
+								  <dd>The CloudMine object.</dd>
+							  
+								  <dt>
+									  <span class="light fixedFont">{string}</span> <b>radius</b>
+									  
+								  </dt>
+								  <dd>Distance around the target.</dd>
+							  
+								  <dt>
+									  <span class="light fixedFont">{object}</span> <b>options</b>
+									  
+								  </dt>
+								  <dd>Override defaults set on WebService. See WebService constructor for parameters.</dd>
+							  
+							</dl>
+						
+						
+						
+					
+					
+						<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{<a href="../symbols/APICall.html">APICall</a>}</span> An APICall instance for the web service request used to attach events.</dd>
+							
+						</dl>
+					
+					
+					
+
+					<hr />
+				
+					  <a name="searchUsers"> </a>
+					  <div class="fixedFont">
+					    
+					    <span class="light">{<a href="../symbols/APICall.html">APICall</a>}</span>
+					    <b>searchUsers</b>(query, options)
+					    
+					  </div>
+					  <div class="description">
+						  Search CloudMine user objects by custom attributes.
+Results may be affected by defaults and/or by the options parameter.
+						  
+						  
+					  </div>
+					  
+					  
+					  
+						
+							<dl class="detailList">
+							  <dt class="heading">Parameters:</dt>
+							  
+								  <dt>
+									  <span class="light fixedFont">{string}</span> <b>query</b>
+									  
+								  </dt>
+								  <dd>Additional query parameters to search for in [key="value", key="value"] format.</dd>
+							  
+								  <dt>
+									  <span class="light fixedFont">{object}</span> <b>options</b>
+									  
+								  </dt>
+								  <dd>Override defaults set on WebService. See WebService constructor for parameters.</dd>
+							  
+							</dl>
+						
+						
+						
+					
+					
+						<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{<a href="../symbols/APICall.html">APICall</a>}</span> An APICall instance for the web service request used to attach events.</dd>
+							
+						</dl>
+					
+					
+					
+
+					<hr />
+				
+					  <a name="searchUsers^2"> </a>
+					  <div class="fixedFont">
+					    
+					    <span class="light">{<a href="../symbols/APICall.html">APICall</a>}</span>
+					    <b>searchUsers</b>(query, options)
+					    
+					  </div>
+					  <div class="description">
+						  Search CloudMine user objects by custom attributes.
+Results may be affected by defaults and/or by the options parameter.
+						  
+						  
+					  </div>
+					  
+					  
+					  
+						
+							<dl class="detailList">
+							  <dt class="heading">Parameters:</dt>
+							  
+								  <dt>
+									  <span class="light fixedFont">{object}</span> <b>query</b>
+									  
+								  </dt>
+								  <dd>Additional query parameters to search for in {key: value, key: value} format.</dd>
 							  
 								  <dt>
 									  <span class="light fixedFont">{object}</span> <b>options</b>
@@ -1798,6 +2290,104 @@ Results may be affected by defaults and/or by the options parameter.
 
 					<hr />
 				
+					  <a name="updateUser"> </a>
+					  <div class="fixedFont">
+					    
+					    <span class="light">{<a href="../symbols/APICall.html">APICall</a>}</span>
+					    <b>updateUser</b>(data, options)
+					    
+					  </div>
+					  <div class="description">
+						  Update user object of logged in user.
+						  
+						  
+					  </div>
+					  
+					  
+					  
+						
+							<dl class="detailList">
+							  <dt class="heading">Parameters:</dt>
+							  
+								  <dt>
+									  <span class="light fixedFont">{object}</span> <b>data</b>
+									  
+								  </dt>
+								  <dd>An object with a key and value field.</dd>
+							  
+								  <dt>
+									  <span class="light fixedFont">{object}</span> <b>options</b>
+									  
+								  </dt>
+								  <dd>Override defaults set on WebService. See WebService constructor for parameters.</dd>
+							  
+							</dl>
+						
+						
+						
+					
+					
+						<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{<a href="../symbols/APICall.html">APICall</a>}</span> An APICall instance for the web service request used to attach events.</dd>
+							
+						</dl>
+					
+					
+					
+
+					<hr />
+				
+					  <a name="updateUser^2"> </a>
+					  <div class="fixedFont">
+					    
+					    <span class="light">{<a href="../symbols/APICall.html">APICall</a>}</span>
+					    <b>updateUser</b>(key, value)
+					    
+					  </div>
+					  <div class="description">
+						  Update user object of logged in user.
+						  
+						  
+					  </div>
+					  
+					  
+					  
+						
+							<dl class="detailList">
+							  <dt class="heading">Parameters:</dt>
+							  
+								  <dt>
+									  <span class="light fixedFont">{string}</span> <b>key</b>
+									  
+								  </dt>
+								  <dd>The key which you are assigning to the user object.</dd>
+							  
+								  <dt>
+									  <span class="light fixedFont">{string}</span> <b>value</b>
+									  
+								  </dt>
+								  <dd>The value for the key which you are assigning to the user object.</dd>
+							  
+							</dl>
+						
+						
+						
+					
+					
+						<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{<a href="../symbols/APICall.html">APICall</a>}</span> An APICall instance for the web service request used to attach events.</dd>
+							
+						</dl>
+					
+					
+					
+
+					<hr />
+				
 					  <a name="upload"> </a>
 					  <div class="fixedFont">
 					    
@@ -2005,7 +2595,7 @@ Results may be affected by defaults and/or by the options parameter.
     </div>
     <footer>
       <h1>Copyright &copy;2012 CloudMine, LLC. All Rights Reserved.</h1>
-	    <div>Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blankt">JsDoc Toolkit</a> 2.4.0 on Sun Aug 05 2012 11:52:26 GMT-0400 (EDT)</div>
+	    <div>Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blankt">JsDoc Toolkit</a> 2.4.0 on Thu Sep 13 2012 18:23:22 GMT-0400 (Eastern Daylight Time)</div>
     </footer>
   </body>
 </html>

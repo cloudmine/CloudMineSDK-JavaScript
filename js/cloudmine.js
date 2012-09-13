@@ -1,4 +1,4 @@
-/* CloudMine JavaScript Library v0.9.1 cloudmine.me | cloudmine.me/license */ 
+/* CloudMine JavaScript Library v0.9.2 cloudmine.me | cloudmine.me/license */ 
 (function() {
   /**
    * Construct a new WebService instance
@@ -54,9 +54,6 @@
     this.options = opts(this, options);
     setupUserToken(this);
   }
-
-  // Version information.
-  var version = '0.9-git';
 
   /** @namespace WebService.prototype */
   WebService.prototype = {
@@ -186,6 +183,29 @@
         type: 'DELETE',
         options: options,
         query: server_params(options, keys)
+      });
+    },
+
+    
+    /**
+     * Run a code snippet directly.
+     * Default http method is 'GET', to change the method set the method option for options.
+     * @param {string} snippet The name of the code snippet to run.
+     * @param {object} params Data to send to the code snippet (optional).
+     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @return {APICall} An APICall instance for the web service request used to attach events.
+    */
+    run: function(snippet, parameters, options) {
+      options = opts(this, options);
+      parameters = merge({}, options.params, parameters);
+      options.params = null;
+      options.snippet = null;
+
+      return new APICall({
+        action: 'run/' + snippet,
+        type: options.method || 'GET',
+        query: parameters,
+        options: options
       });
     },
 
@@ -446,10 +466,13 @@
           }
           var iframe = document.createElement('iframe');
           iframe.style.display = 'none';
-          iframe.src = apicall.url;
-          iframe.onload = function() { setTimeout(detach, 5000); };
-          detach.timer = setTimeout(detach, 60000);
           document.body.appendChild(iframe);
+          setTimeout(function() { iframe.src = apicall.url; }, 25);
+          iframe.onload = function() {
+            clearTimeout(detach.timer);
+            detach.timer = setTimeout(detach, 5000);
+          };
+          detach.timer = setTimeout(detach, 60000);
           response.success[key] = iframe;
         }
 
@@ -600,7 +623,8 @@
         data: payload,
         options: options,
         processResponse: APICall.basicResponse,
-        headers: auth(user.userid, user.oldpassword)
+        username: user.userid,
+        password: user.oldpassword
       });
     },
 
@@ -684,7 +708,8 @@
         action: 'account/login',
         type: 'POST',
         options: options,
-        headers: auth(user.userid, user.password),
+        username: user.userid,
+        password: user.password,
         processResponse: APICall.basicResponse
       }).on('success', function(data) {
         self.options.userid = data.userid;
@@ -747,58 +772,66 @@
         action: 'account/login',
         type: 'POST',
         processResponse: APICall.basicResponse,
-        headers: auth(user.userid, user.password),
+        username: user.userid,
+        password: user.password,
         options: options
       });
     },
 
     /**
      * Delete a user.
-     * If a user id is specified, you must be using the master key privilege.
-     * If no user id is specified, you must enter the login credentials of the user.
-     * @param {object} data An object that may contain a userid field or username, and password fields.
+     * If you are using the master api key, omit the user password to delete the user.
+     * If you are not using the master api key, provide the user name and password in the corresponding
+     * userid and password fields.
+     *
+     * @param {object} data An object that may contain a userid field and optionally a password field.
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
      * @return {APICall} An APICall instance for the web service request used to attach events.
      *
-     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
      * @function
      * @name deleteUser
      * @memberOf WebService.prototype
      */
     /**
      * Delete a user.
-     * If a user id is specified, you must be using the master key privilege.
-     * If no user id is specified, you must enter the login credentials of the user.
-     * @param {string} user The user id to delete. If null, delete the account with the username and password.
-     * @param {string} username The username to delete. This must be set if userid is null.
-     * @param {string} password The password for the account. This must be set if userid is null.
+     * If you are using the master api key, omit the user password to delete the user.
+     * If you are not using the master api key, provide the user name and password in the corresponding
+     * userid and password fields.
+     *
+     * @param {string} userid The username to delete. If using a master key use a user id.
+     * @param {string} password The password for the account. Omit if using a master key.
      * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
      * @return {APICall} An APICall instance for the web service request used to attach events.
      *
-     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
      * @function
      * @name deleteUser^2
      * @memberOf WebService.prototype
      */
-    deleteUser: function(user, username, password, options) {
-      if (isObject(user)) options = username;
-      else user = {user: user, username: username, password: password}
+    deleteUser: function(userid, password, options) {
+      if (isObject(userid)) options = password;
+      else userid = {userid: userid, password: password}
       options = opts(this, options);
       options.applevel = true;
 
-      var headers = (user.userid != null) ? null : auth(user.username, user.password);
-      if (user.username) {
-        this.options.session_token = null;
-        this.options.username = null;
-      }
-
-      return new APICall({
-        action: 'account' + (user.userid ? '/' + user.userid : ''),
+      var config = {
+        action: 'account',
         type: 'DELETE',
         options: options,
-        processResponse: APICall.basicResponse,
-        headers: headers
-      });
+        processResponse: APICall.basicResponse
+      };
+
+      if (userid.password) {
+        // Non-master key access
+        this.options.session_token = null;
+        this.options.username = null;
+        config.username = userid.userid;
+        config.password = userid.password;
+      } else {
+        // Master key access
+        config.action += '/' + userid.userid;
+      }
+
+      return new APICall(config);
     },
 
     /**
@@ -872,54 +905,11 @@
       return { __type__: 'geopoint',
                latitude: lat,
                longitude: lng };
-    },
-
-    /**
-     * @private
-     */
-
-    _setupUserToken: function() {
-      var user_token;
-      if (isNode) {
-        var fs = require('fs'), user_token_data;
-        var token_file = '/tmp/.cmut_' + this.options.appid;
-        try {
-          user_token = fs.readFileSync(token_file, 'ascii');
-        } catch(e) {
-          user_token = uuid();
-          try {
-            fs.writeFileSync(token_file, user_token);
-          } catch(e) {}
-        }
-      } else {
-        var token_key = 'cmut_' + this.options.appid;
-        if (window.localStorage) {
-          user_token = localStorage.getItem(token_key);
-          if (!user_token){
-            user_token = uuid();
-            localStorage.setItem(token_key, user_token);
-          }
-        } else {
-          var cookies = document.cookie.split(';');
-          for (var i = 0; i < cookies.length; ++i){
-            var cookie = cookies[i].split('=');
-            if (cookie[0] === token_key) {
-              user_token = cookie[1];
-              break;
-            }
-          }
-          if (user_token === undefined){
-            user_token = uuid();
-            document.cookie = token_key + '=' + user_token + '; expires=' + new Date(33333333333333).toUTCString() + '; path=/';
-          }
-        }
-      }
-      this.options.user_token = user_token;
     }
   };
 
   // Version information.
-  var version = '0.9.1';
+  var version = '0.9.2';
   WebService.VERSION = version;
 
   /**
@@ -972,7 +962,7 @@
       'X-CloudMine-Agent': agent,
       'X-CloudMine-UT': opts.user_token
     };
-    
+
     this.responseHeaders = {};
     this.responseText = null;
     this.status = null;
@@ -992,13 +982,26 @@
     for (var key in this.config.headers) {
       mapInsensitive(this.requestHeaders, key, this.config.headers[key]);
     }
+
     this.config.headers = this.requestHeaders;
+
+    if (!isEmptyObject(perfComplete)) {
+      this.config.headers['X-CloudMine-UT'] += ';' + stringify(perfComplete, ':', ',');
+      perfComplete = {};
+    }
+
+    // CORS cripples the withCredentials flag to uselessness for no good reason.
+    // W3C specs seriously needs a justifications section because what did they expect?
+    if (config.username || config.password) {
+      this.config.headers['Authorization'] = "Basic " + btoa(config.username + ':' + config.password);
+      this.config.username = null;
+      this.config.password = null;
+    }
 
     this.setContentType(config.contentType || 'application/json');
     this.url = [apiroot, "/v1/app/", this.config.options.appid, root, this.config.action, (query ? "?" + query : "")].join("");
 
-    var self = this, sConfig = this.config;
-
+    var self = this, sConfig = this.config, timestamp = Date.now();
     /** @private */
     this.config.complete = function(xhr, status) {
       var data;
@@ -1006,10 +1009,14 @@
         data = xhr.responseText
         self.status = xhr.status;
         self.responseText = data;
-        each(xhr.getAllResponseHeaders().split('\n'), function(item) {
+        each(xhr.getAllResponseHeaders().split(/(\r|\n)?\n/), function(item) {
           var index = (item.indexOf(':'));
           if (index > 0) self.responseHeaders[item.substring(0, index)] = item.substring(index + 2);
         });
+        
+        // Performance metrics, if applicable.
+        var requestId = self.responseHeaders['X-Request-Id'];
+        if (requestId) perfComplete[requestId] = Date.now() - timestamp;
 
         // If we can parse the data as JSON or store the original data.
         try {
@@ -1045,8 +1052,8 @@
         self.xhr = ajax(self.url, sConfig);
       }, 1);
     }
-  }
-
+  }  
+  
   /** @namespace APICall.prototype */
   APICall.prototype = {
     /**
@@ -1362,6 +1369,10 @@
     ].join('\r\n'));
   }
 
+
+  // Cache ids for perfAPICall
+  var perfComplete = {};
+
   /**
    * Node.JS jQuery-like ajax adapter.
    * This is an internal class that is not exposed.
@@ -1392,6 +1403,11 @@
     // Preprocess data if it is JSON data.
     if (isObject(config.data) && config.processData) {
       config.data = JSON.stringify(config.data);
+    }
+
+    // Authenticate request if we have authentication information.
+    if (config.username || config.password) {
+      opts.headers.Authorization = "Basic " + new Buffer(config.username + ':' + config.password, 'utf8').toString('base64');
     }
 
     // Attach a content-length
@@ -1540,7 +1556,7 @@
   var agentInvalid = /[^a-zA-Z0-9._-]/g;
 
   // Utility functions.
-  function hex() { return Math.round(Math.random() * 16).toString(16); }
+  function hex() { return Math.round(Math.random() * 15).toString(16); }
   function uuid() {
     var out = Array(32), i;
     out[14] = 4;
@@ -1553,12 +1569,6 @@
 
   function opts(scope, options) {
     return merge({}, scope.options, options);
-  }
-
-  function auth(user, pass, obj) {
-    if (!obj) obj = {};
-    obj.Authorization = "Basic " + Base64.encode(user + ":" + pass);
-    return obj;
   }
 
   function server_params(options, map) {
@@ -1761,7 +1771,7 @@
     var out = {}, unescape = ignore ? nop : decodeURIComponent;
     for (var i = 0; i < input.length; ++i) {
       var str = input[i].split(sep);
-      out[unescape(str[0])] = unescape(str[1]);
+      out[unescape(str.shift())] = unescape(str.join(sep));
     }
     return out;
   }
@@ -1890,34 +1900,34 @@
   }
 
   function setupUserToken(obj) {
-    var user_token, appid = obj.options.appid;
-    var dest = 'cmut_' + appid;
+    var token, appid = 'cmut_' + obj.options.appid;
     if (isNode) {
+      var filename = '/tmp/.' + appid;
       try {
-        dest = '/tmp/.' + dest;
-        var fs = require('fs');
-        if (require('path').existsSync(dest)) user_token = fs.readFileSync(dest, 'utf8');
-        fs.writeFileSync(dest, user_token);
-      } catch(e) {}
-
-      if (!user_token || user_token.replace(/\s+/g, '') === '') user_token = uuid();
+        token = fs.readFileSync(filename, 'utf8');
+      } catch (e) {
+        token = uuid();
+        try {
+          fs.writeFileSync(filename, token);
+        } catch (e) {}
+      }
+    } else if (window.localStorage) {
+      token = localStorage.getItem(appid);
+      if (!token) {
+        token = uuid();
+        localStorage.setItem(appid, token);
+      }
     } else {
-      if (window.localStorage) {
-        user_token = localStorage.getItem(dest) || uuid();
-        localStorage.setItem(dest, user_token);
+      var cookies = unstringify(document.cookie, '=', ';');
+      if (!cookies[appid]) {
+        token = uuid();
+        document.cookie = appid + '=' + token + '; expires=' + new Date(33333333333333).toUTCString() + '; path=/';
       } else {
-        cookies = unstringify(document.cookie, '=', ';', true);
-        if (cookies[dest]) user_token = cookies[dest];
-        if (!user_token) {
-          cookies[dest] = user_token = uuid();
-          cookies.expires = new Date(33333333333333).toUTCString();
-          cookies.path = '/';
-          document.cookie = stringify(cookies, '=', ';', true);
-        }
+        token = cookies[appid];
       }
     }
 
-    obj.options.user_token = user_token;
+    obj.options.user_token = token;
   }
 
   // Export CloudMine objects.
@@ -1934,108 +1944,11 @@
     window.cloudmine = window.cloudmine || {};
     window.cloudmine.WebService = WebService;
     if (window.cloudmine.API) apiroot = window.cloudmine.API;
-    if (($ = this.jQuery || this.Zepto) != null) ajax = $.ajax;
-    else throw new Error("Missing jQuery-compatible ajax implementation", "cloudmine.js");
+    if (($ = this.jQuery || this.Zepto) != null) {
+      ajax = $.ajax;
+      // Thanks jQuery for the utter nonsense handling of IE 10.
+      if ($.support) $.support.cors = true
+    }
+    else throw new Error("Missing jQuery-compatible ajax implementation");
   }
-
-  // Base64 Library from http://www.webtoolkit.info
-  var Base64 = {
-	  // private property
-	  _keyStr : "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",
-
-	  // public method for encoding
-	  encode : function (input) {
-		  var output = "", chr1, chr2, chr3, enc1, enc2, enc3, enc4, i = 0;
-		  input = Base64._utf8_encode(input);
-
-		  while (i < input.length) {
-			  chr1 = input.charCodeAt(i++);
-			  chr2 = input.charCodeAt(i++);
-			  chr3 = input.charCodeAt(i++);
-
-			  enc1 = chr1 >> 2;
-			  enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);
-			  enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);
-			  enc4 = chr3 & 63;
-
-			  if (isNaN(chr2)) enc3 = enc4 = 64;
-			  else if (isNaN(chr3)) enc4 = 64;
-
-			  output += this._keyStr.charAt(enc1) + this._keyStr.charAt(enc2) +
-			    this._keyStr.charAt(enc3) + this._keyStr.charAt(enc4);
-		  }
-
-		  return output;
-	  },
-
-	  // public method for decoding
-	  decode : function (input) {
-		  input = input.replace(/[^A-Za-z0-9\+\/\=]/g, "");
-		  var output = "", chr1, chr2, chr3;
-		  var enc1, enc2, enc3, enc4, i = 0;
-
-		  while (i < input.length) {
-			  enc1 = this._keyStr.indexOf(input.charAt(i++));
-			  enc2 = this._keyStr.indexOf(input.charAt(i++));
-			  enc3 = this._keyStr.indexOf(input.charAt(i++));
-			  enc4 = this._keyStr.indexOf(input.charAt(i++));
-
-			  chr1 = (enc1 << 2) | (enc2 >> 4);
-			  chr2 = ((enc2 & 15) << 4) | (enc3 >> 2);
-			  chr3 = ((enc3 & 3) << 6) | enc4;
-
-			  output += String.fromCharCode(chr1);
-			  if (enc3 != 64) output += String.fromCharCode(chr2);
-			  if (enc4 != 64) output += String.fromCharCode(chr3);
-		  }
-
-		  return Base64._utf8_decode(output);
-	  },
-
-	  // private method for UTF-8 encoding
-	  _utf8_encode : function (string) {
-		  string = string.replace(/\r\n/g,"\n");
-		  var utftext = "";
-
-		  for (var n = 0; n < string.length; n++) {
-			  var c = string.charCodeAt(n);
-
-			  if (c < 128) utftext += String.fromCharCode(c);
-			  else if((c > 127) && (c < 2048)) {
-				  utftext += String.fromCharCode((c >> 6) | 192);
-				  utftext += String.fromCharCode((c & 63) | 128);
-			  } else {
-				  utftext += String.fromCharCode((c >> 12) | 224);
-				  utftext += String.fromCharCode(((c >> 6) & 63) | 128);
-				  utftext += String.fromCharCode((c & 63) | 128);
-			  }
-		  }
-
-		  return utftext;
-	  },
-
-	  // private method for UTF-8 decoding
-	  _utf8_decode : function (utftext) {
-		  var string = "", i = 0, c = c1 = c2 = 0;
-		  while (i < utftext.length) {
-			  c = utftext.charCodeAt(i);
-
-			  if (c < 128) {
-				  string += String.fromCharCode(c);
-				  i++;
-			  } else if((c > 191) && (c < 224)) {
-				  c2 = utftext.charCodeAt(i+1);
-				  string += String.fromCharCode(((c & 31) << 6) | (c2 & 63));
-				  i += 2;
-			  } else {
-				  c2 = utftext.charCodeAt(i+1);
-				  c3 = utftext.charCodeAt(i+2);
-				  string += String.fromCharCode(((c & 15) << 12) | ((c2 & 63) << 6) | (c3 & 63));
-				  i += 3;
-			  }
-		  }
-		  return string;
-	  }
-  }
-
 })();
