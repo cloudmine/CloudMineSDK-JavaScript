@@ -21,9 +21,11 @@ directly link from a browser
 <script type="text/javascript" src="https://raw.github.com/cloudmine/cloudmine-js/master/js/cloudmine.js"></script>
 ```
 
+You may also rebuild and test the CloudMine JavaScript library by using the provided Cakefile.
+
 ## Documentation
 
-Detailed documentation, tutorials and code samples are on our developer site: https://cloudmine.me/docs/javascript.
+Detailed documentation, tutorials and code samples are on our developer site: https://cloudmine.me/docs/js.
 
 Direct link to API reference documentation: https://cloudmine.me/js-docs/symbols/WebService.html.
 
@@ -68,3 +70,15 @@ Now check your CloudMine dashboard (https://cloudmine.me/dashboard/) to see your
 ## License
 
 This software is distributed under the MIT License. See the [LICENSE](https://github.com/cloudmine/cloudmine-js/blob/master/LICENSE) file for details.
+
+## Compatibility
+This library has been tested to work under the following environments:
+* Chrome 22, Stable
+* Firefox 15, Stable
+* Firefox 3.6
+* Safari 5
+* Internet Explorer 10
+
+## Known Issues
+* Firefox 3.6 will not trigger specific error events (notfound, unauthorized) for invalid application or api key specification.
+* Internet Explorer 10 changes location of entire page while downloading files when running locally.
