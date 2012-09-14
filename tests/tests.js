@@ -22,7 +22,7 @@ $(function() {
   });
 
   asyncTest('Register a new user, verify user, cloudmine-agent, login the user, delete user.', 6, function() {
-    console.log('Register a new user, verify user, cloudmine-agent, and log the user in');
+    console.log('Register a new user, verify user, cloudmine-agent, login the user, delete user.');
     var user = {
       email: util.noise(5) + '@' + util.noise(5) + '.com',
       password: util.noise(5)

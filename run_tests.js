@@ -1,8 +1,6 @@
 // Simple script runner used to test Node.JS.
 
-if (process.argv.length == 4) {
-  process.env.CLOUDMINE_APPID = process.argv[2];
-  process.env.CLOUDMINE_APIKEY = process.argv[3];
+if (process.env.CLOUDMINE_APPID && process.env.CLOUDMINE_APIKEY) {
   var qunit = require('qunit');
   var config = {
     deps: [ "./tests/init.js", "./tests/util.js", "./tests/config.js" ],
@@ -13,6 +11,9 @@ if (process.argv.length == 4) {
   qunit.run(config);
 } else {
   console.log("Cannot run tests without specifying an application id and api key.");
-  console.log("Usage: node run_tests.js appid apikey");
-  console.log("node run_tests.js 793dcffc4f67f94c36a8f20628d3d31b 8b05c2e5d0e88b471c5aae8ba6cf9f7b");
+  console.log("Please export the following variables in your shell:");
+  console.log("  CLOUDMINE_APPID: This should be the application id to test under");
+  console.log("  CLOUDMINE_APIKEY: This should be the api key to test under");
+  console.log("\nUnit tests may leave behind stale users and data.");
+  console.log("It is not recommended to run unit tests on a production application.");
 }
