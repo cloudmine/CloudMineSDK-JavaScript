@@ -1,13 +1,11 @@
 var fs = Import('fs');
 var path = Import('path');
 var cryptoMod = Import('crypto');
-var cloudmine = this.cloudmine || Import('../js/cloudmine.js');
 
 $(function() {
   var config = Import('./config');
   var util = Import('./util');
   var webservice;
-
   QUnit.module("JS", {
     setup: function() {
       webservice = new cloudmine.WebService({
@@ -866,6 +864,7 @@ $(function() {
 
   asyncTest('Verify download integrity.', 4, function() {
     console.log('Verify download integrity.');
+    var sourceFile = inBrowser ? "binary.png" : "tests/binary.png"; 
     if (inBrowser) {
       expect(1);
       ok(true, 'This test currently cannot be performed in browsers for files.');
@@ -881,11 +880,11 @@ $(function() {
       }
 
       var downloadedFile;
-      var apicall = webservice.upload(uploadKey, "binary.png").on('success', function() {
+      var apicall = webservice.upload(uploadKey, sourceFile).on('success', function() {
         util.track(webservice, uploadKey);
-        ok(true, "Uploaded binary.png to " + uploadKey);
+        ok(true, "Uploaded " + sourceFile + " to " + uploadKey);
       }).on('error', function() {
-        ok(false, "Uploaded binary.png to " + uploadKey);
+        ok(false, "Uploaded " + sourceFile + " to " + uploadKey);
       }).on('complete', download);
 
       function download() {
@@ -900,7 +899,7 @@ $(function() {
         var exists = path.existsSync(downloadTo); 
         ok(exists, 'File was downloaded to the correct file name.');
         if (exists) {
-          var originalHash = hash(fs.readFileSync('binary.png', 'binary'));
+          var originalHash = hash(fs.readFileSync(sourceFile, 'binary'));
           var downloadedHash = hash(fs.readFileSync(downloadTo, 'binary'));
           ok(downloadedHash === originalHash, "Downloaded file matches content of uploaded");
         } else {
@@ -914,6 +913,7 @@ $(function() {
   asyncTest('Binary file upload test', 5, function() {
     console.log('Binary file upload test');
     var uploadKey = 'test_obj_' + util.noise(8);
+    var sourceFile = inBrowser ? "binary.png" : "tests/binary.png";
     var fileHandle, filename;
     
     if (inBrowser) {
@@ -961,7 +961,7 @@ $(function() {
         start();
       }
     } else {
-      fileHandle = filename = 'binary.png';
+      fileHandle = filename = sourceFile;
       uploadContents();
     }
     
@@ -988,7 +988,7 @@ $(function() {
     }
     
     function downloadFile() {
-      webservice.download(uploadKey, {filename: "Copy of " + filename}).on('success', function() {
+      webservice.download(uploadKey, {filename: filename.replace(/\.([a-z]+)/, ' (copy).$1')}).on('success', function() {
         ok(true, "Downloaded file to computer");
       }).on('error', function() {
         ok(false, "Downloaded file to computer");

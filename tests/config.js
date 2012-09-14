@@ -22,9 +22,7 @@
   
   if (!config.appid || !config.apikey) {
     if (!this.inBrowser) {
-      console.log("You must set the following environment variables before running unit tests.");
-      console.log("   CLOUDMINE_APPID: This is the application id to test under");
-      console.log("   CLOUDMINE_APIKEY: This is the api key to test under");
+      console.log("Please use cake --app appid --key apikey test instead of invoking directly."); 
       console.log("\nThese unit tests are not guarenteed to cleanup after itself during failure.");
       console.log("Avoid using a production application to run tests.");
     } else {

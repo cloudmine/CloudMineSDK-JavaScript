@@ -1009,10 +1009,7 @@
         data = xhr.responseText
         self.status = xhr.status;
         self.responseText = data;
-        each(xhr.getAllResponseHeaders().split(/(\r|\n)?\n/), function(item) {
-          var index = (item.indexOf(':'));
-          if (index > 0) self.responseHeaders[item.substring(0, index)] = item.substring(index + 2);
-        });
+        self.responseHeaders = unstringify(xhr.getAllResponseHeaders(), /:\s*/, /(?:\r|\n)?\n/);
         
         // Performance metrics, if applicable.
         var requestId = self.responseHeaders['X-Request-Id'];
@@ -1407,7 +1404,7 @@
 
     // Authenticate request if we have authentication information.
     if (config.username || config.password) {
-      opts.headers.Authorization = "Basic " + new Buffer(config.username + ':' + config.password, 'utf8').toString('base64');
+      opts.headers.Authorization = "Basic " + btoa(config.username + ':' + config.password);
     }
 
     // Attach a content-length
@@ -1429,7 +1426,7 @@
       });
 
       response.on('end', function() {
-        self._headers = stringify(response.headers);
+        self._headers = stringify(response.headers, ': ', '\n', true) || "";
         self.status = response.statusCode;
 
         // Process data if necessary.
@@ -1441,7 +1438,6 @@
             self._textStatus = 'parsererror';
           }
         }
-
 
         if (self._textStatus == 'success' && self.status >= 200 && self.status < 300) {
           if (config.success) config.success.call(cbContext, data, 'success', self);
@@ -1481,7 +1477,7 @@
      * @return {object} An object representing all the response headers.
      */
     getAllResponseHeaders: function() {
-      return stringify(this._headers, ': ', '\n');
+      return this._headers;
     },
 
     /**
@@ -1650,7 +1646,7 @@
   }
 
   function isObject(item) {
-    return typeof item === "object"
+    return item && typeof item === "object"
   }
 
   function isString(item) {
@@ -1766,7 +1762,6 @@
   }
 
   function unstringify(input, sep, eol, ignore) {
-    sep = sep || '=';
     input = input.split(eol || '&');
     var out = {}, unescape = ignore ? nop : decodeURIComponent;
     for (var i = 0; i < input.length; ++i) {
@@ -1895,10 +1890,6 @@
     return s;
   }
 
-  function NodeAJAX(url, config) {
-    return new HttpRequest(url, config);
-  }
-
   function setupUserToken(obj) {
     var token, appid = 'cmut_' + obj.options.appid;
     if (isNode) {
@@ -1931,18 +1922,24 @@
   }
 
   // Export CloudMine objects.
-  var http, https, ajax, isNode, url, apiroot = "https://api.cloudmine.me";
+  var http, btoa, https, ajax, isNode, url, apiroot = "https://api.cloudmine.me";
   if (!this.window) {
     isNode = true;
-    ajax = NodeAJAX;
     url = require('url');
     http = require('http');
     https = require('https');
     module.exports = { WebService: WebService };
+    ajax = function(url, config) {
+      return new HttpRequest(url, config);
+    }
+    btoa = function(str, encoding) {
+      return new Buffer(str, encoding || 'utf8').toString('base64');
+    }
   } else {
     isNode = false;
     window.cloudmine = window.cloudmine || {};
     window.cloudmine.WebService = WebService;
+    btoa = window.btoa;
     if (window.cloudmine.API) apiroot = window.cloudmine.API;
     if (($ = this.jQuery || this.Zepto) != null) {
       ajax = $.ajax;

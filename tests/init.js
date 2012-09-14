@@ -3,17 +3,17 @@
 
   // Initialization code for Unit tests
   // Consistency for 'loading' features for Node.JS/Browsers
-  function Export(name, map) {
-    if (!this.window) {
-      module.exports = map;
-    } else {
-      if (!Export.data) Export.data = {};
-      Export.data[name] = map;
-    }
+  var exports = {};
+  function Export(name, data) {
+    exports[name] = data;
+    return data;
   }
 
   function Import(name) {
-    return this.window ? Export.data[name] : require(name);
+    if (!this.window && !exports[name]) {
+      exports[name] = require(name);
+    }
+    return exports[name];
   }
 
   // Mass create null types if they aren't present
@@ -23,7 +23,7 @@
   }
 
   if (!base.$) $ = function(func) {
-    return func instanceof 'function' ? func.apply(this.arguments) : [];
+    return typeof func == 'function' ? func.apply(this, arguments) : func;
   }
 
   // Force a few types into the global scope.
