@@ -1,0 +1,32 @@
+CloudMine JavaScript Library Change Log
+
+Git Unstable Changes
+	No changes logged.
+	
+v0.9.3 September 24th, 2012
+	Fix searchGeo parameters being reversed.
+	Update documentation to updateUser function since it is misleading.
+	updateUser no longer accepts null as a valid field name to change.
+	Handle get(options) correctly.
+
+v0.9.2 September 14th, 2012
+	Add Internet Explorer 10 as an officially supported browser.
+	Add Cakefile to easily minify CloudMine library, regenerate documentation and perform tests.
+	Add support for distance parameter for meta results.
+	Fixed upload not naming files as random key when requested.
+	Application name and version are reported as part of user agent when specified (analytics).
+	More consistent handling of errors from server.
+	Remove Base64 implementation, use btoa instead.
+	Remove redundant appid/apikey specification in APICall configs.
+	
+	New WebService methods:
+	* allUsers: List user objects in your application.
+	* deleteUser: Delete a user based with login credentials, or master key.
+	* getUser: Get a specific user object in your application.
+	* run: Directly invoke code snippets instead of requiring usage of other method.
+	* searchGeo: Perform a geo-location search for objects near the given object.
+	* searchUsers: Search user objects in your application.
+	* updateUser: Update a given user object.
+
+v0.9 July 14th, 2012
+	Rewrote JavaScript library to object oriented version.

@@ -1,4 +1,4 @@
-/* CloudMine JavaScript Library v0.9.2 cloudmine.me | cloudmine.me/license */ 
+/* CloudMine JavaScript Library v0.9.3 cloudmine.me | cloudmine.me/license */ 
 (function() {
   /**
    * Construct a new WebService instance
@@ -60,21 +60,24 @@
     /**
      * Get data from CloudMine.
      * Results may be affected by defaults and/or by the options parameter.
-     * @param {string|string[]|null} keys If set, return the specified keys, otherwise return all keys. 
-     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @param {string|string[]|null} [keys] If set, return the specified keys, otherwise return all keys. 
+     * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
      * @return {APICall} An APICall instance for the web service request used to attach events.
      */
     get: function(keys, options) {
-      options = opts(this, options);
-      keys = {
-        keys: isArray(keys) ? keys.join(',') : keys
-      };
+      if (isArray(keys)) keys = keys.join(',');
+      else if (isObject(keys)) {
+        options = keys;
+        keys = null;
+      }
 
+      options = opts(this, options);
+      var query = keys ? server_params(options, {keys: keys}) : null;
       return new APICall({
         action: 'text',
         type: 'GET',
         options: options,
-        query: server_params(options, keys)
+        query: query
       });
     },
 
@@ -83,7 +86,7 @@
      * The data must be convertable to JSON.
      * Results may be affected by defaults and/or by the options parameter.
      * @param {object} data An object hash where the top level properties are the keys.
-     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
      * @return {APICall} An APICall instance for the web service request used to attach events.
      *
      * @function
@@ -96,7 +99,7 @@
      * Results may be affected by defaults and/or by the options parameter.
      * @param {string|null} key The key to affect. If given null, a random key will be assigned.
      * @param {string|number|object} value The value of the object
-     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
      * @return {APICall} An APICall instance for the web service request used to attach events.
      *
      * @function
@@ -127,7 +130,7 @@
      * The data must be convertable to JSON.
      * Results may be affected by defaults and/or by the options parameter.
      * @param {object} data An object hash where the top level properties are the keys.
-     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
      * @return {APICall} An APICall instance for the web service request used to attach events.
      *
      * @function
@@ -170,7 +173,7 @@
      * If given null and options.all is true, delete all objects on the server.
      * Results may be affected by defaults and/or by the options parameter.
      * @param {string|string[]|null} keys The keys to delete on the server.
-     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
      * @return {APICall} An APICall instance for the web service request used to attach events.
      */
     destroy: function(keys, options) {
@@ -192,7 +195,7 @@
      * Default http method is 'GET', to change the method set the method option for options.
      * @param {string} snippet The name of the code snippet to run.
      * @param {object} params Data to send to the code snippet (optional).
-     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
      * @return {APICall} An APICall instance for the web service request used to attach events.
     */
     run: function(snippet, parameters, options) {
@@ -213,7 +216,7 @@
      * Search CloudMine for text objects.
      * Results may be affected by defaults and/or by the options parameter.
      * @param {string} query Query parameters to search for.
-     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
      * @return {APICall} An APICall instance for the web service request used to attach events.
      */
     search: function(query, options) {
@@ -232,7 +235,7 @@
      * Note: This does not search the contents of files.
      * Results may be affected by defaults and/or by the options parameter.
      * @param {string} query Additional query parameters to search for.
-     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
      * @return {APICall} An APICall instance for the web service request used to attach events.
      */
     searchFiles: function(query, options) {
@@ -244,7 +247,7 @@
      * Search CloudMine user objects by custom attributes.
      * Results may be affected by defaults and/or by the options parameter.
      * @param {string} query Additional query parameters to search for in [key="value", key="value"] format.
-     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
      * @return {APICall} An APICall instance for the web service request used to attach events.
      *
      * @function
@@ -255,14 +258,13 @@
      * Search CloudMine user objects by custom attributes.
      * Results may be affected by defaults and/or by the options parameter.
      * @param {object} query Additional query parameters to search for in {key: value, key: value} format.
-     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
      * @return {APICall} An APICall instance for the web service request used to attach events.
      *
      * @function
      * @name searchUsers^2
      * @memberOf WebService.prototype
      */
-
     searchUsers: function(query, options) {
       query = {p: query != null ? buildSearchQuery(query) : ''}
       options = opts(this, options);
@@ -277,7 +279,7 @@
     /**
      * Get all user objects.
      * Results may be affected by defaults and/or by the options parameter.
-     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
      * @return {APICall} An APICall instance for the web service request used to attach events.
      */
 
@@ -294,7 +296,7 @@
     /**
      * Get specific user by id.
      * @param {string} id User id being requested.
-     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
      * Results may be affected by defaults and/or by the options parameter.
      * @return {APICall} An APICall instance for the web service request used to attach events.
      */
@@ -312,40 +314,35 @@
     /**
      * Search using CloudMine's geoquery API.
      * @param {object} target The CloudMine object.
-     * @param {string} radius Distance around the target.
-     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @param {string} [radius] Distance around the target.
+     * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
      * @return {APICall} An APICall instance for the web service request used to attach events.
      */
 
     searchGeo: function(target, radius, options) {
-      var self = this;
-      var geopoint = null;
-      if (radius !== undefined){
-        if (isObject(radius)){
-          options = radius;
-          radius = undefined;
-        } else {
-          var units = radius.match(/\w*/)[0];
-        }
+      var units;
+      if (isString(radius)) units = radius.match(/\w*/)[0];
+      else {
+        options = radius;
+        radius = null;
       }
-      options = merge({}, {distance: true, units: units}, options);
+      options = merge({distance: true, units: units}, options);
 
-      if (target.__type__ === 'geopoint') {
-        geopoint = target;
-      } else {
-        for (var key in ownProperties(target)){
-          if (target[key].__type__ === 'geopoint'){
-            geopoint = target[key];
+      // First level scan for geo point object if we aren't a geopoint.
+      if (!isGeopoint(target)) {
+        for (var key in target) {
+          if (isGeopoint(target[key])) {
+            target = target[key];
             break;
           }
         }
       }
-      if (geopoint === null){
-        throw new Error('No geopoint property found');
-      } else {
-        var lat = geopoint.latitude || geopoint.lat || geopoint. x;
-        var lng = geopoint.longitude || geopoint.lng || geopoint. y;
-        return this.search('[location near (' + lat + ', ' + lng + ')' + (radius === undefined ? '' : ', ' + radius) + ']', options);
+
+      if (!isGeopoint(target)) throw new TypeError('Object is not a geopoint object');
+      else {
+        var latitude = target.latitude || target.lat || target.x;
+        var longitude = target.longitude || target.lng || target.y;
+        return this.search('[location near (' + longitude + ', ' + latitude + ')' + (radius ? ', ' + radius : '') + ']', options);
       }
     },
 
@@ -353,7 +350,7 @@
      * Upload a file stored in CloudMine.
      * @param {string} key The binary file's object key.
      * @param {file|string} file FileAPI: A HTML5 FileAPI File object, Node.js: The filename to upload.
-     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
      * @return {APICall} An APICall instance for the web service request used to attach events.
      */
     upload: function(key, file, options) {
@@ -424,7 +421,7 @@
     /**
      * Download a file stored in CloudMine.
      * @param {string} key The binary file's object key.
-     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
      * @config {string} [filename] If present, the file will be downloaded directly to the computer with the
      *                             filename given. This does not validate the filename given!
      * @config {string} [mode] If buffer, automatically move returning data to either an ArrayBuffer or Buffer
@@ -508,7 +505,7 @@
     /**
      * Create a new user.
      * @param {object} data An object with a userid and password field.
-     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
      * @return {APICall} An APICall instance for the web service request used to attach events.
      *
      * @function
@@ -519,7 +516,7 @@
      * Create a new user.
      * @param {string} user The userid to login as.
      * @param {string} password The password to login as.
-     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
      * @return {APICall} An APICall instance for the web service request used to attach events.
      *
      * @function
@@ -546,8 +543,8 @@
 
     /**
      * Update user object of logged in user.
-     * @param {object} data An object with a key and value field.
-     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @param {object} data An object to merge into the logged in user object.
+     * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
      * @return {APICall} An APICall instance for the web service request used to attach events.
      *
      * @function
@@ -556,8 +553,9 @@
      */
     /**
      * Update user object of logged in user.
-     * @param {string} key The key which you are assigning to the user object.
-     * @param {string} value The value for the key which you are assigning to the user object.
+     * @param {string} field The field to merge into the logged in user object.
+     * @param {string} value The value to set the field to.
+     * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
      * @return {APICall} An APICall instance for the web service request used to attach events.
      *
      * @function
@@ -565,13 +563,12 @@
      * @memberOf WebService.prototype
      */
 
-    updateUser: function(key, value, options) {
-      if (isObject(key)) options = value;
+    updateUser: function(field, value, options) {
+      if (isObject(field)) options = value;
       else {
-        if (!key) key = uuid();
         var out = {};
-        out[key] = value;
-        key = out;
+        out[field] = value;
+        field = out;
       }
       options = opts(this, options);
 
@@ -580,7 +577,7 @@
         type: 'POST',
         options: options,
         query: server_params(options),
-        data: JSON.stringify(key)
+        data: JSON.stringify(field)
       });
     },
 
@@ -588,7 +585,7 @@
     /**
      * Change a user's password
      * @param {object} data An object with userid, password, and oldpassword fields.
-     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
      * @return {APICall} An APICall instance for the web service request used to attach events.
      *
      * @function
@@ -600,7 +597,7 @@
      * @param {string} user The userid to change the password.
      * @param {string} oldpassword The existing password for the user.
      * @param {string} password The new password for the user.
-     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
      * @return {APICall} An APICall instance for the web service request used to attach events.
      *
      * @function
@@ -631,7 +628,7 @@
     /**
      * Initiate a password reset request.
      * @param {string} userid The userid to send a reset password email to.
-     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
      * @return {APICall} An APICall instance for the web service request used to attach events.
      */
     resetPassword: function(userid, options) {
@@ -654,7 +651,7 @@
      * Change the password for an account from the token received from password reset.
      * @param {string} token The token for password reset. Usually received by email.
      * @param {string} newPassword The password to assign to the user.
-     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
      * @return {APICall} An APICall instance for the web service request used to attach events.
      */
     confirmReset: function(token, newPassword, options) {
@@ -676,7 +673,7 @@
     /**
      * Login as a user to access user-level data.
      * @param {object} data An object hash with userid and password fields.
-     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
      * @return {APICall} An APICall instance for the web service request used to attach events.
      *
      * @function
@@ -687,7 +684,7 @@
      * Login as a user to access user-level data.
      * @param {string} user The user to login as
      * @param {string} password The password for the user
-     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
      * @return {APICall} An APICall instance for the web service request used to attach events.
      *
      * @function
@@ -719,7 +716,7 @@
 
     /**
      * Logout the current user.
-     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
      * @return {APICall} An APICall instance for the web service request used to attach events.
      */
     logout: function(options) {
@@ -744,7 +741,7 @@
     /**
      * Verify if the given userid and password is valid.
      * @param {object} data An object with userid and password fields.
-     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
      * @return {APICall} An APICall instance for the web service request used to attach events.
      *
      * @function
@@ -755,7 +752,7 @@
      * Verify if the given userid and password is valid.
      * @param {string} user The userid to login
      * @param {string} password The password of the user to login
-     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
      * @return {APICall} An APICall instance for the web service request used to attach events.
      *
      * @function
@@ -785,7 +782,7 @@
      * userid and password fields.
      *
      * @param {object} data An object that may contain a userid field and optionally a password field.
-     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
      * @return {APICall} An APICall instance for the web service request used to attach events.
      *
      * @function
@@ -800,7 +797,7 @@
      *
      * @param {string} userid The username to delete. If using a master key use a user id.
      * @param {string} password The password for the account. Omit if using a master key.
-     * @param {object} options Override defaults set on WebService. See WebService constructor for parameters.
+     * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
      * @return {APICall} An APICall instance for the web service request used to attach events.
      *
      * @function
@@ -909,7 +906,7 @@
   };
 
   // Version information.
-  var version = '0.9.2';
+  var version = '0.9.3';
   WebService.VERSION = version;
 
   /**
@@ -1664,6 +1661,10 @@
 
   function isFunction(item) {
     return typeof item === 'function';
+  }
+
+  function isGeopoint(item) {
+    return isObject(item) && item.__type__ === 'geopoint';
   }
 
   function objectKeys(obj) {

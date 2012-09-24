@@ -21,6 +21,85 @@ $(function() {
     }
   });
 
+  asyncTest('Verify Get functionality', 9, function() {
+    console.log('Verify Get functionality');
+    
+    var obj1 = 'test_' + util.noise(5);
+    var obj2 = 'test_' + util.noise(5);
+    var obj3 = 'test_' + util.noise(5);
+    var payload = {}, msg;
+    payload[obj1] = { "test123": util.noise(32) };
+    payload[obj2] = { "test456": util.noise(32) };
+    payload[obj3] = { "test789": util.noise(32) };
+    
+    function getObjectsNoParams() {
+      msg = "Get all objects without parameters";
+      webservice.get().on('error', function(data) {
+        ok(false, msg);
+      }).on('success', function(data) {
+        ok(true, msg);
+      }).on('complete', getSingleObject);
+    }
+    
+    function getSingleObject() {
+      msg = "Get single object by key name";
+      webservice.get(obj1).on('error', function(data) {
+        ok(false, msg);
+      }).on('success', function(data) {
+        deepEqual(data[obj1], payload[obj1], msg);
+      }).on('complete', getMultipleObjects);
+    }
+    
+    function getMultipleObjects() {
+      msg = "Get multiple object by array";
+      webservice.get([obj1, obj2, obj3]).on('error', function(data) {
+        ok(false, msg);
+      }).on('success', function(data) {
+        deepEqual(data, payload, msg);
+      }).on('complete', getObjectsWithOptions);
+    }
+    
+    function getObjectsWithOptions() {
+      msg = "Get all objects with count option";
+      webservice.get({count: true}).on('error', function(data) {
+        ok(false, msg);
+      }).on('success', function(data, resp) {
+        ok(resp.count > 0 && util.keys(data).length > 0, msg);
+      }).on('complete', getSingleObjectWithOptions);
+    }
+    
+    function getSingleObjectWithOptions() {
+      msg = "Get single object by key name with count option";
+      webservice.get(obj1, {count: true}).on('error', function(data) {
+        ok(false, msg);
+      }).on('success', function(data, resp) {
+        deepEqual(data[obj1], payload[obj1], msg);
+        ok(resp.count == 1 && util.keys(data).length == resp.count, "Single object returned, confirmed by count");
+      }).on('complete', getMultipleObjectsWithOptions);
+    }
+
+    function getMultipleObjectsWithOptions() {
+      msg = "Get multiple object by array with count option";
+      webservice.get([obj1, obj2, obj3], {count: true}).on('error', function(data) {
+        ok(false, msg);
+      }).on('success', function(data, resp) {
+        deepEqual(data, payload, msg);
+        ok(resp.count == 3 && util.keys(data).length == resp.count, "Multiple object returned, confirmed by count");
+      }).on('complete', start);
+    }
+
+    // Start tests
+    msg = "Created test payload";
+    webservice.set(payload).on('error', function() {
+      ok(false, msg);
+    }).on('success', function() {
+      util.track(webservice, obj1);
+      util.track(webservice, obj2);
+      util.track(webservice, obj3);
+      ok(true, msg);
+    }).on('complete', getObjectsNoParams);
+  });
+
   asyncTest('Register a new user, verify user, cloudmine-agent, login the user, delete user.', 6, function() {
     console.log('Register a new user, verify user, cloudmine-agent, login the user, delete user.');
     var user = {
@@ -1102,10 +1181,10 @@ $(function() {
     };
 
     var key = util.noise(10), value = util.noise(10),
-        key2 = util.noise(10), value2 = util.noise(10);
+    key2 = util.noise(10), value2 = util.noise(10);
 
     var nonExistingKey = util.noise(10), nonExistingValue = util.noise(10),
-        nonExistingKey2 = util.noise(10), nonExistingValue2 = util.noise(10);
+    nonExistingKey2 = util.noise(10), nonExistingValue2 = util.noise(10);
 
     function searchForNonExisting(){
       webservice.searchUsers('[' + nonExistingKey + '="' + nonExistingValue + '"]')
@@ -1125,12 +1204,12 @@ $(function() {
         .on('success', function(response){
           if (util.keys(response).length == 0){
             ok(true, 'Didn\'t find non-existing user for [' + nonExistingKey + '="' + nonExistingValue + '", ' + 
-                                                             nonExistingKey2 + '="' + nonExistingValue2 + '"]');
+               nonExistingKey2 + '="' + nonExistingValue2 + '"]');
           }
         })
         .on('error', function(response){
           ok(false, 'Didn\'t find non-existing user for [' + nonExistingKey + '="' + nonExistingValue + '", ' + 
-                                                             nonExistingKey2 + '="' + nonExistingValue2 + '"]');
+             nonExistingKey2 + '="' + nonExistingValue2 + '"]');
         })
         .on('complete', start);
     }
@@ -1146,7 +1225,7 @@ $(function() {
               }
             })
             .on('error', function(response){
-                ok(false, 'Found the user for [' + key + '="' + value + '"]');
+              ok(false, 'Found the user for [' + key + '="' + value + '"]');
             })
             .on('complete', searchForExistingWithMultipleKeys);
         });
@@ -1175,7 +1254,7 @@ $(function() {
 
     function login(){
       webservice.login({userid: user.email, password: user.password})
-      .on('success', update);
+        .on('success', update);
     }
 
     webservice.createUser({userid: user.email, password: user.password})
@@ -1190,10 +1269,10 @@ $(function() {
     query;
 
     var key = util.noise(10), value = util.noise(10),
-        key2 = util.noise(10), value2 = util.noise(10);
+    key2 = util.noise(10), value2 = util.noise(10);
 
     var nonExistingKey = util.noise(10), nonExistingValue = util.noise(10),
-        nonExistingKey2 = util.noise(10), nonExistingValue2 = util.noise(10);
+    nonExistingKey2 = util.noise(10), nonExistingValue2 = util.noise(10);
 
     function searchForNonExisting(){
       query = {};
@@ -1218,12 +1297,12 @@ $(function() {
         .on('success', function(response){
           if (util.keys(response).length == 0){
             ok(true, 'Didn\'t find non-existing user for {' + nonExistingKey + ': "' + nonExistingValue + '", ' + 
-                                                             nonExistingKey2 + ': "' + nonExistingValue2 + '"}');
+               nonExistingKey2 + ': "' + nonExistingValue2 + '"}');
           }
         })
         .on('error', function(response){
           ok(false, 'Didn\'t find non-existing user for {' + nonExistingKey + ': "' + nonExistingValue + '", ' + 
-                                                            nonExistingKey2 + ': "' + nonExistingValue2 + '"}');
+             nonExistingKey2 + ': "' + nonExistingValue2 + '"}');
         })
         .on('complete', start);
     }
@@ -1273,7 +1352,7 @@ $(function() {
 
     function login(){
       webservice.login({userid: user.email, password: user.password})
-      .on('success', update);
+        .on('success', update);
     }
 
     webservice.createUser({userid: user.email, password: user.password})

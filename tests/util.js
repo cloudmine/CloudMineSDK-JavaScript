@@ -1,44 +1,49 @@
 (function() {
   // Automatic cleanup (when possible)
-  // Cache objects as session: [objects]
   var testData = [];
-  function trackedService(service) {
+  function trackedService(service, root, returnAll) {
+    // Find the last tracked service.
     var item = null;
     for (var i = 0; i < testData.length; ++i) {
       if (testData[i][0] === service) {
-        item = testData[i];
+        item = testData[i][1];
         break;
       }
     }
 
+    // Newly tracked service.
     if (!item) {
-      item = [service, []];
-      testData.push(item);
+      item = {};
+      testData.push([service, item]);
     }
 
-    return item;
+    // Ensure the given root exists.
+    if (returnAll) return item;
+    else {
+      if (!root) root = "app";
+      if (!item[root]) item[root] = [];
+      return item[root];
+    }
   }
 
-  function track(service, key) {
-    var item = trackedService(service)[1];
-    var root = service.options.session_token || "app";
-    if (!item[root]) item[root] = [];
-    
+  function track(service, key, session) {
+    if (session === undefined) session = service.options.session_token
+    var item = trackedService(service, session);
     var contained = false;
-    for (var i = 0; i < item[root].length; ++i) {
-      if (item[root][i] === key) {
+    for (var i = 0; i < item.length; ++i) {
+      if (item[i] === key) {
         contained = true;
         break;
       }
     }
 
-    if (!contained) item[root].push(key);
+    if (!contained) item.push(key);
   }
 
   function cleanup(service, session) {
-    var item = trackedService(service)[1];
+    var item = trackedService(service, session, session == null);
     if (session) {
-      service.destroy(item[session], {session_token: (session === "app" ? null : session)});
+      service.destroy(item, {session_token: (session === "app" ? null : session)});
     } else {
       for (var key in item) {
         service.destroy(item[key], {session_token: (key === "app" ? null : key)});

@@ -56,6 +56,6 @@ test = (info, next) ->
     next()
 
 complete = ->
-  console.log "\nCloudMine Javascript Library 0.9.2"
+  console.log "\nCloudMine Javascript Library 0.9.3"
   console.log "For more information on how to use this library, go to: http://cloudmine.me/docs/js"
   process.exit 0
