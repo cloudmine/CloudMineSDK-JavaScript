@@ -26,18 +26,15 @@
     }
   }
 
-  function track(service, key, session) {
+  function track(service, input, session) {
     if (session === undefined) session = service.options.session_token
-    var item = trackedService(service, session);
-    var contained = false;
-    for (var i = 0; i < item.length; ++i) {
-      if (item[i] === key) {
-        contained = true;
-        break;
-      }
-    }
+    var tracked = trackedService(service, session);
 
-    if (!contained) item.push(key);
+    if (isString(input) || isNumber(input)) input = [ input ]
+    else if (isObject(input) && !isArray(input)) input = keys(input);
+    input.forEach(function(key) {
+      if (tracked.indexOf(key) === -1) tracked.push(key);
+    });
   }
 
   function cleanup(service, session) {
@@ -119,6 +116,28 @@
     throw new TypeError("Object.keys used on non-object");
   }
 
+
+  function isObject(item) {
+    return item && typeof item === "object"
+  }
+
+  function isString(item) {
+    return typeof item === "string"
+  }
+
+  function isNumber(item) {
+    return typeof item === 'number' && !isNaN(item);
+  }
+
+  function isArray(item) {
+    if (item === null) return false;
+    return isObject(item) && item.length != null
+  }
+
+  function isFunction(item) {
+    return typeof item === 'function';
+  }
+
   // Export objects
   Export('./util', {
     track: track,
@@ -128,6 +147,11 @@
     reverse: reverse,
     uuid: uuid,
     noise: noise,
-    hex: hex
+    hex: hex,
+    isObject: isObject,
+    isArray: isArray,
+    isString: isString,
+    isNumber: isNumber,
+    isFunction: isFunction
   });
 })();

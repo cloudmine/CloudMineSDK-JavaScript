@@ -56,6 +56,7 @@ test = (info, next) ->
     next()
 
 complete = ->
-  console.log "\nCloudMine Javascript Library 0.9.3"
+  cloudmine = require('./js/cloudmine');
+  console.log "\nCloudMine Javascript Library v#{cloudmine.WebService.VERSION}"
   console.log "For more information on how to use this library, go to: http://cloudmine.me/docs/js"
   process.exit 0

@@ -2,7 +2,13 @@ CloudMine JavaScript Library Change Log
 
 Git Unstable Changes
 	No changes logged.
-	
+
+v.0.9.4 September 25th, 2012
+	Fix mangled search queries involving ".\w+".
+	searchGeo: Required to specify field name as first argument now.
+	searchGeo: Add signature to handle (field, latitude, longitude, options).
+	searchGeo: Remove distance default of true, moved to options object.
+
 v0.9.3 September 24th, 2012
 	Fix searchGeo parameters being reversed.
 	Update documentation to updateUser function since it is misleading.

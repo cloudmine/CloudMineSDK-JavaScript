@@ -197,7 +197,7 @@
      * @param {object} params Data to send to the code snippet (optional).
      * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
      * @return {APICall} An APICall instance for the web service request used to attach events.
-    */
+     */
     run: function(snippet, parameters, options) {
       options = opts(this, options);
       parameters = merge({}, options.params, parameters);
@@ -221,7 +221,7 @@
      */
     search: function(query, options) {
       options = opts(this, options);
-      query = {q: query != null ? buildSearchQuery(query) : ''}
+      query = {q: query != null ? convertQueryInput(query) : ''}
       return new APICall({
         action: 'search',
         type: 'GET',
@@ -238,9 +238,19 @@
      * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
      * @return {APICall} An APICall instance for the web service request used to attach events.
      */
-    searchFiles: function(query, options) {
-      query = buildSearchQuery(query, '__type__ = "file"');
-      return this.search(query, options);
+    searchFiles: function (query, options) {
+      query = convertQueryInput(query);
+      var newQuery = '[__type__ = "file"';
+
+      if (!query || query.replace(/\s+/, '').length == 0) {
+        newQuery += ']';
+      } else if (query[0] != '[') {
+        newQuery += '].' + query;
+      } else {
+        newQuery += (query[1] == ']' ? '' : ', ') + query.substring(1);
+      }
+
+      return this.search(newQuery, options);
     },
 
     /**
@@ -266,7 +276,7 @@
      * @memberOf WebService.prototype
      */
     searchUsers: function(query, options) {
-      query = {p: query != null ? buildSearchQuery(query) : ''}
+      query = {p: query != null ? convertQueryInput(query) : ''}
       options = opts(this, options);
       return new APICall({
         action: 'account/search',
@@ -313,39 +323,57 @@
 
     /**
      * Search using CloudMine's geoquery API.
-     * @param {object} target The CloudMine object.
-     * @param {string} [radius] Distance around the target.
+     * @param {string} field Field to search on.
+     * @param {number} longitude The longitude to search for objects at.
+     * @param {number} latitude The latitude to search for objects at.
      * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
+     * @param {string} [options.units = 'km'] The unit to use when not specified for. Can be 'km', 'mi', 'm', 'ft'.
+     * @param {boolean} [options.distance = false] If true, include distance calculations in the meta result for objects.
+     * @param {string|number} [options.radius] Distance around the target. If string, include units. If number, specify the unit in options.unit.
      * @return {APICall} An APICall instance for the web service request used to attach events.
      */
+    /**
+     * Search using CloudMine's geoquery API.
+     * @param {string} field Field to search on.
+     * @param {object} target A reference object that has geo-location data.
+     * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
+     * @param {string} [options.units = 'km'] The unit to use when not specified for. Can be 'km', 'mi', 'm', 'ft'.
+     * @param {boolean} [options.distance = false] If true, include distance calculations in the meta result for objects.
+     * @param {string|number} [options.radius] Distance around the target. If string, include units. If number, specify the unit in options.unit.
+     * @return {APICall} An APICall instance for the web service request used to attach events.
+     *
+     * @function
+     * @name searchGeo^2
+     * @memberOf WebService.prototype
+     */
+    searchGeo: function(field, longitude, latitude, options) {
+      var geo, options;
 
-    searchGeo: function(target, radius, options) {
-      var units;
-      if (isString(radius)) units = radius.match(/\w*/)[0];
-      else {
-        options = radius;
-        radius = null;
-      }
-      options = merge({distance: true, units: units}, options);
-
-      // First level scan for geo point object if we aren't a geopoint.
-      if (!isGeopoint(target)) {
-        for (var key in target) {
-          if (isGeopoint(target[key])) {
-            target = target[key];
-            break;
-          }
-        }
+      // Source is 1 argument for object, 2 for lat/long
+      if (isObject(longitude)) {
+        options = latitude || {};
+        geo = extractGeo(longitude, field);
+      } else {
+        if (!options) options = {};
+        geo = extractGeo(longitude, latitude);
       }
 
-      if (!isGeopoint(target)) throw new TypeError('Object is not a geopoint object');
-      else {
-        var latitude = target.latitude || target.lat || target.x;
-        var longitude = target.longitude || target.lng || target.y;
-        return this.search('[location near (' + longitude + ', ' + latitude + ')' + (radius ? ', ' + radius : '') + ']', options);
+      if (!geo) throw new TypeError('Parameters given do not provide geolocation data');
+      
+      // Handle radius formats
+      var radius = options.radius;
+      if (isNumber(radius)) radius = ', ' + radius + (options && options.units ? options.units : 'km');
+      else if (isString(radius) && radius.length) {
+        radius = ', ' + radius;
+        if (!options.units) options.units = radius.match(/mi?|km|ft/)[0];
       }
+      else radius = '';
+
+      var locTerms = (field || 'location') + ' near (' + geo.longitude + ', ' + geo.latitude + ')' + radius;
+      
+      return this.search('[' + locTerms + ']', options);
     },
-
+    
     /**
      * Upload a file stored in CloudMine.
      * @param {string} key The binary file's object key.
@@ -897,16 +925,10 @@
       if (this.options.applevel === true || this.options.applevel === false) return this.options.applevel;
       return this.options.session_token == null;
     },
-
-    geopoint: function(lat, lng) {
-      return { __type__: 'geopoint',
-               latitude: lat,
-               longitude: lng };
-    }
   };
 
   // Version information.
-  var version = '0.9.3';
+  var version = '0.9.4';
   WebService.VERSION = version;
 
   /**
@@ -1501,7 +1523,8 @@
     dontwait: 'async', // Only applies to code snippets, don't wait for results.
     resultsonly: 'result_only', // Only applies to code snippets, only show results from code snippet.
     count: 'count',
-    distance: 'distance'
+    distance: 'distance', // Only applies to geo-query searches
+    units: 'units' // Only applies to geo-query searches
   };
 
   // Default jQuery ajax configuration.
@@ -1650,6 +1673,10 @@
     return typeof item === "string"
   }
 
+  function isNumber(item) {
+    return typeof item === "number" && !isNaN(item);
+  }
+
   function isBinary(item) {
     return isObject(item) && BinaryClasses.indexOf(item.constructor) > -1
   }
@@ -1665,6 +1692,35 @@
 
   function isGeopoint(item) {
     return isObject(item) && item.__type__ === 'geopoint';
+  }
+
+  function extractGeo(x, y) {
+    if (isNumber(x) && isNumber(y)) {
+      return {latitude: y, longitude: x};
+    } else if (isObject(x)) {
+      // Got a field? try to extract from there.
+      if (y && isGeopoint(x[y])) return extractGeo(x[y]);
+      else {
+        // Search current object since we didn't specify a field as y.
+        var out = {
+          latitude: x.latitude || x.lat || x.y,
+          longitude: x.longitude || x.lng || x.x
+        };
+        if (isNumber(out.latitude) && isNumber(out.longitude)) return out;
+        
+        // Search first level objects since we haven't found location data yet.
+        for (var key in x) {
+          if (isGeopoint(x[key])) {
+            return {
+              latitude: x.latitude || x.lat || x.y,
+              longitude: x.longitude || x.lng || x.x
+            };
+          }
+        }
+      }
+    }
+
+    return null;
   }
 
   function objectKeys(obj) {
@@ -1781,106 +1837,15 @@
     return obj;
   }
 
-  // Strip a query of its brackets
-  function stripOfBrackets(query){
-    if (query[0] === '[') query = query.substring(1);
-    if (query[query.length - 1] === ']') query = query.substring(0, query.length - 1);
-    return query;
-  }
-
-  // Make sure a query segment is properly formatted with a single set of brackets and a period before any keywords like "location"
-  function ensureSyntax(query) {
-    if (isObject(query)) query = objectToStringQuery(query);
-    if (query.indexOf('[') > 0) {
-      if (query[0] !== '.') return '.' + query
-      else return query
-    }
-    return '[' + stripOfBrackets(query) + ']';
-  }
-  
-  // Merges string queries properly
-  function appendToSearchQueryString(query, addition) {
-    var segments;
-    addition = stripOfBrackets(addition || '');
-    query = stripOfBrackets(query || '');
-    if (query === '[]' || query === '' || query === null) segments = [addition];
-    else segments = [addition].concat(query.split(', '));
-    if (segments[0] === '') segments = segments.splice(1);
-    return '[' + segments.join(', ') + ']';
-  }
-
-  // Converts an object to a string query
-  function objectToStringQuery(query){
-    var string = '[';
-    for (var key in ownProperties(query)) { 
-      if (typeof query[key] == 'string') {
-        string += key + ' = "' + query[key] + '", ';
-      } else if (typeof query[key] == 'number' || query[key] instanceof RegExp) {
-        string += key + ' = ' + query[key] + ', ';
+  function convertQueryInput(input) {
+    if (isObject(input)) {
+      var out = [];
+      for (var key in input) {
+        out.push(key + " = " + JSON.stringify(input[key]));
       }
+      return "[" + out.join(', ') + "]";
     }
-
-    return string.substring(0, string.length - 2) + ']';
-  }
-
-  // Breaks up a query into an object using "generic" for non-prefixed segments and segment names for the other keys
-  // EX: [red = "blue"].location[apple = "orange"] becomes { generic: '[red = "blue"]', location: '[apple = "orange"]' }
-  // Used in mergeQuerySegmentsObject when merging two or more query strings that have overlapping segments 
-  // (such as two strings with .location[] parameters)
-  function searchQuerySegmentsObject(array) {
-    var obj = {};
-    for (var i = 0; i < array.length; ++ i){
-      var key = array[i].match(/\.\w*/);
-      key = (key === null) ? '.generic' : key[0];
-      obj[key.substring(1)] = array[i].replace(key, '');
-    }
-    return obj;
-  }
-
-  // Take objects derived from searchQuerySegmentsObject and merge them together into one object.
-  function mergeQuerySegmentsObjects(/*, obj... */) {
-    var obj = {};
-    for (var i = 0; i < arguments.length; ++ i){
-      for (var key in ownProperties(arguments[i])) {
-        obj[key] = appendToSearchQueryString(obj[key] || '', arguments[i][key]);
-      }
-    }
-    return obj;
-  }
-
-  // Take arbitrary number of objects or strings and make a search query.
-  // Usage: supply the user's input as the query, and hard-code additional parameters as mandatory (such as __type__ = "file")
-  function buildSearchQuery(/* obj/str... */){
-    var allQueries = {};
-    for (var i = 0; i < arguments.length; ++ i){
-      var query = arguments[i];
-      if (query === '[]' || !query) continue;
-      query = ensureSyntax(query);
-      var querySegmentsObj = searchQuerySegmentsObject(query.match(/[\.\w]*?\[?[^\[]*\]/gi));
-      allQueries = mergeQuerySegmentsObjects(allQueries, querySegmentsObj);
-    }
-
-    query = '';
-    if (allQueries.generic !== undefined) query += allQueries.generic;
-    for (var key in ownProperties(allQueries)) {
-      if (key === 'generic') continue;
-      query += '.' + key + allQueries[key];
-    }
-
-    // Make sure we don't start with a period.
-    if (query[0] === '.') query = query.substring(1);
-    return query;
-  }
-
-
-  function ownProperties(object){
-    var newObject = {};
-    for (var key in object){
-      if (object.hasOwnProperty(key)){
-        newObject[key] = object[key];
-      }
-    }
-    return newObject;
+    return input;
   }
 
   function NotSupported() {

@@ -93,9 +93,7 @@ $(function() {
     webservice.set(payload).on('error', function() {
       ok(false, msg);
     }).on('success', function() {
-      util.track(webservice, obj1);
-      util.track(webservice, obj2);
-      util.track(webservice, obj3);
+      util.track(webservice, payload);
       ok(true, msg);
     }).on('complete', getObjectsNoParams);
   });
@@ -1174,189 +1172,237 @@ $(function() {
       }).on('complete', downloadCanvas);
     }
   });
-  asyncTest("User update/search test with strings as parameters", 5, function(){
+
+  asyncTest("User update/search test with strings as parameters", 15, function(){
+    var msg;
     var user = {
       email: util.noise(5) + '@' + util.noise(5) + '.com',
       password: util.noise(5)
     };
 
-    var key = util.noise(10), value = util.noise(10),
-    key2 = util.noise(10), value2 = util.noise(10);
+    var key = util.noise(10), value = util.noise(10);
+    var key2 = util.noise(10), value2 = util.noise(10);
 
-    var nonExistingKey = util.noise(10), nonExistingValue = util.noise(10),
-    nonExistingKey2 = util.noise(10), nonExistingValue2 = util.noise(10);
+    var nonExistingKey = util.noise(10), nonExistingValue = util.noise(10);
+    var nonExistingKey2 = util.noise(10), nonExistingValue2 = util.noise(10);
 
-    function searchForNonExisting(){
-      webservice.searchUsers('[' + nonExistingKey + '="' + nonExistingValue + '"]')
-        .on('success', function(response){
-          if (util.keys(response).length == 0) {
-            ok(true, 'Didn\'t find non-existing user for [' + nonExistingKey + '="' + nonExistingValue + '"]');
-          }
-        })
-        .on('error', function(response){
-          ok(false, 'Didn\'t find non-existing user for [' + nonExistingKey + '="' + nonExistingValue + '"]');
-        })
-        .on('complete', searchForNonExistingWithMultipleKeys);
+    function createUser() {
+      msg = "Create test user";
+      webservice.createUser({userid: user.email, password: user.password}).on('error', function() {
+        ok(false, msg);
+      }).on('success', function() {
+        ok(true, msg);
+      }).on('complete', login);
     }
 
-    function searchForNonExistingWithMultipleKeys(){
-      webservice.searchUsers('[' + nonExistingKey + '="' + nonExistingValue + '", ' + nonExistingKey2 + '="' + nonExistingValue2 + '"]')
-        .on('success', function(response){
-          if (util.keys(response).length == 0){
-            ok(true, 'Didn\'t find non-existing user for [' + nonExistingKey + '="' + nonExistingValue + '", ' + 
-               nonExistingKey2 + '="' + nonExistingValue2 + '"]');
-          }
-        })
-        .on('error', function(response){
-          ok(false, 'Didn\'t find non-existing user for [' + nonExistingKey + '="' + nonExistingValue + '", ' + 
-             nonExistingKey2 + '="' + nonExistingValue2 + '"]');
-        })
-        .on('complete', start);
+    function login() {
+      msg = "Login with test user";
+      webservice.login({userid: user.email, password: user.password}).on('error', function() {
+        ok(false, msg);
+      }).on('success', function() {
+        ok(true, msg);
+      }).on('complete', updateFirstKey);
     }
 
-    function searchForExisting(){
-      ok(true, 'Updated user with [' + key + '="' + value + '"]. Logging out...')
-      webservice.logout()
-        .on('success', function(){
-          webservice.searchUsers('[' + key + '="' + value + '"]')
-            .on('success', function(response){
-              if (util.keys(response).length == 1){
-                ok(true, 'Found the user for [' + key + '="' + value + '"]');
-              }
-            })
-            .on('error', function(response){
-              ok(false, 'Found the user for [' + key + '="' + value + '"]');
-            })
-            .on('complete', searchForExistingWithMultipleKeys);
-        });
+    function updateFirstKey() {
+      msg = "Update test key " + key + " to value " + value;
+      webservice.updateUser(key, value).on('error', function() {
+        ok(false, msg);
+      }).on('success', function() {
+        ok(true, msg);
+      }).on('complete', updateSecondKey);
     }
 
-    function searchForExistingWithMultipleKeys(){
-      webservice.searchUsers('[' + key + '="' + value + '"]')
-        .on('success', function(response){
-          if (util.keys(response).length == 1){
-            ok(true, 'Found the user for [' + key + '="' + value + '", ' + key2 + '="' + value2 + '"]');
-          }
-        })
-        .on('error', function(response){
-          ok(false, 'Found the user for [' + key + '="' + value + '", ' + key2 + '="' + value2 + '"]');
-        })
-        .on('complete', searchForNonExisting);
+    function updateSecondKey() {
+      msg = "Update 2nd test key " + key2 + " to value " + value2;
+      webservice.updateUser(key2, value2).on('error', function() {
+        ok(false, msg);
+      }).on('success', function() {
+        ok(true, msg);
+      }).on('complete', searchExistingLogout);
     }
 
-    function update(){
-      webservice.updateUser(key2, value2) 
-        .on('success', function(){
-          webservice.updateUser(key, value)
-            .on('success', searchForExisting)
-        });
+    function searchExistingLogout() {
+      msg = "Logging user out to search for existing keys";
+      webservice.logout().on('error', function() {
+        ok(false, msg);
+      }).on('success', function() {
+        ok(true, msg);
+      }).on('complete', searchExistingFirstKey);
     }
 
-    function login(){
-      webservice.login({userid: user.email, password: user.password})
-        .on('success', update);
+    function searchExistingFirstKey() {
+      msg = "Searching for user with " + key + "=" + value;
+      webservice.searchUsers('[' + key + '="' + value + '"]').on('error', function() {
+        ok(false, msg);
+      }).on('success', function(data) {
+        ok(true, msg);
+        var users = util.keys(data);
+        equal(1, users.length, "One user matches key.");
+        deepEqual(value, data[users[0]][key], "Data matches what was sent to server.");
+      }).on('complete', searchExistingMultipleKey);
     }
 
-    webservice.createUser({userid: user.email, password: user.password})
-      .on('success', login);
+    function searchExistingMultipleKey() {
+      msg = "Searching for user with keys " + key + ", " + key2;
+      webservice.searchUsers('[' + key + '="' + value + '", ' + key2 + '="' + value2 + '"]').on('error', function() {
+        ok(false, msg);
+      }).on('success', function(data) {
+        var users = util.keys(data);
+        equal(1, users.length, "One user matches key.");
+        deepEqual(value, data[users[0]][key], "First key matches what was sent to server.");
+        deepEqual(value2, data[users[0]][key2], "Second key matches what was sent to server.");
+      }).on('complete', searchMissingFirstKey);      
+    }
+
+    function searchMissingFirstKey() {
+      msg = "Searching for user with missing key " + nonExistingKey + "=" + nonExistingValue;
+      webservice.searchUsers('[' + nonExistingKey + '="' + nonExistingValue + '"]').on('error', function() {
+        ok(false, msg);
+      }).on('success', function(data) {
+        ok(true, msg);
+        equal(0, util.keys(data).length, "No users matches missing key.");
+      }).on('complete', searchMissingMultipleKey);
+    }
+
+    function searchMissingMultipleKey() {
+      msg = "Searching for user with missing keys " + nonExistingKey + ", " + nonExistingKey2;
+      webservice.searchUsers('[' + nonExistingKey + '="' + nonExistingValue + '", ' + nonExistingKey2 + '="' + nonExistingValue2 + '"]').on('error', function() {
+        ok(false, msg);
+      }).on('success', function(data) {
+        ok(true, msg);
+        equal(0, util.keys(data).length, "No users matches missing key.");
+      }).on('complete', start);      
+    }
+
+    // Start test
+    createUser();
   });
 
-  asyncTest("User update/search test with objects as parameters.", 5, function(){
+  asyncTest("User update/search test with objects as parameters", 15, function(){
+    var msg;
     var user = {
       email: util.noise(5) + '@' + util.noise(5) + '.com',
       password: util.noise(5)
-    },
-    query;
+    };
 
-    var key = util.noise(10), value = util.noise(10),
-    key2 = util.noise(10), value2 = util.noise(10);
+    var key = util.noise(10), value = util.noise(10);
+    var key2 = util.noise(10), value2 = util.noise(10);
 
-    var nonExistingKey = util.noise(10), nonExistingValue = util.noise(10),
-    nonExistingKey2 = util.noise(10), nonExistingValue2 = util.noise(10);
+    var nonExistingKey = util.noise(10), nonExistingValue = util.noise(10);
+    var nonExistingKey2 = util.noise(10), nonExistingValue2 = util.noise(10);
 
-    function searchForNonExisting(){
-      query = {};
-      query[nonExistingKey] = nonExistingValue;
-      webservice.searchUsers(query)
-        .on('success', function(response){
-          if (util.keys(response).length == 0){
-            ok(true, 'Didn\'t find non-existing user for {' + nonExistingKey + ': "' + nonExistingValue + '"}');
-          }
-        })
-        .on('error', function(response){
-          ok(false, 'Didn\'t find non-existing user for {' + nonExistingKey + ': "' + nonExistingValue + '"}');
-        })
-        .on('complete', searchForNonExistingWithMultipleKeys);
+    function createUser() {
+      msg = "Create test user";
+      webservice.createUser({userid: user.email, password: user.password}).on('error', function() {
+        ok(false, msg);
+      }).on('success', function() {
+        ok(true, msg);
+      }).on('complete', login);
     }
 
-    function searchForNonExistingWithMultipleKeys(){
-      query = {};
+    function login() {
+      msg = "Login with test user";
+      webservice.login({userid: user.email, password: user.password}).on('error', function() {
+        ok(false, msg);
+      }).on('success', function() {
+        ok(true, msg);
+      }).on('complete', updateFirstKey);
+    }
+
+    function updateFirstKey() {
+      msg = "Update test key " + key + " to value " + value;
+      var query = {};
+      query[key] = value;
+
+      webservice.updateUser(query).on('error', function() {
+        ok(false, msg);
+      }).on('success', function() {
+        ok(true, msg);
+      }).on('complete', updateSecondKey);
+    }
+
+    function updateSecondKey() {
+      msg = "Update 2nd test key " + key2 + " to value " + value2;
+      var query = {};
+      query[key2] = value2;
+
+      webservice.updateUser(query).on('error', function() {
+        ok(false, msg);
+      }).on('success', function() {
+        ok(true, msg);
+      }).on('complete', searchExistingLogout);
+    }
+
+    function searchExistingLogout() {
+      msg = "Logging user out to search for existing keys";
+      webservice.logout().on('error', function() {
+        ok(false, msg);
+      }).on('success', function() {
+        ok(true, msg);
+      }).on('complete', searchExistingFirstKey);
+    }
+
+    function searchExistingFirstKey() {
+      msg = "Searching for user with " + key + "=" + value;
+      var query = {};
+      query[key] = value;
+
+      webservice.searchUsers(query).on('error', function() {
+        ok(false, msg);
+      }).on('success', function(data) {
+        ok(true, msg);
+        var users = util.keys(data);
+        equal(1, users.length, "One user matches key.");
+        deepEqual(value, data[users[0]][key], "Data matches what was sent to server.");
+      }).on('complete', searchExistingMultipleKey);
+    }
+
+    function searchExistingMultipleKey() {
+      msg = "Searching for user with keys " + key + ", " + key2;
+      var query = {};
+      query[key] = value;
+      query[key2] = value2;
+
+      webservice.searchUsers(query).on('error', function() {
+        ok(false, msg);
+      }).on('success', function(data) {
+        var users = util.keys(data);
+        equal(1, users.length, "One user matches key.");
+        deepEqual(value, data[users[0]][key], "First key matches what was sent to server.");
+        deepEqual(value2, data[users[0]][key2], "Second key matches what was sent to server.");
+      }).on('complete', searchMissingFirstKey);      
+    }
+
+    function searchMissingFirstKey() {
+      msg = "Searching for user with missing key " + nonExistingKey + "=" + nonExistingValue;
+      var query = {};
+      query[nonExistingKey] = nonExistingValue;
+
+      webservice.searchUsers(query).on('error', function() {
+        ok(false, msg);
+      }).on('success', function(data) {
+        ok(true, msg);
+        equal(0, util.keys(data).length, "No users matches missing key.");
+      }).on('complete', searchMissingMultipleKey);
+    }
+
+    function searchMissingMultipleKey() {
+      msg = "Searching for user with missing keys " + nonExistingKey + ", " + nonExistingKey2;
+      var query = {};
       query[nonExistingKey] = nonExistingValue;
       query[nonExistingKey2] = nonExistingValue2;
-      webservice.searchUsers(query)
-        .on('success', function(response){
-          if (util.keys(response).length == 0){
-            ok(true, 'Didn\'t find non-existing user for {' + nonExistingKey + ': "' + nonExistingValue + '", ' + 
-               nonExistingKey2 + ': "' + nonExistingValue2 + '"}');
-          }
-        })
-        .on('error', function(response){
-          ok(false, 'Didn\'t find non-existing user for {' + nonExistingKey + ': "' + nonExistingValue + '", ' + 
-             nonExistingKey2 + ': "' + nonExistingValue2 + '"}');
-        })
-        .on('complete', start);
+
+      webservice.searchUsers(query).on('error', function() {
+        ok(false, msg);
+      }).on('success', function(data) {
+        ok(true, msg);
+        equal(0, util.keys(data).length, "No users matches missing key.");
+      }).on('complete', start);      
     }
 
-    function searchForExisting(){
-      ok(true, 'Updated user with {' + key + ': "' + value + '", ' + key2 + ': "' + value2 + '"}. Logging out...')
-      webservice.logout()
-        .on('success', function(){
-          query = {};
-          query[key] = value;
-          webservice.searchUsers(query)
-            .on('success', function(response){
-              if (util.keys(response).length == 1){
-                ok(true, 'Found the user for {' + key + ': "' + value + '"}');
-              }
-            })
-            .on('error', function(response){
-              ok(false, 'Found the user for {' + key + ': "' + value + '"}');
-            })
-            .on('complete', searchForExistingWithMultipleKeys);
-        });
-    }
-
-    function searchForExistingWithMultipleKeys(){
-      query = {};
-      query[key] = value;
-      query[key2] = value2;
-      webservice.searchUsers(query)
-        .on('success', function(response){
-          if (util.keys(response).length == 1){
-            ok(true, 'Found the user for {' + key + ': "' + value + '", ' + key2 + ': "' + value2 + '"}');
-          }
-        })
-        .on('error', function(response){
-          ok(false, 'Found the user for {' + key + ': "' + value + '", ' + key2 + ': "' + value2 + '"}');
-        })
-        .on('complete', searchForNonExisting);
-    }
-
-    function update(){
-      query = {};
-      query[key] = value;
-      query[key2] = value2;
-      webservice.updateUser(query) 
-        .on('success', searchForExisting);
-    }
-
-    function login(){
-      webservice.login({userid: user.email, password: user.password})
-        .on('success', update);
-    }
-
-    webservice.createUser({userid: user.email, password: user.password})
-      .on('success', login);
+    // Start test
+    createUser();
   });
 
   asyncTest("User search by ID", 2, function(){
@@ -1411,5 +1457,100 @@ $(function() {
         ok(false, "Error retrieveing users.");
       })
       .on('complete', start);
+  });
+
+  asyncTest("Find objects by using geo search", 17, function() {
+    var msg;
+    var obj1 = "test_" + util.noise(5);
+    var obj2 = "test_" + util.noise(5);
+    var obj3 = "test_" + util.noise(5);
+    
+    var payload = {};
+    payload[obj1] = {
+      loc: {
+        __type__: 'geopoint',
+        longitude: -75.163994,
+        latitude: 39.950727
+      },
+      name: 'Philadelphia, PA'
+    };
+
+    payload[obj2] = {
+      loc: {
+        __type__: 'geopoint',
+        longitude: -75.318146,
+        latitude: 40.070400
+      },
+      name: 'Conshohocken, PA'
+    };
+
+    payload[obj3] = {
+      loc: {
+        __type__: 'geopoint',
+        longitude: -73.992920,
+        latitude: 40.696050
+      },
+      name: 'New York, NY'
+    };
+
+    function createPayload() {
+      msg = "Create test payload";
+      webservice.set(payload).on('error', function(data, resp) {
+        ok(false, msg); 
+      }).on('success', function(data, resp) {
+        util.track(webservice, payload);
+        ok(true, msg);
+      }).on('complete', findObjsNearPhilly);
+    }
+    
+    function findObjsNearPhilly() {
+      msg = 'Find objects within 30 miles of Philly';
+      webservice.searchGeo('loc', payload[obj1], {radius: '30mi'}).on('error', function(data, resp) {
+        ok(false, msg);
+      }).on('success', function(data, resp) {
+        ok(true, msg);
+        deepEqual(data[obj1], payload[obj1], "Found Philadelphia Object");
+        deepEqual(data[obj2], payload[obj2], "Found Conshohocken Object");
+        deepEqual(undefined, data[obj3], "Did not find New York object");
+      }).on('complete', findObjsWithNumberParameters);
+    }
+
+    function findObjsWithNumberParameters() {
+      msg = 'Find objects within 30 miles of Philly using coordinates';
+      webservice.searchGeo('loc', -75, 40, {radius: 30, units: 'mi'}).on('error', function() {
+        ok(false, msg);
+      }).on('success', function(data, resp) {
+        ok(true, msg);
+        deepEqual(data[obj1], payload[obj1], "Found Philadelphia Object");
+        deepEqual(data[obj2], payload[obj2], "Found Conshohocken Object");
+        deepEqual(undefined, data[obj3], "Did not find New York object");
+        
+      }).on('complete', findObjsWithDistance);
+    }
+
+    function findObjsWithDistance() {
+      var metaWasTriggered = false;
+      msg = 'Find objects within 30 miles of New York using coordinates';
+      webservice.searchGeo('loc', -74, 40.70, {distance: true, radius: 30, units: 'mi'}).on('error', function() {
+        ok(false, msg);
+      }).on('success', function(data, resp) {
+        ok(true, msg);
+        deepEqual(undefined, data[obj1], "Did not find Philadelphia Object");
+        deepEqual(undefined, data[obj2], "Did not find Conshohocken Object");
+        deepEqual(data[obj3], payload[obj3], "Found New York object");
+      }).on('meta', function(data, resp) {
+        metaWasTriggered = true;
+        ok(!data[obj1], "Meta does not contain distance info for " + obj1);
+        ok(!data[obj2], "Meta does not contain distance info for " + obj2);
+        ok(data[obj3] && data[obj3].geo, "Meta contains distance info for " + obj3);
+      }).on('complete', function() {
+        ok(metaWasTriggered, "Distance meta data found as expected");
+        start();
+      });
+    }
+
+    // Start tests
+    createPayload();
+    
   });
 });
