@@ -1,4 +1,4 @@
-/* CloudMine JavaScript Library v0.9.3 cloudmine.me | cloudmine.me/license */ 
+/* CloudMine JavaScript Library v0.9.4 cloudmine.me | cloudmine.me/license */ 
 (function() {
   /**
    * Construct a new WebService instance
