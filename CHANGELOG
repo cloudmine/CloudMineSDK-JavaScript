@@ -1,7 +1,7 @@
 CloudMine JavaScript Library Change Log
 
 Git Unstable Changes
-	No changes logged.
+	Fix userid not being set on successful login.
 
 v.0.9.4 September 25th, 2012
 	Fix mangled search queries involving ".\w+".

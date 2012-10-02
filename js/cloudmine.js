@@ -1,5 +1,7 @@
-/* CloudMine JavaScript Library v0.9.4 cloudmine.me | cloudmine.me/license */ 
+/* CloudMine JavaScript Library v0.9.x cloudmine.me | cloudmine.me/license */ 
 (function() {
+  var version = '0.9.4-git';
+
   /**
    * Construct a new WebService instance
    *
@@ -737,7 +739,7 @@
         password: user.password,
         processResponse: APICall.basicResponse
       }).on('success', function(data) {
-        self.options.userid = data.userid;
+        self.options.userid = user.userid;
         self.options.session_token = data.session_token;
       });
     },
@@ -927,8 +929,6 @@
     },
   };
 
-  // Version information.
-  var version = '0.9.4';
   WebService.VERSION = version;
 
   /**
