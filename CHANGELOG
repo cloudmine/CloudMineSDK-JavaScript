@@ -2,6 +2,8 @@ CloudMine JavaScript Library Change Log
 
 Git Unstable Changes
 	Fix userid not being set on successful login.
+	Remove stray comma breaking IE.
+	createUser: profile option will assign given all properties to the new user object.
 
 v.0.9.4 September 25th, 2012
 	Fix mangled search queries involving ".\w+".

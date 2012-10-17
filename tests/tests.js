@@ -6,6 +6,7 @@ $(function() {
   var config = Import('./config');
   var util = Import('./util');
   var webservice;
+
   QUnit.module("JS", {
     setup: function() {
       webservice = new cloudmine.WebService({
@@ -147,6 +148,40 @@ $(function() {
         ok(true, 'Verified that account was destroyed.');
       }).on('complete', start);
     }
+  });
+
+  asyncTest('Create a user with a profile', 5, function() {
+    var username = util.noise(5) + '@' + util.noise(5) + '.com';
+    var password = util.noise(12);
+    var profile = {
+      noise: util.noise(10),
+      gamma: { f1: [1,2,3] }
+    };
+
+    function createUser() {
+      var msg = "Create user " + username + " with password " + password;
+      webservice.createUser(username, password, {profile: profile}).on('error', function() {
+        ok(false, msg);
+      }).on('success', function(data) {
+        ok(true, msg);
+        notEqual(data.__id__, null, "User has an id");
+        for (var key in profile) {
+          deepEqual(data[key], profile[key], key + " has the expected value");
+        }
+      }).on('complete', deleteUser);
+    }
+
+    function deleteUser() {
+      var msg = 'User was deleted.';
+      webservice.deleteUser(username, password).on('success', function() {
+        ok(true, msg);
+      }).on('error', function() {
+        ok(false, msg);
+      }).on('complete', start);
+    }
+
+    // Start
+    createUser();
   });
 
   asyncTest('Set an object and compare value with existing data', 2, function() {

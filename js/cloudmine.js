@@ -536,6 +536,7 @@
      * Create a new user.
      * @param {object} data An object with a userid and password field.
      * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
+     * @config {object} [options.profile] Create a user with the given user profile.
      * @return {APICall} An APICall instance for the web service request used to attach events.
      *
      * @function
@@ -547,6 +548,7 @@
      * @param {string} user The userid to login as.
      * @param {string} password The password to login as.
      * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
+     * @config {object} [options.profile] Create a user with the given user profile.
      * @return {APICall} An APICall instance for the web service request used to attach events.
      *
      * @function
@@ -558,10 +560,15 @@
       else user = {userid: user, password: password};
       options = opts(this, options);
       options.applevel = true;
+
       var payload = JSON.stringify({
-        email: user.userid,
-        password: user.password
+        credentials: {
+          email: user.userid,
+          password: user.password
+        },
+        profile: options.profile
       });
+
       return new APICall({
         action: 'account/create',
         type: 'POST',
@@ -926,7 +933,7 @@
     isApplicationData: function() {
       if (this.options.applevel === true || this.options.applevel === false) return this.options.applevel;
       return this.options.session_token == null;
-    },
+    }
   };
 
   WebService.VERSION = version;
