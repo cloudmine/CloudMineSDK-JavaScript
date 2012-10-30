@@ -200,7 +200,8 @@ $(document).ready(function(){
       $('#todo').empty().hide();
       $('#todo_header, #new').hide();
       $('#login, #or, #register_button').show();
-      $('#login_button').attr('value', 'Login');
+      $('#login_button').val('Login').show();
+      $('#register_button').val('Register').show();
       $('#login_email, #login_password').val('');
       $('#login_email').focus();
       $('#priority_buttons').html('Priority:');

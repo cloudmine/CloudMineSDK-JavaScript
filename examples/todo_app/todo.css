@@ -1,218 +1,217 @@
-html{
-  font-family: Arial;
+html {
+    font-family: Arial, Helvetica, Geneva, sans-serif;
 }
 
-#main{
-  width: 700px;
-  margin: 0px auto;
+#main {
+    width: 700px;
+    margin: 0px auto;
 }
 
-#todo_header{
-  display: none;
+#todo_header {
+    display: none;
 }
 
-.grey{
-  color:#d2d2d2;
-  margin-left: 10px;
-  display: inline-block;
+.grey {
+    color:#d2d2d2;
+    margin-left: 10px;
+    display: inline-block;
 }
 
-#header{
-  width: 700px;
-  height: 100px;
-  margin: 0px auto;
-  background: url('cm.png') left no-repeat;
+#header {
+    width: 700px;
+    height: 100px;
+    margin: 0px auto;
+    background: url('cm.png') left no-repeat;
 }
 
-#header div{
-  position: relative;
-  top: 30px;
-  left:160px;
-  font-size:30px;
-  color: #0091d3;
+#header div {
+    position: relative;
+    top: 30px;
+    left:160px;
+    font-size:30px;
+    color: #0091d3;
 }
 
-#header div .black{
-  color: #000;
+#header div .black {
+    color: #000;
 }
 
-#todo, #new{
-  width: 700px;
-  margin: 0px auto;
-  display: none;
+#todo, #new {
+    width: 700px;
+    margin: 0px auto;
+    display: none;
 }
 
-#new{
-  margin-top:40px;
+#new {
+    margin-top:40px;
 }
 
-#login{
-  width: 700px;
-  margin: 0px auto;
+#login {
+    width: 700px;
+    margin: 0px auto;
 }
 
-#login_button, #register_button, #create_button, #logout_button{
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  background: #E4E5E6;
-  color: #222222;
-  font-size:20px;
+#login_button, #register_button, #create_button, #logout_button {
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    background: #E4E5E6;
+    color: #222222;
+    font-size:20px;
 }
 
-#login_button{
-  background:#a7e1fa;
+#login_button {
+    background:#a7e1fa;
 }
 
-#logout_button{
-  display: inline-block;
-  float:right;
-  position:relative;
-  bottom:50px;
+#logout_button {
+    display: inline-block;
+    float:right;
+    position:relative;
+    bottom:50px;
 }
 
 #login_button:hover, 
 #register_button:hover, 
 #create_button:hover,
-#logout_button:hover{
-  background:#97c4d7;
+#logout_button:hover {
+    background:#97c4d7;
 }
 
 input[type='text'], 
-input[type='password']{
-  border: none;
-  border-radius: 5px;
-  background: #E4E5E6;
-  padding: 5px 10px;
-  font-size:20px;
-  outline:none;
+input[type='password'] {
+    border: none;
+    border-radius: 5px;
+    background: #E4E5E6;
+    padding: 5px 10px;
+    font-size:20px;
+    outline:none;
 }
 
-#new_item input[type='text']{
-  border: none;
-  border-radius: 5px;
-  background: #FFF;
-  padding: 5px 10px;
-  font-size:20px;
-  outline:none;
+#new_item input[type='text'] {
+    border: none;
+    border-radius: 5px;
+    background: #FFF;
+    padding: 5px 10px;
+    font-size:20px;
+    outline:none;
 }
 
-#due_in{
-  width:40px;
+#due_in {
+    width:40px;
 }
 
-#priority_buttons, #due_in_hours{
-  margin-top:10px;
+#priority_buttons, #due_in_hours {
+    margin-top:10px;
 }
 
-input[type='checkbox']{
-  margin: 0px 10px 0px 2px;
+input[type='checkbox'] {
+    margin: 0px 10px 0px 2px;
 }
 
 
 input::-webkit-input-placeholder {
-  color: rgba(0,0,0,0.3);  
+    color: rgba(0,0,0,0.3);  
 }
 
-input:-moz-placeholder{
-  color: rgba(0,0,0,0.3);  
+input:-moz-placeholder {
+    color: rgba(0,0,0,0.3);  
 }
 
-.todo_item, #new_item{
-  border: none;
-  border-radius: 5px;
-  background: #E4E5E6;
-  padding: 5px;
-  font-size:20px;
-  outline:none;
-  margin-bottom: 5px;
-  white-space:nowrap;
-  display:inline-block;
+.todo_item, #new_item {
+    border: none;
+    border-radius: 5px;
+    background: #E4E5E6;
+    padding: 5px;
+    font-size:20px;
+    outline:none;
+    margin-bottom: 5px;
+    white-space:nowrap;
+    display:inline-block;
 }
 
-#new_item{
-  color:#000;
+#new_item {
+    color:#000;
 }
 
-#new_item:hover{
-  color:#000;
+#new_item:hover {
+    color:#000;
 }
 
-.todo_item{
-  cursor: pointer;
+.todo_item {
+    cursor: pointer;
 }
 
-.todo_item:hover, #new_item.inactive:hover{
-  background:#d0d0d0;
+.todo_item:hover, #new_item.inactive:hover {
+    background:#d0d0d0;
 }
 
-.todo_item.done{
-  text-decoration:line-through;
-  color:#818181;
-  background:#eeeeee;
+.todo_item.done {
+    text-decoration:line-through;
+    color:#818181;
+    background:#eeeeee;
 }
 
-
-.delete_button{
-  display: inline-block;
-  width: 15px;
-  height: 15px;
-  background: url('close_button.png');
-  cursor: pointer;
-  margin: 0px 2px 0px 10px;
+.delete_button {
+    display: inline-block;
+    width: 15px;
+    height: 15px;
+    background: url('close_button.png');
+    cursor: pointer;
+    margin: 0px 2px 0px 10px;
 }
 
-.delete_button:hover{
-  background-position: 0px -15px;
+.delete_button:hover {
+    background-position: 0px -15px;
 }
 
-.delete_button:active{
-  background-position: 0px -30px;
+.delete_button:active {
+    background-position: 0px -30px;
 }
 
-.priority{
-  width: 25px;
-  height: 25px;
-  cursor: pointer;
-  display: inline-block;
-  margin: -5px 5px;
+.priority {
+    width: 25px;
+    height: 25px;
+    cursor: pointer;
+    display: inline-block;
+    margin: -5px 5px;
 }
 
-.priority:hover{
-  background-position: 0px -25px;
+.priority:hover {
+    background-position: 0px -25px;
 }
 
-.due, .overdue{
-  margin-left: 10px;
-  font-size: 16px;
+.due, .overdue {
+    margin-left: 10px;
+    font-size: 16px;
 }
 
-.due{
-  color:rgba(0,0,0,0.4);
+.due {
+    color:rgba(0,0,0,0.4);
 }
 
-.overdue{
-  color:rgba(255,0,0,1);
+.overdue {
+    color:rgba(255,0,0,1);
 }
 
-#restoring_session{
-  width: 700px;
-  margin:0px auto;
-  display: none;
-  margin-top:200px;
+#restoring_session {
+    width: 700px;
+    margin:0px auto;
+    display: none;
+    margin-top:200px;
 }
 
-.error{
-  display: none;
-  border: none;
-  border-radius: 5px;
-  background: #ec2828;
-  font-size:20px;
-  color: #FFF;
-  white-space: nowrap;
-  padding: 0px 5px;
+.error {
+    display: none;
+    border: none;
+    border-radius: 5px;
+    background: #ec2828;
+    font-size:20px;
+    color: #FFF;
+    white-space: nowrap;
+    padding: 0px 5px;
 }
 
-#empty_list{
-  color: #bfbfbf;
+#empty_list {
+    color: #bfbfbf;
 }

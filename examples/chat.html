@@ -1,64 +1,71 @@
 <!DOCTYPE HTML>
 <html>
   <head>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js" language="javascript"></script>
+    <script src="vendor/jquery-1.8.2.min.js" language="javascript"></script>
     <script src="../js/cloudmine.js" language="javascript"></script>
     <script language="javascript">
       $(document).ready(function() {
-          var appid = "327a12c8208b4297a06f8f5fb32cfecc";
-          var apikey = "931732f754654d3c80521024eba8f8ec";
+        // There are more options that can be passed to the WebService constructor
+        // that will act as defaults for any future call made on the webservice object.
+        var webservice = new cloudmine.WebService({
+          appid: "327a12c8208b4297a06f8f5fb32cfecc",
+          apikey: "931732f754654d3c80521024eba8f8ec"
+        });
+        
+        // Always cache jquery results, it's quite slow.
+        var messageField = $('#message');
+        var nameField = $('#name');
 
-          ws = new cloudmine.WebService({appid: appid, apikey: apikey});
+        // Setup polling of the CloudMine servers to update the chat box.
+        function updateChat() {
+          // Call the CloudMine API to grab all the data from the server. In this case
+          // we want to get all the keys since they represent all the messages.
+          
+          // Rather than concatenating a really long string, array joining is faster.
+          var chat = [];
 
-          var opts = {
-              // can be used to override user auth and params
-          };
-
-          $('#message').bind('keydown', function(event) {
-              // Only bind to the return/enter key being pressed.
-              if(event.which == 13) {
-                  // Construct some sort of unique identifier
-                  // (in this case, we are using the UNIX timestamp).
-                  var key = new Date().getTime();
-
-                  // This is our data model.
-                  // Basically just store the person's name and their message in a JSON object.
-                  var data = {
-                      'name': $('#name').val(),
-                      'message': $('#message').val()
-                  };
-
-                  // Call the CloudMine API to actually push the data to the CM servers.
-                  ws.update(key, data).on('success', function(){
-                      updateChat();
-                  }, opts);
-
-                  // Clear the message box.
-                  $('#message').val('');
-              }
+          webservice.get(null).on('success', function(response) {
+            // Basic string concatination to build the string
+            // to display to the user in the chat box.
+            for (var i in response) {
+              var value = response[i];
+              chat.push(value.name + ': ' + value.message);
+            }
+            
+            // Show the assembled string in the chat box.
+            $('#chat').val(chat.join('\n'));
           });
 
-          // Setup polling of the CloudMine servers to update the chat box.
-          updateChat = function(){
-              // Call the CloudMine API to grab all the data from the server. In this case
-              // we want to get all the keys since they represent all the messages.
-              var chat = '';
-              ws.get(null).on('success', function(response) {
-                  var i, value;
-                  // Basic string concatination to build the string
-                  // to display to the user in the chat box.
-                  for (i in response){
-                      value = response[i];
-                      chat += value.name + ': ' + value.message + "\n";
-                  }
+          // Poll again after 10 seconds
+          setTimeout(updateChat, 10000);
+        }
 
-                  // Show the assembled string in the chat box.
-                  $('#chat').val(chat);
-              }, opts);
+        messageField.on('keydown', function(event) {
+          // Only bind to the return/enter key being pressed.
+          if (event.which == 13) {
+            // Construct some sort of unique identifier
+            // (in this case, we are using the UNIX timestamp).
+            var key = Date.now();
+            
+            // This is our data model.
+            // Basically just store the person's name and their message in a JSON object.
+            var data = {
+              name: nameField.val(),
+              message: messageField.val()
+            };
+            
+            // Call the CloudMine API to actually push the data to the CM servers.
+            webservice.update(key, data).on('success', function() {
+              updateChat();
+            });
+
+            // Clear the message box.
+            messageField.val('');
           }
-          updateChat();
-
-          setInterval(updateChat, 10000);
+        });
+        
+        // Initial poll of data for chat.
+        updateChat();
       });
     </script>
   </head>
