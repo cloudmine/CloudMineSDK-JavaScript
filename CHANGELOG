@@ -1,9 +1,16 @@
 CloudMine JavaScript Library Change Log
 
-Git Unstable Changes
+v.0.9.5 Git Unstable Changes
+	Add social login support (creates users as necessary).
+	Add user session persistence.
 	Fix userid not being set on successful login.
 	Remove stray comma breaking IE.
 	createUser: profile option will assign given all properties to the new user object.
+	Remove BlobBuilder support and fix Blob construction.
+	Removed some unused functions.
+	
+	New WebService methods:
+	* loginSocial: Create/Login user via OAuth authentication to the given network, e.g. twitter, facebook, github. (Browser only)
 
 v.0.9.4 September 25th, 2012
 	Fix mangled search queries involving ".\w+".

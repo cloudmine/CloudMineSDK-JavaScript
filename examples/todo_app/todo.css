@@ -60,6 +60,53 @@ html {
     font-size:20px;
 }
 
+.button > img {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+a.button {
+  font-size: 14px;
+  display: inline-block;
+  vertical-align: middle;
+  background-color: white;
+  border-radius: 5px;
+  line-height: 18px;
+  padding: 5px 5px 5px 5px;
+  text-decoration: none;
+  border: thin solid lightgray;
+  color: black;
+}
+
+a.facebook.login {
+  padding: 8px 8px 7px 7px !important;
+}
+
+a.facebook.auth {
+  padding: 2px 3px 2px 2px !important;
+  display: inline-block;
+  float:right;
+  position:relative;
+  bottom:50px;
+}
+
+a.twitter.login {
+  padding-right: 10px !important;
+}
+
+a.twitter.auth {
+  padding: 0px 3px 0px 2px !important;
+  display: inline-block;
+  float:right;
+  position:relative;
+  bottom:50px;
+}
+
+a.button:hover {
+  background-color: #0f8ecb;
+  color: white;
+}
+
 #login_button {
     background:#a7e1fa;
 }
@@ -214,4 +261,8 @@ input:-moz-placeholder {
 
 #empty_list {
     color: #bfbfbf;
+}
+
+div.spacer {
+    padding: 20px;
 }

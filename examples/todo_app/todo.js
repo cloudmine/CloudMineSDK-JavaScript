@@ -1,8 +1,8 @@
-/* 
+/*
    To-do list: sample CloudMine app
 
    Features: - Simple data pushing: Creating new items, updating them as "done," and deleting them using CloudMine object storage
-             - Easy and secure user management: Logging in or registering as a new user, with the session saved 
+             - Easy and secure user management: Logging in or registering as a new user, with the session saved
                for seven days or until the user logs out.
 
    Main objects in use: - cloudmine:       instance of CloudMine js library
@@ -21,6 +21,9 @@ $(document).ready(function(){
   /*
     Binding UI events to buttons, and login on hitting Enter while in the password field. Focus on the email field automatically.
   */
+  $('a.button').on('click', function(e){ e.preventDefault(); });
+  $('a.facebook').on('click', function(){ todo.login_user('facebook'); });
+  $('a.twitter').on('click', function(){ todo.login_user('twitter'); });
   $('#login_button').click(function(){    todo.login_user();    });
   $('#register_button').click(function(){ todo.register_user(); });
   $('#create_button').click(function(){   todo.create_item();   });
@@ -34,16 +37,24 @@ $(document).ready(function(){
     NOTE: This doesn't work in Chrome on default settings because it doesn't allow local cookies to be stored.
   */
   var check_for_session = function(){
-    var cookies = document.cookie.split(';');
-    for (var i in cookies){
-      var cookie = cookies[i].split('=');
-      if (cookie[0] == 'cloudmineTodoSession' && cookie[1] != 'none'){
-        $('#login').hide();
-        $('#restoring_session').show();
-        return cookie[1];
+    if(window.localStorage){
+      var saved = localStorage['cloudmineTodoSession'];
+      if(!saved)
+        return null;
+      var prefs = JSON.parse(saved);
+      return prefs.token;
+    } else {
+      var cookies = document.cookie.split(';');
+      for (var i in cookies){
+        var cookie = cookies[i].split('=');
+        if (cookie[0] == 'cloudmineTodoSession' && cookie[1] != 'none'){
+          $('#login').hide();
+          $('#restoring_session').show();
+          return cookie[1];
+        }
       }
     }
-    return null
+    return null;
   };
 
   /*
@@ -54,8 +65,8 @@ $(document).ready(function(){
 
     // Set up an object with our App id and API key
     var init_vals = {
-      appid: '0a93fa8190b44eb8926c2c1babe8f1ba',
-      apikey: '51b28b3a94a8434bb0bc64c34636fe1d'
+      appid: 'd23a60e7d44f401aa75643e69899b004',
+      apikey: 'f46828a750794cfb932d01f22b2c6d10'
     }
 
     // Perform the check for the session cookie
@@ -75,7 +86,7 @@ $(document).ready(function(){
     }
   }
 
-  
+
   /*
     Set up the todo object with all we need to make this to-do list work dynamically with no refreshes.
     We'll mostly be using jQuery to manipulate DOM elements and our instance of the CloudMine JS library - cm - to make all the data calls.
@@ -92,7 +103,7 @@ $(document).ready(function(){
       register_user
 
       Called by the Register button click on the login screen.
-      It uses cm.createUser to register a new user account using the info entered in 
+      It uses cm.createUser to register a new user account using the info entered in
     */
     register_user: function(){
       var userid = $('#login_email').val(),
@@ -103,8 +114,8 @@ $(document).ready(function(){
 
       // Run the CloudMine createUser call and chain on success and error callbacks.
       cm.createUser(userid, password)
-        .on('success', function(response){ 
-          todo.process_registration(response, { userid: userid, password: password }); 
+        .on('success', function(response){
+          todo.process_registration(response, { userid: userid, password: password });
         })
         .on('conflict', function(data){
             todo.error('login', data.errors[0]);
@@ -117,8 +128,8 @@ $(document).ready(function(){
           $('#login_button, #or').show();
         });
     },
-    
-    /* 
+
+    /*
       process_registration
 
       Called by todo.register_user. Logs in newly created user.
@@ -129,50 +140,70 @@ $(document).ready(function(){
 
     /*
       login_user
-      
+
       Called by Login button click and todo.process_registration (new user is immediately logged in after registration)
       Parameter:
         credentials: optional object containing username and password
     */
     login_user: function(credentials){
+      var socialLogin = false;
       if (credentials == undefined){
         credentials = {
           userid: $('#login_email').val(),
           password: $('#login_password').val()
         };
-      }
-      
-      // Don't actually run if one of the values is blank
-      if (!credentials.userid || !credentials.password){
-        return;
+      } else if (typeof credentials === 'string'){
+        socialLogin = true;
       }
 
       // Alter the UI to indicate that the login request is pending
       $('#login_button').attr('value', 'Logging in...');
       $('#register_button, #or').hide();
 
+      var login = socialLogin ? cm.loginSocial.bind(cm) : cm.login.bind(cm);
+
+      function loginError(msg){
+        $('#login_button').attr('value', 'Login');
+        $('#register_button, #or').show();
+        todo.error('login', msg);
+      }
+
       // Run CloudMine login request.
-      cm.login(credentials)
-        .on('success', function(data){ 
+      login(credentials)
+        .on('success', function(data){
+          var services = data.profile.__services__;
+          if(services){
+            console.log("linked services:", services);
+            data.profile.__services__.forEach(function(service){
+              $('a.auth.' + service).hide();
+            });
+          }
           todo.process_login(data);
         })
         .on('unauthorized', function(data){
-          $('#login_button').attr('value', 'Login');
-          $('#register_button, #or').show();
-          todo.error('login', data.errors[0]);
-        });
+          loginError(data.errors[0]);
+        })
+        .on('error', function(data){
+          loginError(data.errors ? data.errors[0] : "Error Logging in");
+        })
     },
-    
+
     /*
       process_login
-      
-      Called by todo.login_user. Creates a cookie with the session_token we got back from CloudMine 
+
+      Called by todo.login_user. Creates a cookie with the session_token we got back from CloudMine
       and calls for this user's data for their to-do list.
       Parameter:
         response: response data from the server, passed in by todo.login_user
     */
     process_login: function(response){
-      document.cookie = 'cloudmineTodoSession=' + response.session_token + '; expires=' + response.expires + '; path=/';
+      if(window.localStorage){
+        var save = JSON.stringify({token: response.session_token});
+        localStorage.setItem('cloudmineTodoSession', save);
+      }
+      else {
+        document.cookie = 'cloudmineTodoSession=' + response.session_token + '; expires=' + response.expires + '; path=/';
+      }
       todo.get_items();
     },
 
@@ -182,9 +213,9 @@ $(document).ready(function(){
       Called by Logout button in the list view. Logs user out, clears session cookie.
     */
     logout_user: function(){
-      cm.logout().on('success', function(){ 
-        todo.process_logout(); 
-      }); 
+      cm.logout().on('success', function(){
+        todo.process_logout();
+      });
     },
 
     /*
@@ -193,9 +224,14 @@ $(document).ready(function(){
       Called by todo.logout_user. Clears the session cookie and resets the login screen.
     */
     process_logout: function(){
-      var _splice, cookies;
-      // Read for session cookie
-      document.cookie = 'cloudmineTodoSession=none; expires=' + new Date(0).toUTCString() + '; path=/';
+      if(window.localStorage){
+        localStorage.clear();
+      } else {
+        var _splice, cookies;
+        // Read for session cookie
+        document.cookie = 'cloudmineTodoSession=none; expires=' + new Date(0).toUTCString() + '; path=/';
+      }
+
       // Reset everything
       $('#todo').empty().hide();
       $('#todo_header, #new').hide();
@@ -235,7 +271,7 @@ $(document).ready(function(){
       }
 
       // Make the CloudNine library call to send the data to the cloud, along with the unique_id
-      
+
       cm.update(unique_id, data)
         .on('success', function(){
           todo.draw_item(data);
@@ -259,7 +295,7 @@ $(document).ready(function(){
         // Save the response data
         todo.data = data;
         $('#login').hide();
-        $('#todo, #new').show(); 
+        $('#todo, #new').show();
         todo.setup_priority_buttons();
         todo.draw_list(data);
       });
@@ -267,7 +303,7 @@ $(document).ready(function(){
 
     /*
       create_item
-      
+
       Sets up and validates variables for a new to-do item, then passes the data to todo.push_item. Gets the data from the input elements in the DOM
     */
     create_item: function(){
@@ -287,13 +323,13 @@ $(document).ready(function(){
       delete_item
 
       Called by Delete button click on an item. Removes the item from the cloud with cm.destroy and then removes it from the UI.
-      The callback on this one 
+      The callback on this one
       Parameters:
         key: The item's key in the CloudMine db
     */
     delete_item: function(key){
       cm.destroy(key)
-        .on('complete', function(){ 
+        .on('complete', function(){
           $('span[item="' + key + '"]').remove();
         })
     },
@@ -311,6 +347,7 @@ $(document).ready(function(){
         $('#empty_list').hide();
       }
 
+      $("#todo").html('');
       for (var key in data){
         var item = data[key];
         todo.draw_item(item);
@@ -330,11 +367,11 @@ $(document).ready(function(){
 
       item_text = ''; // By default, start with an empty string.
       if (item_data.hasOwnProperty('deadline')){ // Parse how much time is left to complete this task.
-        parsed_deadline = todo.parse_remaining_time(item_data.deadline.timestamp); 
+        parsed_deadline = todo.parse_remaining_time(item_data.deadline.timestamp);
         if (parsed_deadline <= 0){
           item_text += '<span class="overdue">Overdue</span>'; // If time is up, put a bold "Overdue" flag on the item.
         } else {
-        item_text += '<span class="due">Due in ' + parsed_deadline + ' hours.</span>'; // Else, put a subtler flag indicating the hours left to complete the task. 
+        item_text += '<span class="due">Due in ' + parsed_deadline + ' hours.</span>'; // Else, put a subtler flag indicating the hours left to complete the task.
         }
       }
       // Build the elements
@@ -352,8 +389,8 @@ $(document).ready(function(){
 
       /*
         Prepend the checkbox to the div element and give the whole thing
-        a click function to toggle the listing's done status. 
-        (This is just for UI's sake: it's easier to click the whole thing than ticking the checkbox itself. 
+        a click function to toggle the listing's done status.
+        (This is just for UI's sake: it's easier to click the whole thing than ticking the checkbox itself.
         The CSS cursor: pointer on the item will make it clear that it's clickable)
       */
       todo_div.prepend(todo_checkbox).click(function(){
@@ -377,13 +414,14 @@ $(document).ready(function(){
       // In case this is the first item added, hide the "You haven't added any items yet" message.
       $('#empty_list').hide();
     },
-    
+
     /*
       setup_priority_buttons
 
       Called by todo.get_items. Sets up the three traffic-light buttons used to select a priority level when creating a new item.
     */
     setup_priority_buttons: function(){
+      $('#priority_buttons').html('');
       var _i, pb, all_pbs = [ ];
       for (_i = 3; _i > 0; _i --){
         pb = new todo.priority_button(_i);
@@ -399,13 +437,13 @@ $(document).ready(function(){
     /*
       toggle_item
 
-      Called by a Click handler defined in todo.draw_item. 
+      Called by a Click handler defined in todo.draw_item.
       Toggles an item between done and not done, both in the UI and the CloudMine db.
       Parameters:
         data: Item data, from which this function gets its done status and its id.
     */
     toggle_item: function(data){
-      var todo_div = $('span[item="' + data.__id__ + '"]').find('div'), 
+      var todo_div = $('span[item="' + data.__id__ + '"]').find('div'),
           todo_checkbox = $('span[item="' + data.__id__ + '"]').find('input[type="checkbox"]');
       if (data.done){
         data.done = false;
@@ -418,7 +456,7 @@ $(document).ready(function(){
       }
       cm.update(data.__id__, { done: data.done });
     },
-    
+
     /*
       create_deadline
 
@@ -451,16 +489,16 @@ $(document).ready(function(){
 
       return parseInt( deadline.getTime() / 3600000 - now.getTime() / 3600000);
     },
-  
+
     /*
       is_empty_object
 
-      Checks if an object is empty, because for some reason in Javascript      
+      Checks if an object is empty, because for some reason in Javascript
       empty objects are truthy while empty arrays evaluate as false ,'>/
       Parameters:
         object: The object we're checking.
     */
-    is_empty_object: function(item) { 
+    is_empty_object: function(item) {
       if (item) {
         for (var k in item) {
           if (item.hasOwnProperty(k)) return false;
@@ -468,7 +506,7 @@ $(document).ready(function(){
       }
       return true;
     },
-    
+
     /*
       error
 
@@ -533,7 +571,7 @@ $(document).ready(function(){
 
   todo.priority_button = priority_button // Attach the priority button object to the todo object
 
-  /* 
+  /*
     After everything is defined, finally initialize CloudMine.
   */
 

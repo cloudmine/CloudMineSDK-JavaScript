@@ -388,7 +388,7 @@ $(function() {
     function test1() {
       var webservice_bad_apikey = new cloudmine.WebService({
         appid: webservice.options.appid,
-        apikey: util.uuid()
+        apikey: "00000000000000000000000000000001"
       });
 
       webservice_bad_apikey.get(key).on('unauthorized', function() {
@@ -404,7 +404,7 @@ $(function() {
     var test2_404 = false;
     function test2() {
       var webservice_bad_appid = new cloudmine.WebService({
-        appid: util.uuid(),
+        appid: "00000000000000000000000000000001",
         apikey: webservice.options.apikey
       });
 
@@ -1585,7 +1585,39 @@ $(function() {
     }
 
     // Start tests
-    createPayload();
-    
+    createPayload();    
+  });
+
+  asyncTest('Attempt a social login to Twitter and Github', 7, function() {
+    if (inBrowser) {
+      function loginToTwitter() {
+        webservice.loginSocial('twitter').on('success', function(data, response) {
+          ok(true, "Successfully logged in to Twitter.");
+          notEqual(data.session_token, null, "Session token in response");
+          equal(webservice.options.session_token, data.session_token, "Session token is saved");
+        }).on('error', function(data) {
+          ok(false, "Did not successfully login to Twitter.");
+        }).on('complete', loginToGithub);
+      }
+
+      function loginToGithub() {
+        var previousSession = webservice.options.session_token;
+        webservice.loginSocial('github').on('success', function(data, response) {
+          ok(true, "Successfully logged in to Github.");
+          notEqual(data.session_token, null, "Session token in response.");
+          equal(webservice.options.session_token, data.session_token, "Session token is saved");
+          equal(data.session_token, previousSession, "Session token did not change during github link.");
+        }).on('error', function() {
+          ok(false, "Did not successfully login to Github.");
+        }).on('complete', start);
+      }
+
+      // Start tests
+      loginToTwitter();
+    } else {
+      expect(1);
+      ok(true, "This feature is not available in Node.JS");
+      start();
+    }
   });
 });

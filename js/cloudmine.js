@@ -1,6 +1,6 @@
-/* CloudMine JavaScript Library v0.9.x cloudmine.me | cloudmine.me/license */ 
+/* CloudMine JavaScript Library v0.9.5 cloudmine.me | cloudmine.me/license */ 
 (function() {
-  var version = '0.9.4-git';
+  var version = '0.9.5-git';
 
   /**
    * Construct a new WebService instance
@@ -41,6 +41,7 @@
    * @config {boolean} [applevel] If true, always send requests to application.
    *                              If false, always send requests to user-level, trigger error if not logged in.
    *                              Otherwise, send requests to user-level if logged in.
+   * @config {boolean} [savelogin] If true, session token and userid will be persisted between logins.
    * @config {integer} [limit] Set the default result limit for requests
    * @config {string} [sort] Set the field on which to sort results
    * @config {integer} [skip] Set the default number of results to skip for requests
@@ -54,7 +55,14 @@
    */
   function WebService(options) {
     this.options = opts(this, options);
-    setupUserToken(this);
+
+    var src = this.options.appid;
+    if (options.savelogin) {
+      if (!this.options.userid) this.options.userid = retrieve('userid', src);
+      if (!this.options.session_token) this.options.session_token = retrieve('session_token', src);
+    }
+
+    this.options.user_token = retrieve('ut', src) || store('ut', uuid(), src);
   }
 
   /** @namespace WebService.prototype */
@@ -407,7 +415,7 @@
         // Upload by filename
 
         if (isNode) {
-          if (isString(file)) file = require('fs').readFileSync(file);
+          if (isString(file)) file = fs.readFileSync(file);
           upload(file);
         }
         else NotSupported();
@@ -439,7 +447,7 @@
         if (File && file instanceof File) {
           if (!options.contentType && file.type != "") options.contentType = file.type;
         } else {
-          file = getBlob(file, options.contentType || defaultType);
+          file = new Blob([ new Uint8Array(file) ], {type: options.contentType || defaultType});
         }
 
         reader.readAsDataURL(file);
@@ -484,7 +492,7 @@
       if (options.filename) {
         if (isNode) {
           apicall.setProcessor(function(data) {
-            response.success[key] = require('fs').writeFileSync(options.filename, data, 'binary');
+            response.success[key] = fs.writeFileSync(options.filename, data, 'binary');
             return response;
           }).done();
         } else {
@@ -731,11 +739,17 @@
     login: function(user, password, options) {
       if (isObject(user)) options = password;
       else user = {userid: user, password: password};
+      options = opts(this, options);
+      options.applevel = true;
+
       // Wipe out existing login information.
       this.options.userid = null;
       this.options.session_token = null;
-      options = opts(this, options);
-      options.applevel = true;
+
+      if (options.savelogin) {
+        store('userid', null, this.options.appid);
+        store('session_token', null, this.options.appid);
+      }
 
       var self = this;
       return new APICall({
@@ -746,9 +760,69 @@
         password: user.password,
         processResponse: APICall.basicResponse
       }).on('success', function(data) {
+        if (options.savelogin) {
+          store('userid', user.userid, self.options.appid);
+          store('session_token', data.session_token, self.options.appid);
+        }
         self.options.userid = user.userid;
         self.options.session_token = data.session_token;
       });
+    },
+
+    /**
+     * Login a user via a social network credentials.
+     * This only works for browsers (i.e. not in a node.js environment) and requires user interaction (a browser window).
+     * @param {string} network A network to authenticate against. @see WebService.SocialNetworks
+     * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
+     * @config {string} [options.link] If false, do not link social network to currently logged in user.
+     * @return {APICall} An APICall instance for the web service request used to attach events.
+     */
+    loginSocial: function(network, options) {
+      // This does not work with Node.JS, or unrecognized services.
+      if (isNode) NotSupported();
+      options = opts(this, options);
+      options.applevel = true;
+
+      var challenge = uuid(), self = this;
+      var apicall = new APICall({
+        action: 'account/social/login/status/'+challenge,
+        options: options,
+        later: true,
+        processResponse: function(data) {
+          if (data.finished) {
+            self.options.session_token = data.session_token;
+            data = { success: data }
+          }
+          else {
+            self.options.session_token = null;
+            data = { errors: [ "Login unsuccessful." ] }
+          }
+
+          if (options.savelogin) {
+            store('session_token', self.options.session_token, self.options.appid);
+          }
+
+          return data;
+        }
+      });
+
+      var url = apiroot+"/v1/app/"+options.appid+"/account/social/login?service="+network+"&apikey="+options.apikey+"&challenge="+challenge;
+
+      if (this.options.session_token && options.link !== false) {
+        url += "&session_token=" + this.options.session_token;
+      }
+
+      var win = window.open(url, challenge, "width=600,height=400,menubar=0,location=0,toolbar=0,status=0");
+
+      function checkOpen() {
+        if (win.closed) {
+          clearTimeout(checkOpen.interval);
+          apicall.done();
+        }
+      }
+      checkOpen.interval = setInterval(checkOpen, 50);
+
+      return apicall;
     },
 
     /**
@@ -763,6 +837,11 @@
       var token = this.options.session_token;
       this.options.userid = null;
       this.options.session_token = null;
+
+      if (options.savelogin) {
+        store('userid', null, this.options.appid);
+        store('session_token', this.options.appid);
+      }
 
       return new APICall({
         action: 'account/logout',
@@ -854,10 +933,19 @@
         processResponse: APICall.basicResponse
       };
 
+      // Drop session if we are referring to ourselves.
+      if (userid.userid == this.options.userid) {
+        this.options.session_token = null;
+        this.options.userid = null;
+        
+        if (options.savelogin) {
+          store('userid', null, this.options.appid);
+          store('session_token', null, this.options.appid);
+        }
+      }
+
       if (userid.password) {
         // Non-master key access
-        this.options.session_token = null;
-        this.options.username = null;
         config.username = userid.userid;
         config.password = userid.password;
       } else {
@@ -937,6 +1025,33 @@
   };
 
   WebService.VERSION = version;
+
+  // Supported Social Networks
+  WebService.SocialNetworks = [
+    'bodymedia',
+    'dropbox',
+    'facebook',
+    'fitbit',
+    'flickr',
+    'foursquare',
+    'gcontacts',
+    'gdocs',
+    'github',
+    'gmail',
+    'google',
+    'gplus',
+    'instagram',
+    'linkedin',
+    'meetup',
+    'runkeeper',
+    'tumblr',
+    'twitter',
+    'withings',
+    'wordpress',
+    'yammer',
+    'zeo'
+  ];
+
 
   /**
    * <p>WebService will return an instance of this class that should be used to interact with
@@ -1350,9 +1465,7 @@
    * @memberOf APICall
    */
   APICall.basicResponse = function(data, xhr, response) {
-    var out = {success: {}};
-    out.success = data;
-    return out;
+    return {success: data || {}};
   }
 
   /**
@@ -1571,7 +1684,6 @@
   var defaultType = 'application/octet-stream';
   var File = base.File;
   var FileReader = base.FileReader;
-  var BlobBuilder = base.BlobBuilder || base.WebKitBlobBuilder || base.MozBlobBuilder || base.MSBlobBuilder;
   var ArrayBuffer = base.ArrayBuffer;
   var Buffer = base.Buffer;
   var CanvasRenderingContext2D = base.CanvasRenderingContext2D;
@@ -1589,9 +1701,27 @@
     for (i = 20; i < 32; ++i) { out[i] = hex(); }
     return out.join('');
   }
+  
 
   function opts(scope, options) {
     return merge({}, scope.options, options);
+  }
+
+  var propCache = {};
+  var ROOT_COLLECTION = 'base';
+
+  function retrieve(key, collection) {
+    var col = getCollection(collection);
+    return col[key];
+  }
+  
+  function store(key, value, collection) {
+    var col = getCollection(collection);
+    if (col[key] != value) {
+      col[key] = value;
+      saveCollection(collection);
+    }
+    return value;
   }
 
   function server_params(options, map) {
@@ -1654,7 +1784,7 @@
       });
     }
     return out;
-  }
+    }
 
   function mapInsensitive(map, name, value) {
     // Find the closest name if we haven't referenced it directly.
@@ -1730,65 +1860,6 @@
     return null;
   }
 
-  function objectKeys(obj) {
-    if (typeof Object.keys == "function") {
-      return Object.keys(obj);
-    } else if (typeof obj == "object") {
-      var keys = [];
-      for (var key in obj) {
-        if (obj.hasOwnProperty(key)) {
-          keys.push(key);
-        }
-      }
-      return keys;
-    }
-
-    throw new TypeError("Object.keys used on non-object");
-  }
-
-  // Takes two objects or two arrays are arguments
-  // Recursively compares them
-  // Not in use right now
-  function areEqual(a, b) {
-    if (isArray(a) && isArray(b)){
-      if (a.length == b.length){
-        for (var i = 0; i < a.length; ++ i){
-          if (isObject(a[i]) || isArray(a[i])){
-            if (!areEqual(a[i], b[i])){
-              return false;
-            }
-          } else if (a[i] !== b[i]){
-            return false;
-          }
-        }
-        return true;
-      } else {
-        return false;
-      }
-    } else if (isObject(a) && isObject(b)){
-      if (areEqual(objectKeys(a), objectKeys(b))){
-        var keys = objectKeys(a);
-        for (var i = 0; i < keys.length; ++ i){
-          var key = keys[i];
-          if (isObject(a[key]) || isArray(a[key])){
-            if (!areEqual(a[key], b[key])){
-              return false;
-            }
-          } else {
-            if (a[key] !== b[key]){
-              return false;
-            }
-          }
-        }
-        return true;
-      } else {
-        return false;
-      }
-    } else {
-      return false;
-    }
-  }
-
   function isEmptyObject(item) {
     if (item) {
       for (var k in item) {
@@ -1796,21 +1867,6 @@
       }
     }
     return true;
-  }
-
-  function getBlob(data, contentType) {
-    var blob;
-    if (!contentType) contentType = defaultType;
-    data = new Uint8Array(data);
-    try {
-      // Binary in javascript is such a nightmare.
-      blob = new Blob(data, {type: contentType});
-    } catch (e) {
-      var builder = new BlobBuilder();
-      builder.append(data);
-      blob = builder.getBlob(contentType);
-    }
-    return blob;
   }
 
   function stringify(map, sep, eol, ignore) {
@@ -1855,70 +1911,119 @@
     return input;
   }
 
-  function NotSupported() {
-    throw new Error("Unsupported operation");
-  }
-
-  function nop(s) {
-    return s;
-  }
-
-  function setupUserToken(obj) {
-    var token, appid = 'cmut_' + obj.options.appid;
-    if (isNode) {
-      var filename = '/tmp/.' + appid;
-      try {
-        token = fs.readFileSync(filename, 'utf8');
-      } catch (e) {
-        token = uuid();
-        try {
-          fs.writeFileSync(filename, token);
-        } catch (e) {}
-      }
-    } else if (window.localStorage) {
-      token = localStorage.getItem(appid);
-      if (!token) {
-        token = uuid();
-        localStorage.setItem(appid, token);
-      }
-    } else {
-      var cookies = unstringify(document.cookie, '=', ';');
-      if (!cookies[appid]) {
-        token = uuid();
-        document.cookie = appid + '=' + token + '; expires=' + new Date(33333333333333).toUTCString() + '; path=/';
-      } else {
-        token = cookies[appid];
-      }
-    }
-
-    obj.options.user_token = token;
-  }
+  function NotSupported() { throw new Error("Unsupported operation"); }
+  function nop(s) { return s; }
 
   // Export CloudMine objects.
-  var http, btoa, https, ajax, isNode, url, apiroot = "https://api.cloudmine.me";
+  var http, btoa, https, ajax, isNode, fs, url, getCollection, saveCollection, apiroot = "https://api.cloudmine.me";
   if (!this.window) {
     isNode = true;
     url = require('url');
     http = require('http');
     https = require('https');
+    fs = require('fs');
     module.exports = { WebService: WebService };
+
+    // Wrap the HttpRequest constructor so it operates the same as jQuery/Zepto.
     ajax = function(url, config) {
       return new HttpRequest(url, config);
     }
+
+    // Node.JS adapter to support base64 encoding.
     btoa = function(str, encoding) {
       return new Buffer(str, encoding || 'utf8').toString('base64');
     }
+
+    /**
+     * Retreive JSON data from the given collection. This will attempt to load a .cm.(collection).json file first
+     * from the current directory, and on any error, try to load the same name from the home directory.
+     * @param {string} [collection="base"] The collection to retreive data from.
+     * @return An object from the stored JSON data.
+     * @private
+     */
+    getCollection = function(collection) {
+      collection = 'cm.' + (collection || ROOT_COLLECTION);
+      
+      // Load the collection if it hasn't already been loaded. Try current directory, or $HOME.
+      if (!propCache[collection]) {
+        var locations = ['.', process.env.HOME + "/."], loc;
+        while ((loc = locations.shift()) != null) {
+          try {
+            propCache[collection] = JSON.parse(fs.readFileSync(loc + collection + '.json', 'UTF8'));
+            break;
+          } catch (e) {}
+        }
+        if (!loc) propCache[collection] = {};
+      }
+
+      return propCache[collection];
+    }
+
+    /**
+     * Save JSON data to the given collection. This will attempt to save to .cm.(collection).json file first
+     * in the current directory, and on any error, try to save to the same name in the home directory.
+     * @param {string} [collection="base"] The collection to save data from.
+     * @throws {Error} If the file could not be saved.
+     * @private
+     */
+    saveCollection = function(collection) {
+      collection = 'cm.' + (collection || ROOT_COLLECTION);
+
+      // Attempt to save to the current directory, or load from $HOME.
+      var locations = ['.', process.env.HOME + "/."], loc;
+      while ((loc = locations.shift()) != null) {
+        try {
+          fs.writeFileSync(loc + collection + '.json', JSON.stringify(propCache[collection] || {}), 'UTF8');
+          break;
+        } catch (e) {}
+      }
+
+      if (!loc) throw new Error("Could not save CloudMine session data");
+    }
+
   } else {
     isNode = false;
     window.cloudmine = window.cloudmine || {};
     window.cloudmine.WebService = WebService;
     btoa = window.btoa;
+
     if (window.cloudmine.API) apiroot = window.cloudmine.API;
+
+    // Require the use of jQuery or Zepto.
     if (($ = this.jQuery || this.Zepto) != null) {
       ajax = $.ajax;
-      // Thanks jQuery for the utter nonsense handling of IE 10.
       if ($.support) $.support.cors = true
     }
     else throw new Error("Missing jQuery-compatible ajax implementation");
+
+    /**
+     * Retreive JSON data from the given collection in html5 local storage.
+     * @param {string} [collection="base"] The collection to retreive data from.
+     * @return An object from the stored JSON data.
+     * @private
+     */
+    getCollection = function(collection) {
+      collection = 'cm.' + (collection || ROOT_COLLECTION);
+
+      if (!propCache[collection]) {
+        try {
+          propCache[collection] = JSON.parse(localStorage.getItem(collection)) || {};
+        } catch (e) {
+          propCache[collection] = {};
+        }
+      }
+
+      return propCache[collection];
+    }
+
+    /**
+     * Save JSON data to the given collection in html5 local storage.
+     * @param {string} [collection="base"] The collection to save data from.
+     * @private
+     */
+    saveCollection = function(collection) {
+      collection = 'cm.' + (collection || ROOT_COLLECTION);
+      localStorage.setItem(collection, JSON.stringify(propCache[collection] || {}));
+    }
   }
 })();

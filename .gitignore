@@ -1,4 +1,5 @@
 *.swp
+.cm.*
 .DS_Store
 node_modules
 *~
