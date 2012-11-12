@@ -1027,7 +1027,7 @@
     this.setContentType(config.contentType || 'application/json');
     this.url = [apiroot, "/v1/app/", this.config.options.appid, root, this.config.action, (query ? "?" + query : "")].join("");
 
-    var self = this, sConfig = this.config, timestamp = Date.now();
+    var self = this, sConfig = this.config, timestamp = +(new Date);
     /** @private */
     this.config.complete = function(xhr, status) {
       var data;
@@ -1039,7 +1039,7 @@
         
         // Performance metrics, if applicable.
         var requestId = self.responseHeaders['X-Request-Id'];
-        if (requestId) perfComplete[requestId] = Date.now() - timestamp;
+        if (requestId) perfComplete[requestId] = +(new Date) - timestamp;
 
         // If we can parse the data as JSON or store the original data.
         try {
