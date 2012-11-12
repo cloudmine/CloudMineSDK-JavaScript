@@ -1,14 +1,14 @@
 CloudMine JavaScript Library Change Log
 
-v.0.9.5 Git Unstable Changes
+v.0.9.5 November 12, 2012
 	Add social login support (creates users as necessary).
 	Add user session persistence.
 	Fix userid not being set on successful login.
-	Remove stray comma breaking IE.
+	Remove stray comma breaking IE and other IE fixes.
 	createUser: profile option will assign given all properties to the new user object.
 	Remove BlobBuilder support and fix Blob construction.
 	Removed some unused functions.
-	
+
 	New WebService methods:
 	* loginSocial: Create/Login user via OAuth authentication to the given network, e.g. twitter, facebook, github. (Browser only)
 
@@ -33,7 +33,7 @@ v0.9.2 September 14th, 2012
 	More consistent handling of errors from server.
 	Remove Base64 implementation, use btoa instead.
 	Remove redundant appid/apikey specification in APICall configs.
-	
+
 	New WebService methods:
 	* allUsers: List user objects in your application.
 	* deleteUser: Delete a user based with login credentials, or master key.

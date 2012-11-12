@@ -27,16 +27,25 @@ installDeps = (next) ->
     next()
 
 generateDocs = (next) ->
-  exec "node app/run.js -D=\"generatedBy:CloudMine LLC\" -D=\"copyright:#{new Date().getFullYear()} CloudMine, LLC. All Rights Reserved.\" -d=\"../../docs\" -t=\"../../docs/template\" ../../js/cloudmine.js", {cwd: 'node_modules/jsdoc-toolkit'}, next
+  exec "node app/run.js -D=\"generatedBy:CloudMine LLC\" -D=\"copyright:#{new Date().getFullYear()} CloudMine, LLC. All Rights Reserved.\" -d=\"../../docs\" -t=\"../../docs/template\" ../../js/cloudmine.js", {cwd: 'node_modules/jsdoc-toolkit'}, (err, out) ->
+    if err
+      console.log "Failed to generate docs"
+      console.log err
+    else
+      console.log "Docs generated"
+    console.log out
+    next()
 
 
 minify = (next) ->
+  version = require('./js/cloudmine').WebService.VERSION
   parser = require('uglify-js').parser
   ugly = require('uglify-js').uglify
 
   fs.readFile "js/cloudmine.js", 'utf8', (err, data) ->
-    compressed = ugly.gen_code ugly.ast_squeeze ugly.ast_mangle parser.parse data
-    fs.writeFile "js/cloudmine.min.js", compressed, 'utf8', next
+    fs.writeFile "js/cloudmine-#{version}.js", data, 'utf8', (err)->
+      compressed = ugly.gen_code ugly.ast_squeeze ugly.ast_mangle parser.parse data
+      fs.writeFile "js/cloudmine-#{version}.min.js", compressed, 'utf8', next
 
 test = (info, next) ->
   if info.app? and info.key?
