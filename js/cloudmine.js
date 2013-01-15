@@ -1,6 +1,6 @@
 /* CloudMine JavaScript Library v0.9.5 cloudmine.me | cloudmine.me/license */ 
 (function() {
-  var version = '0.9.5';
+  var version = '0.9.6';
 
   /**
    * Construct a new WebService instance
@@ -58,7 +58,9 @@
 
     var src = this.options.appid;
     if (options.savelogin) {
-      if (!this.options.userid) this.options.userid = retrieve('userid', src);
+      if(options.userid) options.login = options.userid;
+
+      if (!this.options.login) this.options.login = retrieve('login', src);
       if (!this.options.session_token) this.options.session_token = retrieve('session_token', src);
     }
 
@@ -542,7 +544,7 @@
 
     /**
      * Create a new user.
-     * @param {object} data An object with a userid and password field.
+     * @param {object} data An object with a email and / or username, and password field.
      * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
      * @config {object} [options.profile] Create a user with the given user profile.
      * @return {APICall} An APICall instance for the web service request used to attach events.
@@ -553,7 +555,7 @@
      */
     /**
      * Create a new user.
-     * @param {string} user The userid to login as.
+     * @param {string} user The email or username to login as.
      * @param {string} password The password to login as.
      * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
      * @config {object} [options.profile] Create a user with the given user profile.
@@ -565,13 +567,16 @@
      */
     createUser: function(user, password, options) {
       if (isObject(user)) options = password;
-      else user = {userid: user, password: password};
+      else user = {email: user, password: password};
       options = opts(this, options);
       options.applevel = true;
 
+      if(user.userid) user.email = user.userid;
+
       var payload = JSON.stringify({
         credentials: {
-          email: user.userid,
+          email: user.email,
+          username: user.username,
           password: user.password
         },
         profile: options.profile
@@ -629,7 +634,7 @@
 
     /**
      * Change a user's password
-     * @param {object} data An object with userid, password, and oldpassword fields.
+     * @param {object} data An object with email, password, and oldpassword fields.
      * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
      * @return {APICall} An APICall instance for the web service request used to attach events.
      *
@@ -639,7 +644,7 @@
      */
     /**
      * Change a user's password
-     * @param {string} user The userid to change the password.
+     * @param {string} user The email to change the password.
      * @param {string} oldpassword The existing password for the user.
      * @param {string} password The new password for the user.
      * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
@@ -651,9 +656,13 @@
      */
     changePassword: function(user, oldpassword, password, options) {
       if (isObject(user)) options = oldpassword;
-      else user = {userid: user, oldpassword: oldpassword, password: password};
+      else user = {login: user, oldpassword: oldpassword, password: password};
       options = opts(this, options);
       options.applevel = true;
+
+      if(user.userid) user.email = user.userid;
+      if(user.email) user.login = user.email;
+      if(user.username) user.login = user.username;
 
       var payload = JSON.stringify({
         password: user.password
@@ -665,22 +674,67 @@
         data: payload,
         options: options,
         processResponse: APICall.basicResponse,
-        username: user.userid,
+        username: user.login,
         password: user.oldpassword
       });
     },
 
     /**
+     * Change a user's credentials (email / username)
+     * @param {object} data An object with login (email or username), password, email, and username fields.
+     * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
+     * @return {APICall} An APICall instance for the web service request used to attach events.
+     *
+     * @function
+     * @name changePassword
+     * @memberOf WebService.prototype
+     */
+    /**
+     * Change a user's credentials (email / username)
+     * @param {string} login The login (email or username) of the user to change.
+     * @param {string} password The existing password for the user.
+     * @param {string} email The new email for the user (can be null).
+     * @param {string} username The new username for the user (can be null).
+     * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
+     * @return {APICall} An APICall instance for the web service request used to attach events.
+     *
+     * @function
+     * @name changePassword^2
+     * @memberOf WebService.prototype
+     */
+    changeCredentials: function(login, password, email, username, options) {
+      if (isObject(user)) options = password;
+      else user = {login: user, password: password, email: email, username: username};
+      options = opts(this, options);
+      options.applevel = true;
+
+      var payload = JSON.stringify({
+        email: user.email,
+        username: user.username
+      });
+
+      return new APICall({
+        action: 'account/credentials',
+        type: 'POST',
+        data: payload,
+        options: options,
+        processResponse: APICall.basicResponse,
+        username: user.login,
+        password: user.password
+      });
+    },
+
+    /**
      * Initiate a password reset request.
-     * @param {string} userid The userid to send a reset password email to.
+     * @param {string} email The email to send a reset password email to.
      * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
      * @return {APICall} An APICall instance for the web service request used to attach events.
      */
-    resetPassword: function(userid, options) {
+    resetPassword: function(email, options) {
       options = opts(this, options);
       options.applevel = true;
       var payload = JSON.stringify({
-        email: userid
+        email: email
       });
 
       return new APICall({ 
@@ -717,7 +771,7 @@
 
     /**
      * Login as a user to access user-level data.
-     * @param {object} data An object hash with userid and password fields.
+     * @param {object} data An object hash with email and / or username, and password fields.
      * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
      * @return {APICall} An APICall instance for the web service request used to attach events.
      *
@@ -727,7 +781,7 @@
      */
     /**
      * Login as a user to access user-level data.
-     * @param {string} user The user to login as
+     * @param {string} user The email or username to login as
      * @param {string} password The password for the user
      * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
      * @return {APICall} An APICall instance for the web service request used to attach events.
@@ -736,18 +790,23 @@
      * @name login^2
      * @memberOf WebService.prototype
      */
-    login: function(user, password, options) {
-      if (isObject(user)) options = password;
-      else user = {userid: user, password: password};
+    login: function(login, password, options) {
+      if (isObject(login)) options = password;
+      else login = {login: login, password: password};
       options = opts(this, options);
       options.applevel = true;
 
+      if(login.userid) login.email = login.userid;
+
+      if(login.email) login.login = login.email;
+      if(login.username) login.login = login.username;
+
       // Wipe out existing login information.
-      this.options.userid = null;
+      this.options.login = null;
       this.options.session_token = null;
 
       if (options.savelogin) {
-        store('userid', null, this.options.appid);
+        store('login', null, this.options.appid);
         store('session_token', null, this.options.appid);
       }
 
@@ -756,15 +815,15 @@
         action: 'account/login',
         type: 'POST',
         options: options,
-        username: user.userid,
-        password: user.password,
+        username: login.login,
+        password: login.password,
         processResponse: APICall.basicResponse
       }).on('success', function(data) {
         if (options.savelogin) {
-          store('userid', user.userid, self.options.appid);
+          store('login', login.login, self.options.appid);
           store('session_token', data.session_token, self.options.appid);
         }
-        self.options.userid = user.userid;
+        self.options.login = login.login;
         self.options.session_token = data.session_token;
       });
     },
@@ -835,11 +894,11 @@
       options.applevel = true;
 
       var token = this.options.session_token;
-      this.options.userid = null;
+      this.options.login = null;
       this.options.session_token = null;
 
       if (options.savelogin) {
-        store('userid', null, this.options.appid);
+        store('login', null, this.options.appid);
         store('session_token', this.options.appid);
       }
 
@@ -855,8 +914,8 @@
     },
 
     /**
-     * Verify if the given userid and password is valid.
-     * @param {object} data An object with userid and password fields.
+     * Verify if the given email and password is valid.
+     * @param {object} data An object with email and password fields.
      * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
      * @return {APICall} An APICall instance for the web service request used to attach events.
      *
@@ -865,8 +924,8 @@
      * @memberOf WebService.prototype
      */
     /**
-     * Verify if the given userid and password is valid.
-     * @param {string} user The userid to login
+     * Verify if the given email and password is valid.
+     * @param {string} user The email to login
      * @param {string} password The password of the user to login
      * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
      * @return {APICall} An APICall instance for the web service request used to attach events.
@@ -875,18 +934,20 @@
      * @name verify^2
      * @memberOf WebService.prototype
      */
-    verify: function(user, password, options) {
-      if (isObject(user)) opts = password;
-      else user = {userid: user, password: password};
+    verify: function(login, password, options) {
+      if (isObject(login)) opts = password;
+      else login = {login: login, password: password};
       options = opts(this, options);
       options.applevel = true;
+
+      if(login.userid) login.login = login.userid;
 
       return new APICall({
         action: 'account/login',
         type: 'POST',
         processResponse: APICall.basicResponse,
-        username: user.userid,
-        password: user.password,
+        username: login.login,
+        password: login.password,
         options: options
       });
     },
@@ -895,9 +956,9 @@
      * Delete a user.
      * If you are using the master api key, omit the user password to delete the user.
      * If you are not using the master api key, provide the user name and password in the corresponding
-     * userid and password fields.
+     * email and password fields.
      *
-     * @param {object} data An object that may contain a userid field and optionally a password field.
+     * @param {object} data An object that may contain a email field and optionally a password field.
      * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
      * @return {APICall} An APICall instance for the web service request used to attach events.
      *
@@ -909,9 +970,9 @@
      * Delete a user.
      * If you are using the master api key, omit the user password to delete the user.
      * If you are not using the master api key, provide the user name and password in the corresponding
-     * userid and password fields.
+     * email and password fields.
      *
-     * @param {string} userid The username to delete. If using a master key use a user id.
+     * @param {string} email The username to delete. If using a master key use a user id.
      * @param {string} password The password for the account. Omit if using a master key.
      * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
      * @return {APICall} An APICall instance for the web service request used to attach events.
@@ -920,11 +981,13 @@
      * @name deleteUser^2
      * @memberOf WebService.prototype
      */
-    deleteUser: function(userid, password, options) {
-      if (isObject(userid)) options = password;
-      else userid = {userid: userid, password: password}
+    deleteUser: function(login, password, options) {
+      if (isObject(login)) options = password;
+      else login = {login: login, password: password}
       options = opts(this, options);
       options.applevel = true;
+
+      if(login.userid) login.login = login.userid;
 
       var config = {
         action: 'account',
@@ -934,23 +997,23 @@
       };
 
       // Drop session if we are referring to ourselves.
-      if (userid.userid == this.options.userid) {
+      if (login.login == this.options.login) {
         this.options.session_token = null;
-        this.options.userid = null;
+        this.options.login = null;
         
         if (options.savelogin) {
-          store('userid', null, this.options.appid);
+          store('login', null, this.options.appid);
           store('session_token', null, this.options.appid);
         }
       }
 
-      if (userid.password) {
+      if (login.password) {
         // Non-master key access
-        config.username = userid.userid;
-        config.password = userid.password;
+        config.username = login.login;
+        config.password = login.password;
       } else {
         // Master key access
-        config.action += '/' + userid.userid;
+        config.action += '/' + login.login;
       }
 
       return new APICall(config);
@@ -969,7 +1032,7 @@
      * @return {string} The logged in userid, if applicable.
      */
     getUserID: function() {
-      return this.options.userid;
+      return this.options.login;
     },
 
     /**
