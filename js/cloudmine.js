@@ -1,4 +1,4 @@
-/* CloudMine JavaScript Library v0.9.5 cloudmine.me | cloudmine.me/license */ 
+/* CloudMine JavaScript Library v0.9.6 cloudmine.me | cloudmine.me/license */ 
 (function() {
   var version = '0.9.6';
 
