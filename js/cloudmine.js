@@ -1,6 +1,6 @@
 /* CloudMine JavaScript Library v0.9.5 cloudmine.me | cloudmine.me/license */ 
 (function() {
-  var version = '0.9.5';
+  var version = '0.9.6';
 
   /**
    * Construct a new WebService instance
