@@ -826,6 +826,56 @@
     },
 
     /**
+     * Query a social network.
+     * Must be logged in as a user who has logged in to a social network.
+     * @param {object} query An object with the parameters of the query.
+     * @config {string} query.network A network to authenticate against. @see WebService.SocialNetworks
+     * @config {string} query.endpoint The endpoint to hit, on the social network side. See the social network's documentation for more details.
+     * @config {string} query.method HTTP verb to use when querying.
+     * @config {object} query.headers Extra headers to pass in the HTTP request to the social network.
+     * @config {object} query.params Extra parameters to pass in the HTTP request to the social network.
+     * @config {string} query.data Data to pass in the body of the HTTP request.
+     * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
+     * @return {APICall} An APICall instance for the web service request used to attach events.
+     */
+    socialQuery: function(query, options) {
+      options = opts(this, options);
+
+      if(!options.session_token) throw new Error("Must be logged in to perform a social query");
+
+      var url = "social/"+query.network+"/"+query.endpoint;
+
+      if(query.headers) {
+        if(url.indexOf('?') === -1) {
+            url = url + "?";
+        } else {
+            url = url + "&";
+        }
+
+        url = url + "headers=" + JSON.stringify(query.headers);
+      }
+
+      if(query.params) {
+        if(url.indexOf('?') === -1) {
+            url = url + "?";
+        } else {
+            url = url + "&";
+        }
+
+        url = url + "params=" + JSON.stringify(query.params);
+      }
+
+      var apicall = new APICall({
+        action: url,
+        type: query.method,
+        options: options,
+        data: query.data
+      });
+
+      return apicall;
+    },
+
+    /**
      * Logout the current user.
      * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
      * @return {APICall} An APICall instance for the web service request used to attach events.
@@ -1103,6 +1153,8 @@
       'X-CloudMine-Agent': agent,
       'X-CloudMine-UT': opts.user_token
     };
+
+    this.requestHeaders = merge({}, this.requestHeaders, config.headers);
 
     this.responseHeaders = {};
     this.responseText = null;
