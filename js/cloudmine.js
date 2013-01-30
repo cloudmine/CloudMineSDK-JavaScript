@@ -845,6 +845,8 @@
 
       var url = "social/"+query.network+"/"+query.endpoint;
 
+      // They may or may not already have a query component in the endpoint. Need to account for
+      // that when passing in headers and extra parameters.
       if(query.headers) {
         if(url.indexOf('?') === -1) {
             url = url + "?";
