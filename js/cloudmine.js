@@ -836,12 +836,17 @@
      * @config {object} query.params Extra parameters to pass in the HTTP request to the social network.
      * @config {string} query.data Data to pass in the body of the HTTP request.
      * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
+     * @throws {Error} If the user is not logged in.
+     * @throws {Error} If query.headers is truthy and not an object.
+     * @throws {Error} If query.params is truthy and not an object.
      * @return {APICall} An APICall instance for the web service request used to attach events.
      */
     socialQuery: function(query, options) {
       options = opts(this, options);
 
       if(!options.session_token) throw new Error("Must be logged in to perform a social query");
+      if(query.headers && !isObject(query.headers)) throw new Error("Headers must be an object");
+      if(query.params && !isObject(query.params)) throw new Error("Extra parameters must be an object");
 
       var url = "social/"+query.network+"/"+query.endpoint;
 
@@ -871,7 +876,8 @@
         action: url,
         type: query.method,
         options: options,
-        data: query.data
+        data: query.data,
+        contentType: 'application/octet-stream'
       });
 
       return apicall;
