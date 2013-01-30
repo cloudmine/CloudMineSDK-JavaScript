@@ -1,6 +1,6 @@
-/* CloudMine JavaScript Library v0.9.5 cloudmine.me | cloudmine.me/license */ 
+/* CloudMine JavaScript Library v0.9.6 cloudmine.me | cloudmine.me/license */ 
 (function() {
-  var version = '0.9.5';
+  var version = '0.9.6';
 
   /**
    * Construct a new WebService instance
@@ -791,15 +791,18 @@
         processResponse: function(data) {
           if (data.finished) {
             self.options.session_token = data.session_token;
+            self.options.userid = data.profile.__id__;
             data = { success: data }
           }
           else {
             self.options.session_token = null;
+            self.options.userid = null;
             data = { errors: [ "Login unsuccessful." ] }
           }
 
           if (options.savelogin) {
-            store('session_token', self.options.session_token, self.options.appid);
+            store('session_token', data.success.session_token, self.options.appid);
+            store('userid', data.success.profile.__id__, self.options.appid);
           }
 
           return data;

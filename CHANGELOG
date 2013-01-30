@@ -1,5 +1,8 @@
 CloudMine JavaScript Library Change Log
 
+v0.9.6 January 29, 2013
+	Fixed a bug that caused the UserID to not be saved properly.
+	
 v.0.9.5 November 12, 2012
 	Add social login support (creates users as necessary).
 	Add user session persistence.

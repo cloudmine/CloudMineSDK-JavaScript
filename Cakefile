@@ -21,7 +21,7 @@ exec = require('child_process').exec
 fs = require 'fs'
 
 installDeps = (next) ->
-  exec 'npm install qunit jsdoc-toolkit uglify-js', (err, out) ->
+  exec 'npm install qunit jsdoc-toolkit uglify-js@1.x.x', (err, out) ->
     console.log 'Installed dependencies:'
     console.log out
     next()
@@ -68,4 +68,5 @@ complete = ->
   cloudmine = require('./js/cloudmine');
   console.log "\nCloudMine Javascript Library v#{cloudmine.WebService.VERSION}"
   console.log "For more information on how to use this library, go to: http://cloudmine.me/docs/js"
+
   process.exit 0
