@@ -806,10 +806,14 @@
         }
       });
 
-      var url = apiroot+"/v1/app/"+options.appid+"/account/social/login?service="+network+"&apikey="+options.apikey+"&challenge="+challenge;
+      var url = apiroot+"/v1/app/"+options.appid+"/account/social/login?service="+network+"&apikey="+options.apikey+"&challenge="+challenge
 
       if (this.options.session_token && options.link !== false) {
         url += "&session_token=" + this.options.session_token;
+      }
+      
+      if (options.scope) {
+        url += "&scope=" + options.scope;
       }
 
       var win = window.open(url, challenge, "width=600,height=400,menubar=0,location=0,toolbar=0,status=0");
@@ -1079,6 +1083,16 @@
     isApplicationData: function() {
       if (this.options.applevel === true || this.options.applevel === false) return this.options.applevel;
       return this.options.session_token == null;
+    }
+
+    uuid: function() {
+      var out = Array(32), i;
+      out[14] = 4;
+      out[19] = ((Math.round(Math.random() * 16) & 3) | 8).toString(16);
+      for (i = 0; i < 14; ++i) { out[i] = hex(); }
+      for (i = 15; i < 19; ++i) { out[i] = hex(); }
+      for (i = 20; i < 32; ++i) { out[i] = hex(); }
+      return out.join('');
     }
   };
 
