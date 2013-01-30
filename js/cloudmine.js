@@ -1154,8 +1154,6 @@
       'X-CloudMine-UT': opts.user_token
     };
 
-    this.requestHeaders = merge({}, this.requestHeaders, config.headers);
-
     this.responseHeaders = {};
     this.responseText = null;
     this.status = null;
