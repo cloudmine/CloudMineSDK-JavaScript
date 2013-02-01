@@ -1620,4 +1620,35 @@ $(function() {
       start();
     }
   });
+
+  asyncTest('Attempt a social query on Twitter', 4, function() {
+    if (inBrowser) {
+      function queryTwitter() {
+          webservice.loginSocial('twitter').on('success', function(data, response) {
+              ok(true, "Successfully logged in to Twitter.");
+              notEqual(data.session_token, null, "Session token in response");
+
+              var socialQuery = { endpoint: "account/settings.json", method: "GET", network: "twitter" }
+
+              webservice.socialQuery(socialQuery).on('success', function(data, response) {
+                  ok(true, "Successfully ran query against Twitter.");
+                  notEqual(data.screen_name, null, "Screen name in response");
+              }).on('error', function(data) {
+                  ok(false, "Did not successfully query Twitter.");
+              }).on('complete', start);
+
+          }).on('error', function(data) {
+              ok(false, "Did not successfully login to Twitter.");
+              start();
+          });
+      }
+
+        // Start tests
+      queryTwitter();
+    } else {
+      expect(1);
+      ok(true, "This feature is not available in Node.JS");
+      start();
+    }
+  });
 });
