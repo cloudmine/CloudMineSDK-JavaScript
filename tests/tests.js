@@ -1621,22 +1621,34 @@ $(function() {
     }
   });
 
-  asyncTest('Attempt a social query on Twitter', 4, function() {
+  asyncTest('Attempt a social query on Twitter', 5, function() {
     if (inBrowser) {
       function queryTwitter() {
           webservice.loginSocial('twitter').on('success', function(data, response) {
               ok(true, "Successfully logged in to Twitter.");
               notEqual(data.session_token, null, "Session token in response");
 
-              var socialQuery = { endpoint: "account/settings.json", method: "GET", network: "twitter" }
+              var socialQuery = { endpoint: "lists/create.json", method: "POST", network: "twitter" }
+              socialQuery.headers = { 'Content-Type': 'application/x-www-form-urlencoded' }
+              socialQuery.data = "name=TestList&mode=public&description=HelloWorld"
 
               webservice.socialQuery(socialQuery).on('success', function(data, response) {
-                  ok(true, "Successfully ran query against Twitter.");
-                  notEqual(data.screen_name, null, "Screen name in response");
-              }).on('error', function(data) {
-                  ok(false, "Did not successfully query Twitter.");
-              }).on('complete', start);
+                  ok(true, "Successfully created a list on Twitter.");
+                  equal(data.name, "TestList", "List name in response");
 
+                  var socialQuery = { endpoint: "lists/destroy.json", method: "POST", network: "twitter" }
+                  socialQuery.headers = { 'Content-Type': 'application/x-www-form-urlencoded' }
+                  socialQuery.data = "list_id=" + data.id;
+
+                  webservice.socialQuery(socialQuery).on('success', function(data, response) {
+                      ok(true, "Successfully destroyed the list we created.");
+                  }).on('error', function(data) {
+                      ok(false, "Did not successfully destroy the list.");
+                  }).on('complete', start);
+              }).on('error', function(data) {
+                  ok(false, "Did not successfully create the list.");
+                  start();
+              });
           }).on('error', function(data) {
               ok(false, "Did not successfully login to Twitter.");
               start();
