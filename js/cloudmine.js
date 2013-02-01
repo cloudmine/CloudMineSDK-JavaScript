@@ -62,7 +62,7 @@
       if (!this.options.session_token) this.options.session_token = retrieve('session_token', src);
     }
 
-    this.options.user_token = retrieve('ut', src) || store('ut', uuid(), src);
+    this.options.user_token = retrieve('ut', src) || store('ut', this.keygen(), src);
   }
 
   /** @namespace WebService.prototype */
@@ -119,7 +119,7 @@
     update: function(key, value, options) {
       if (isObject(key)) options = value;
       else {
-        if (!key) key = uuid();
+        if (!key) key = this.keygen();
         var out = {};
         out[key] = value;
         key = out;
@@ -162,7 +162,7 @@
     set: function(key, value, options) {
       if (isObject(key)) options = value;
       else {
-        if (!key) key = uuid();
+        if (!key) key = this.keygen();
         var out = {};
         out[key] = value;
         key = out;
@@ -393,7 +393,7 @@
      */
     upload: function(key, file, options) {
       options = opts(this, options);
-      if (!key) key = uuid();
+      if (!key) key = this.keygen();
       if (!options.filename) options.filename = key;
 
       // Warning: may not necessarily use ajax to perform upload.
@@ -1086,17 +1086,9 @@
     isApplicationData: function() {
       if (this.options.applevel === true || this.options.applevel === false) return this.options.applevel;
       return this.options.session_token == null;
-    }
+    },
 
-    uuid: function() {
-      var out = Array(32), i;
-      out[14] = 4;
-      out[19] = ((Math.round(Math.random() * 16) & 3) | 8).toString(16);
-      for (i = 0; i < 14; ++i) { out[i] = hex(); }
-      for (i = 15; i < 19; ++i) { out[i] = hex(); }
-      for (i = 20; i < 32; ++i) { out[i] = hex(); }
-      return out.join('');
-    }
+    keygen: uuid
   };
 
   WebService.VERSION = version;
