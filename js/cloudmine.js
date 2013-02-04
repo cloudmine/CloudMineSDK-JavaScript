@@ -809,15 +809,22 @@
         }
       });
 
-      var url = apiroot+"/v1/app/"+options.appid+"/account/social/login?service="+network+"&apikey="+options.apikey+"&challenge="+challenge
+      var url = apiroot+"/v1/app/"+options.appid+"/account/social/login";
+
+      var urlParams = {
+        service: network,
+        apikey: options.apikey,
+        challenge: challenge
+      };
 
       if (this.options.session_token && options.link !== false) {
-        url += "&session_token=" + this.options.session_token;
+        urlParams.session_token = this.options.session_token;
       }
       
-      if (options.scope) {
-        url += "&" + stringify({ scope: options.scope });
-      }
+      if (options.scope) urlParams.scope = options.scope;
+
+      var sep = url.indexOf("?") === -1 ? "?" : "&";
+      url = url + sep + stringify(urlParams);
 
       var win = window.open(url, challenge, "width=600,height=400,menubar=0,location=0,toolbar=0,status=0");
 
