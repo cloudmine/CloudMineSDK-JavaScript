@@ -816,7 +816,7 @@
       }
       
       if (options.scope) {
-        url += "&scope=" + options.scope;
+        url += "&" + stringify({ scope: options.scope });
       }
 
       var win = window.open(url, challenge, "width=600,height=400,menubar=0,location=0,toolbar=0,status=0");
@@ -857,27 +857,13 @@
 
       var url = "social/"+query.network+"/"+query.endpoint;
 
-      // They may or may not already have a query component in the endpoint. Need to account for
-      // that when passing in headers and extra parameters.
-      if(query.headers) {
-        if(url.indexOf('?') === -1) {
-            url = url + "?";
-        } else {
-            url = url + "&";
-        }
+      var urlParams = {};
 
-        url = url + "headers=" + JSON.stringify(query.headers);
-      }
+      if(query.headers) urlParams.headers = query.headers;
+      if(query.params) urlParams.params = query.params;
 
-      if(query.params) {
-        if(url.indexOf('?') === -1) {
-            url = url + "?";
-        } else {
-            url = url + "&";
-        }
-
-        url = url + "params=" + JSON.stringify(query.params);
-      }
+      sep = url.indexOf('?') === -1 ? "?" : "&";
+      url = url + sep + stringify(urlParams);
 
       var apicall = new APICall({
         action: url,
