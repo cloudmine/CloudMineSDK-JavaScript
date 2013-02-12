@@ -126,7 +126,7 @@ $(function() {
     }
 
     function login() {
-      webservice.login({userid: user.email, password: user.password}).on('success', function(data) {
+      webservice.login({email: user.email, password: user.password}).on('success', function(data) {
         ok(data.hasOwnProperty('session_token'), 'Has session token');
       }).on('error', function() {
         ok(false, 'Could not login.');
@@ -134,7 +134,7 @@ $(function() {
     }
 
     function destroy() {
-      webservice.deleteUser({userid: user.email, password: user.password}).on('error', function() {
+      webservice.deleteUser({email: user.email, password: user.password}).on('error', function() {
         ok(false, 'User was destroyed');
       }).on('success', function() {
         ok(true, 'User was destroyed');
@@ -500,7 +500,7 @@ $(function() {
     var appObj = 'IAMA_AppDataInUserData';
     var privateUserObj = 'IAMA_UserLevelObject';
     var user = {
-      userid: util.noise(5) + '@' + util.noise(5) + '.com',
+      email: util.noise(5) + '@' + util.noise(5) + '.com',
       password: util.noise(5)
     };
     
@@ -597,7 +597,7 @@ $(function() {
     var appObj = 'IAMA_AppLevelObject';
     var privateUserObj = 'IAMA_UserLevelObject';
     var user = {
-      userid: util.noise(5) + '@' + util.noise(5) + '.com',
+      email: util.noise(5) + '@' + util.noise(5) + '.com',
       password: util.noise(5)
     };
     
@@ -693,7 +693,7 @@ $(function() {
     var appObj = 'IAMA_AppDataInUserData';
     var privateUserObj = 'IAMA_UserLevelObject';
     var user = {
-      userid: util.noise(5) + '@' + util.noise(5) + '.com',
+      email: util.noise(5) + '@' + util.noise(5) + '.com',
       password: util.noise(5)
     };
     
@@ -787,7 +787,7 @@ $(function() {
     console.log('Ensure code snippets execute properly for actions');
     var opts = {snippet: 'reverse', params: {a: 1, b: { c: 2 }}};
     var key = 'code_snip_test_' + util.noise(8);
-    var user = {userid: util.noise(32) + '@' + util.noise(32) + '.com', password: util.noise(32)};    
+    var user = {email: util.noise(32) + '@' + util.noise(32) + '.com', password: util.noise(32)};    
     
     var snipRan = false;
     webservice.createUser(user).on('success', function() {
@@ -1223,7 +1223,7 @@ $(function() {
 
     function createUser() {
       msg = "Create test user";
-      webservice.createUser({userid: user.email, password: user.password}).on('error', function() {
+      webservice.createUser({email: user.email, password: user.password}).on('error', function() {
         ok(false, msg);
       }).on('success', function() {
         ok(true, msg);
@@ -1232,7 +1232,7 @@ $(function() {
 
     function login() {
       msg = "Login with test user";
-      webservice.login({userid: user.email, password: user.password}).on('error', function() {
+      webservice.login({email: user.email, password: user.password}).on('error', function() {
         ok(false, msg);
       }).on('success', function() {
         ok(true, msg);
@@ -1329,7 +1329,7 @@ $(function() {
 
     function createUser() {
       msg = "Create test user";
-      webservice.createUser({userid: user.email, password: user.password}).on('error', function() {
+      webservice.createUser({email: user.email, password: user.password}).on('error', function() {
         ok(false, msg);
       }).on('success', function() {
         ok(true, msg);
@@ -1338,7 +1338,7 @@ $(function() {
 
     function login() {
       msg = "Login with test user";
-      webservice.login({userid: user.email, password: user.password}).on('error', function() {
+      webservice.login({email: user.email, password: user.password}).on('error', function() {
         ok(false, msg);
       }).on('success', function() {
         ok(true, msg);
@@ -1475,7 +1475,7 @@ $(function() {
         .on('complete', start)
     }
 
-    webservice.createUser({userid: user.email, password: user.password})
+    webservice.createUser({email: user.email, password: user.password})
       .on('success', function(response){
         search(response)
       });
