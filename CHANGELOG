@@ -4,10 +4,11 @@ v0.9.7  In progress
 	Support usernames explicitly
 	Social query support
 	Login methods use JSON instead of Authorization header
-	
+	Better support for sort parameters, /run endpoint, and accessing shared user data
+
 v0.9.6 January 29, 2013
 	Fixed a bug that caused the UserID to not be saved properly.
-	
+
 v.0.9.5 November 12, 2012
 	Add social login support (creates users as necessary).
 	Add user session persistence.

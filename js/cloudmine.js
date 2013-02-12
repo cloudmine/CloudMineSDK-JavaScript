@@ -1,6 +1,6 @@
 /* CloudMine JavaScript Library v0.9.x cloudmine.me | cloudmine.me/license */
 (function() {
-  var version = '0.9.7';
+  var version = '0.9.7-dev';
 
   /**
    * Construct a new WebService instance
@@ -215,12 +215,19 @@
       options.params = null;
       options.snippet = null;
 
-      return new APICall({
+      var call_opts = {
         action: 'run/' + snippet,
         type: options.method || 'GET',
-        query: parameters,
         options: options
-      });
+      };
+
+      if(call_opts.type === 'GET')
+        call_opts.query = parameters;
+      else {
+        call_opts.data = JSON.stringify(parameters);
+      }
+
+      return new APICall(call_opts);
     },
 
     /**
@@ -883,12 +890,10 @@
       if(query.headers) urlParams.headers = query.headers;
       if(query.params) urlParams.params = query.params;
 
-      sep = url.indexOf('?') === -1 ? "?" : "&";
-      url = url + sep + stringify(urlParams);
-
       var apicall = new APICall({
         action: url,
         type: query.method,
+        query: urlParams,
         options: options,
         data: query.data,
         contentType: 'application/octet-stream'
@@ -1227,7 +1232,10 @@
     }
 
     this.setContentType(config.contentType || 'application/json');
-    this.url = [apiroot, "/v1/app/", this.config.options.appid, root, this.config.action, (query ? "?" + query : "")].join("");
+    this.url = [apiroot, "/v1/app/", this.config.options.appid, root, this.config.action].join("");
+
+    var sep = this.url.indexOf('?') === -1 ? '?' : '&';
+    this.url = [this.url, (query ? sep + query : "")].join("");
 
     var self = this, sConfig = this.config, timestamp = +(new Date);
     /** @private */
@@ -1274,7 +1282,8 @@
     // Let script continue before triggering ajax call
     if (!this.config.later && this.config.async) {
       setTimeout(function() {
-        self.xhr = ajax(self.url, sConfig);
+        if(!self.config.cancel)
+          self.xhr = ajax(self.url, sConfig);
       }, 1);
     }
   }
@@ -1729,6 +1738,9 @@
     params: 'params', // Only applies to code snippets, parameters for the code snippet (JSON).
     dontwait: 'async', // Only applies to code snippets, don't wait for results.
     resultsonly: 'result_only', // Only applies to code snippets, only show results from code snippet.
+    shared: 'shared',
+    shared_only: 'shared_only',
+    userid: 'userid',
     count: 'count',
     distance: 'distance', // Only applies to geo-query searches
     units: 'units' // Only applies to geo-query searches
@@ -1874,7 +1886,7 @@
       });
     }
     return out;
-    }
+  }
 
   function mapInsensitive(map, name, value) {
     // Find the closest name if we haven't referenced it directly.
@@ -1964,8 +1976,14 @@
     var out = [], val, escape = ignore ? nop : encodeURIComponent;
     for (var k in map) {
       if (map[k] != null && !isFunction(map[k])){
-        val = isObject(map[k]) ? JSON.stringify(map[k]) : map[k]
-        out.push(escape(k) + sep + escape(val));
+        if(isArray(map[k])){
+          map[k].forEach(function(val){
+            out.push(escape(k) + sep + escape(val));
+          });
+        } else {
+          val = isObject(map[k]) ? JSON.stringify(map[k]) : map[k];
+          out.push(escape(k) + sep + escape(val));
+        }
       }
     }
     return out.join(eol || '&');

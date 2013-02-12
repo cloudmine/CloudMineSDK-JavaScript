@@ -7,7 +7,43 @@ $(function() {
   var util = Import('./util');
   var webservice;
 
-  QUnit.module("JS", {
+  QUnit.module("Unit Tests", {
+    setup: function() {
+      webservice = new cloudmine.WebService({
+        appid: config.appid,
+        apikey: config.apikey,
+        appname: 'UnitTests',
+        appversion: cloudmine.WebService.VERSION
+      });
+    },
+
+    teardown: function() {
+      util.cleanup(webservice);
+    }
+  });
+
+  test("sort parameters get serialzed properly", function(){
+    expect(2);
+    var call, query;
+
+    // one sort field
+    call = webservice.get(null, {sort: "field1"});
+    call.config.cancel = true; // don't make the HTTP call
+
+    query = call.url.split("?")[1];
+    equal(query, "sort=field1", "single field");
+
+    // secondary sort field
+    call = webservice.get(null, {sort: ["field1", "field2"]});
+    call.config.cancel = true; // don't make the HTTP call
+
+    query = call.url.split("?")[1];
+    equal(query, "sort=field1&sort=field2", "secondary field");
+  });
+
+
+
+  QUnit.module("Integration Tests", {
     setup: function() {
       webservice = new cloudmine.WebService({
         appid: config.appid,
