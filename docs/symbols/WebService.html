@@ -251,7 +251,7 @@ access the results of the method called.</div>
 						      <tr>
 							      <td class="attributes">&nbsp;</td>
 							      <td class="nameDescription">
-								      <div class="fixedFont"><b><a href="../symbols/WebService.html#createUser^2">createUser</a></b>(user, password, options)
+								      <div class="fixedFont"><b><a href="../symbols/WebService.html#createUser^2">createUser</a></b>(auth, password, options)
 								      </div>
 								      <div class="description">Create a new user.</div>
 							      </td>
@@ -269,7 +269,7 @@ access the results of the method called.</div>
 						      <tr>
 							      <td class="attributes">&nbsp;</td>
 							      <td class="nameDescription">
-								      <div class="fixedFont"><b><a href="../symbols/WebService.html#deleteUser^2">deleteUser</a></b>(userid, password, options)
+								      <div class="fixedFont"><b><a href="../symbols/WebService.html#deleteUser^2">deleteUser</a></b>(email, password, options)
 								      </div>
 								      <div class="description">Delete a user.</div>
 							      </td>
@@ -299,6 +299,15 @@ access the results of the method called.</div>
 								      <div class="fixedFont"><b><a href="../symbols/WebService.html#get">get</a></b>(keys, options)
 								      </div>
 								      <div class="description">Get data from CloudMine.</div>
+							      </td>
+						      </tr>
+					      
+						      <tr>
+							      <td class="attributes">&nbsp;</td>
+							      <td class="nameDescription">
+								      <div class="fixedFont"><b><a href="../symbols/WebService.html#getEmail">getEmail</a></b>()
+								      </div>
+								      <div class="description">Get the current email.</div>
 							      </td>
 						      </tr>
 					      
@@ -341,6 +350,15 @@ access the results of the method called.</div>
 						      <tr>
 							      <td class="attributes">&nbsp;</td>
 							      <td class="nameDescription">
+								      <div class="fixedFont"><b><a href="../symbols/WebService.html#getUsername">getUsername</a></b>()
+								      </div>
+								      <div class="description">Get the current username.</div>
+							      </td>
+						      </tr>
+					      
+						      <tr>
+							      <td class="attributes">&nbsp;</td>
+							      <td class="nameDescription">
 								      <div class="fixedFont"><b><a href="../symbols/WebService.html#isApplicationData">isApplicationData</a></b>()
 								      </div>
 								      <div class="description">Determine if this store is using application data.</div>
@@ -368,7 +386,7 @@ access the results of the method called.</div>
 						      <tr>
 							      <td class="attributes">&nbsp;</td>
 							      <td class="nameDescription">
-								      <div class="fixedFont"><b><a href="../symbols/WebService.html#login^2">login</a></b>(user, password, options)
+								      <div class="fixedFont"><b><a href="../symbols/WebService.html#login^2">login</a></b>(auth, password, options)
 								      </div>
 								      <div class="description">Login as a user to access user-level data.</div>
 							      </td>
@@ -395,7 +413,7 @@ access the results of the method called.</div>
 						      <tr>
 							      <td class="attributes">&nbsp;</td>
 							      <td class="nameDescription">
-								      <div class="fixedFont"><b><a href="../symbols/WebService.html#resetPassword">resetPassword</a></b>(userid, options)
+								      <div class="fixedFont"><b><a href="../symbols/WebService.html#resetPassword">resetPassword</a></b>(email, options)
 								      </div>
 								      <div class="description">Initiate a password reset request.</div>
 							      </td>
@@ -550,16 +568,16 @@ access the results of the method called.</div>
 							      <td class="nameDescription">
 								      <div class="fixedFont"><b><a href="../symbols/WebService.html#verify">verify</a></b>(data, options)
 								      </div>
-								      <div class="description">Verify if the given userid and password is valid.</div>
+								      <div class="description">Verify if the given login and password is valid.</div>
 							      </td>
 						      </tr>
 					      
 						      <tr>
 							      <td class="attributes">&nbsp;</td>
 							      <td class="nameDescription">
-								      <div class="fixedFont"><b><a href="../symbols/WebService.html#verify^2">verify</a></b>(user, password, options)
+								      <div class="fixedFont"><b><a href="../symbols/WebService.html#verify^2">verify</a></b>(auth, password, options)
 								      </div>
-								      <div class="description">Verify if the given userid and password is valid.</div>
+								      <div class="description">Verify if the given email and password is valid.</div>
 							      </td>
 						      </tr>
 					      
@@ -596,7 +614,7 @@ supported events:
 <p>   200, 201, 400, 401, 404, 409, ok, created, badrequest, unauthorized, notfound, conflict,
    success, error, complete, meta, result, abort
 <p>Event order: success callbacks, meta callbacks, result callbacks, error callbacks, complete
-callbacks 
+callbacks
 
 <p>Example:
 <pre class='code'>
@@ -666,7 +684,7 @@ ws.get("MyKey").on("success", function(data, apicall) {
 								    <span class="light fixedFont">{boolean}</span>  <b>Default.savelogin</b>
 								    <i>Optional</i>
 							    </dt>
-								  <dd>If true, session token and userid will be persisted between logins.</dd>
+								  <dd>If true, session token and email / username will be persisted between logins.</dd>
 						    
 							    <dt>
 								    <span class="light fixedFont">{integer}</span>  <b>Default.limit</b>
@@ -806,7 +824,7 @@ Results may be affected by defaults and/or by the options parameter.
 									  <span class="light fixedFont">{object}</span> <b>data</b>
 									  
 								  </dt>
-								  <dd>An object with userid, password, and oldpassword fields.</dd>
+								  <dd>An object with email, password, and oldpassword fields.</dd>
 							  
 								  <dt>
 									  <span class="light fixedFont">{object}</span> <b>options</b>
@@ -855,7 +873,7 @@ Results may be affected by defaults and/or by the options parameter.
 									  <span class="light fixedFont">{string}</span> <b>user</b>
 									  
 								  </dt>
-								  <dd>The userid to change the password.</dd>
+								  <dd>The email to change the password.</dd>
 							  
 								  <dt>
 									  <span class="light fixedFont">{string}</span> <b>oldpassword</b>
@@ -971,7 +989,7 @@ Results may be affected by defaults and/or by the options parameter.
 									  <span class="light fixedFont">{object}</span> <b>data</b>
 									  
 								  </dt>
-								  <dd>An object with a userid and password field.</dd>
+								  <dd>An object with an email, username, and password field.</dd>
 							  
 								  <dt>
 									  <span class="light fixedFont">{object}</span> <b>options</b>
@@ -1007,7 +1025,7 @@ Results may be affected by defaults and/or by the options parameter.
 					  <div class="fixedFont">
 					    
 					    <span class="light">{<a href="../symbols/APICall.html">APICall</a>}</span>
-					    <b>createUser</b>(user, password, options)
+					    <b>createUser</b>(auth, password, options)
 					    
 					  </div>
 					  <div class="description">
@@ -1023,10 +1041,10 @@ Results may be affected by defaults and/or by the options parameter.
 							  <dt class="heading">Parameters:</dt>
 							  
 								  <dt>
-									  <span class="light fixedFont">{string}</span> <b>user</b>
+									  <span class="light fixedFont">{string}</span> <b>auth</b>
 									  
 								  </dt>
-								  <dd>The userid to login as.</dd>
+								  <dd>The email to login as.</dd>
 							  
 								  <dt>
 									  <span class="light fixedFont">{string}</span> <b>password</b>
@@ -1075,7 +1093,7 @@ Results may be affected by defaults and/or by the options parameter.
 						  Delete a user.
 If you are using the master api key, omit the user password to delete the user.
 If you are not using the master api key, provide the user name and password in the corresponding
-userid and password fields.
+email and password fields.
 						  
 						  
 					  </div>
@@ -1090,7 +1108,7 @@ userid and password fields.
 									  <span class="light fixedFont">{object}</span> <b>data</b>
 									  
 								  </dt>
-								  <dd>An object that may contain a userid field and optionally a password field.</dd>
+								  <dd>An object that may contain email / username fields and optionally a password field.</dd>
 							  
 								  <dt>
 									  <span class="light fixedFont">{object}</span> <b>options</b>
@@ -1120,14 +1138,14 @@ userid and password fields.
 					  <div class="fixedFont">
 					    
 					    <span class="light">{<a href="../symbols/APICall.html">APICall</a>}</span>
-					    <b>deleteUser</b>(userid, password, options)
+					    <b>deleteUser</b>(email, password, options)
 					    
 					  </div>
 					  <div class="description">
 						  Delete a user.
 If you are using the master api key, omit the user password to delete the user.
 If you are not using the master api key, provide the user name and password in the corresponding
-userid and password fields.
+email and password fields.
 						  
 						  
 					  </div>
@@ -1139,10 +1157,10 @@ userid and password fields.
 							  <dt class="heading">Parameters:</dt>
 							  
 								  <dt>
-									  <span class="light fixedFont">{string}</span> <b>userid</b>
+									  <span class="light fixedFont">{string}</span> <b>email</b>
 									  
 								  </dt>
-								  <dd>The username to delete. If using a master key use a user id.</dd>
+								  <dd>The email of the user to delete. If using a master key use a user id.</dd>
 							  
 								  <dt>
 									  <span class="light fixedFont">{string}</span> <b>password</b>
@@ -1338,6 +1356,38 @@ Results may be affected by defaults and/or by the options parameter.
 
 					<hr />
 				
+					  <a name="getEmail"> </a>
+					  <div class="fixedFont">
+					    
+					    <span class="light">{string}</span>
+					    <b>getEmail</b>()
+					    
+					  </div>
+					  <div class="description">
+						  Get the current email.
+						  
+						  
+					  </div>
+					  
+					  
+					  
+						
+						
+						
+					
+					
+						<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{string}</span> The logged in email, if logged in.</dd>
+							
+						</dl>
+					
+					
+					
+
+					<hr />
+				
 					  <a name="getOption"> </a>
 					  <div class="fixedFont">
 					    
@@ -1495,6 +1545,38 @@ Results may be affected by defaults and/or by the options parameter.</dd>
 
 					<hr />
 				
+					  <a name="getUsername"> </a>
+					  <div class="fixedFont">
+					    
+					    <span class="light">{string}</span>
+					    <b>getUsername</b>()
+					    
+					  </div>
+					  <div class="description">
+						  Get the current username.
+						  
+						  
+					  </div>
+					  
+					  
+					  
+						
+						
+						
+					
+					
+						<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{string}</span> The logged in username, if logged in.</dd>
+							
+						</dl>
+					
+					
+					
+
+					<hr />
+				
 					  <a name="isApplicationData"> </a>
 					  <div class="fixedFont">
 					    
@@ -1582,7 +1664,7 @@ Results may be affected by defaults and/or by the options parameter.</dd>
 									  <span class="light fixedFont">{object}</span> <b>data</b>
 									  
 								  </dt>
-								  <dd>An object hash with userid and password fields.</dd>
+								  <dd>An object hash with email / username, and password fields.</dd>
 							  
 								  <dt>
 									  <span class="light fixedFont">{object}</span> <b>options</b>
@@ -1612,7 +1694,7 @@ Results may be affected by defaults and/or by the options parameter.</dd>
 					  <div class="fixedFont">
 					    
 					    <span class="light">{<a href="../symbols/APICall.html">APICall</a>}</span>
-					    <b>login</b>(user, password, options)
+					    <b>login</b>(auth, password, options)
 					    
 					  </div>
 					  <div class="description">
@@ -1628,10 +1710,10 @@ Results may be affected by defaults and/or by the options parameter.</dd>
 							  <dt class="heading">Parameters:</dt>
 							  
 								  <dt>
-									  <span class="light fixedFont">{string}</span> <b>user</b>
+									  <span class="light fixedFont">{string}</span> <b>auth</b>
 									  
 								  </dt>
-								  <dd>The user to login as</dd>
+								  <dd>The email of the user to login as</dd>
 							  
 								  <dt>
 									  <span class="light fixedFont">{string}</span> <b>password</b>
@@ -1766,7 +1848,7 @@ This only works for browsers (i.e. not in a node.js environment) and requires us
 					  <div class="fixedFont">
 					    
 					    <span class="light">{<a href="../symbols/APICall.html">APICall</a>}</span>
-					    <b>resetPassword</b>(userid, options)
+					    <b>resetPassword</b>(email, options)
 					    
 					  </div>
 					  <div class="description">
@@ -1782,10 +1864,10 @@ This only works for browsers (i.e. not in a node.js environment) and requires us
 							  <dt class="heading">Parameters:</dt>
 							  
 								  <dt>
-									  <span class="light fixedFont">{string}</span> <b>userid</b>
+									  <span class="light fixedFont">{string}</span> <b>email</b>
 									  
 								  </dt>
-								  <dd>The userid to send a reset password email to.</dd>
+								  <dd>The email to send a reset password email to.</dd>
 							  
 								  <dt>
 									  <span class="light fixedFont">{object}</span> <b>options</b>
@@ -2712,7 +2794,7 @@ Results may be affected by defaults and/or by the options parameter.
 					    
 					  </div>
 					  <div class="description">
-						  Verify if the given userid and password is valid.
+						  Verify if the given login and password is valid.
 						  
 						  
 					  </div>
@@ -2727,7 +2809,7 @@ Results may be affected by defaults and/or by the options parameter.
 									  <span class="light fixedFont">{object}</span> <b>data</b>
 									  
 								  </dt>
-								  <dd>An object with userid and password fields.</dd>
+								  <dd>An object with email / username, and password fields.</dd>
 							  
 								  <dt>
 									  <span class="light fixedFont">{object}</span> <b>options</b>
@@ -2757,11 +2839,11 @@ Results may be affected by defaults and/or by the options parameter.
 					  <div class="fixedFont">
 					    
 					    <span class="light">{<a href="../symbols/APICall.html">APICall</a>}</span>
-					    <b>verify</b>(user, password, options)
+					    <b>verify</b>(auth, password, options)
 					    
 					  </div>
 					  <div class="description">
-						  Verify if the given userid and password is valid.
+						  Verify if the given email and password is valid.
 						  
 						  
 					  </div>
@@ -2773,10 +2855,10 @@ Results may be affected by defaults and/or by the options parameter.
 							  <dt class="heading">Parameters:</dt>
 							  
 								  <dt>
-									  <span class="light fixedFont">{string}</span> <b>user</b>
+									  <span class="light fixedFont">{string}</span> <b>auth</b>
 									  
 								  </dt>
-								  <dd>The userid to login</dd>
+								  <dd>The email to login</dd>
 							  
 								  <dt>
 									  <span class="light fixedFont">{string}</span> <b>password</b>
@@ -2817,7 +2899,7 @@ Results may be affected by defaults and/or by the options parameter.
     </div>
     <footer>
       <h1>Copyright &copy;2013 CloudMine, LLC. All Rights Reserved.</h1>
-	    <div>Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blankt">JsDoc Toolkit</a> 2.4.0 on Tue Feb 05 2013 15:33:29 GMT-0500 (EST)</div>
+	    <div>Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blankt">JsDoc Toolkit</a> 2.4.0 on Mon Feb 18 2013 15:12:35 GMT-0500 (EST)</div>
     </footer>
   </body>
 </html>

@@ -1,6 +1,6 @@
 CloudMine JavaScript Library Change Log
 
-v0.9.7  In progress
+v0.9.7  February 18, 2013
 	Support usernames explicitly
 	Social query support
 	Login methods use JSON instead of Authorization header
