@@ -1643,6 +1643,7 @@
     }
 
     // Attach a content-length
+    // Prevent node.js from sending transfer-encoding:chunked when there is no body
     config.data = config.data || '';
     if (isArray(config.data)) opts.headers['content-length'] = Buffer.byteLength(config.data);
     else if (isString(config.data)) opts.headers['content-length'] = config.data.length;
