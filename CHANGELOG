@@ -1,5 +1,8 @@
 CloudMine JavaScript Library Change Log
 
+v0.9.8  March 29, 2013
+	Set data to empty string if not present (for content-length)
+
 v0.9.7  February 18, 2013
 	Support usernames explicitly
 	Social query support
