@@ -1,6 +1,6 @@
 /* CloudMine JavaScript Library v0.9.x cloudmine.me | cloudmine.me/license */
 (function() {
-  var version = '0.9.8';
+  var version = '0.9.8-git';
 
   /**
    * Construct a new WebService instance
@@ -184,19 +184,25 @@
      * If given null and options.all is true, delete all objects on the server.
      * Results may be affected by defaults and/or by the options parameter.
      * @param {string|string[]|null} keys The keys to delete on the server.
-     * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
+     * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters. Pass all:true with null keys to really delete all values, or query with a query object or string to delete objects matching query. WARNING: using the query is DANGEROUS. Triple check your query!
      * @return {APICall} An APICall instance for the web service request used to attach events.
      */
     destroy: function(keys, options) {
       options = opts(this, options);
-      if (keys == null && options.all === true) keys = {all: true};
-      else keys = {keys: (isArray(keys) ? keys.join(',') : keys)}
+      var params = {};
+      if (keys == null && options.all === true) params = {all: true};
+      else if (options.query){
+        params = {q: convertQueryInput(options.query)};
+        delete options.query;
+      } else {
+        params = {keys: (isArray(keys) ? keys.join(',') : keys)};
+      }
 
       return new APICall({
         action: 'data',
         type: 'DELETE',
         options: options,
-        query: server_params(options, keys)
+        query: server_params(options, params)
       });
     },
 
