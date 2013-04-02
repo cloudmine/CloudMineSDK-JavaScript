@@ -1,5 +1,9 @@
 CloudMine JavaScript Library Change Log
 
+v0.9.9  April 2, 2013
+	fixed crashed from incomplete responses due to connection errors
+        added ability to destroy via search query
+
 v0.9.8  March 29, 2013
 	Set data to empty string if not present (for content-length)
 

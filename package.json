@@ -1,7 +1,7 @@
 {
   "name": "cloudmine",
   "preferGlobal": false,
-  "version": "0.9.8",
+  "version": "0.9.9",
   "author": {
     "name": "Steve Berlan",
     "email": "steven@cloudmine.me"
@@ -11,8 +11,8 @@
     "Ilya Braude <ilya@cloudmine.me>"
   ],
   "description": "CloudMine JavaScript library for node and browsers",
-  "keywords": ["cloudmine", "backend", "baas"],
-  "homepage": "https://cloudmine.me/docs/javascript",
+  "keywords": ["cloudmine", "backend", "baas", "mbaas"],
+  "homepage": "https://cloudmine.me/docs/js",
   "repository": {
     "type": "git",
     "url": "git://github.com/cloudmine/cloudmine-js.git"
