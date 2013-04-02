@@ -1997,11 +1997,18 @@
   }
 
   function unstringify(input, sep, eol, ignore) {
-    input = input.split(eol || '&');
-    var out = {}, unescape = ignore ? nop : decodeURIComponent;
-    for (var i = 0; i < input.length; ++i) {
-      var str = input[i].split(sep);
-      out[unescape(str.shift())] = unescape(str.join(sep));
+    var out = {};
+
+    if(isString(input)){
+      input = input.split(eol || '&');
+      var unescape = ignore ? nop : decodeURIComponent;
+      for (var i = 0; i < input.length; ++i) {
+        var str = input[i].split(sep);
+        out[unescape(str.shift())] = unescape(str.join(sep));
+      }
+    } else {
+      // error case - input is already an object
+      out = input;
     }
     return out;
   }
