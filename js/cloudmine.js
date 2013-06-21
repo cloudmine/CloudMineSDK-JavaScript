@@ -55,6 +55,7 @@
    */
   function WebService(options) {
     this.options = opts(this, options);
+    if(!this.options.apiroot) this.options.apiroot = "https://api.cloudmine.me";
 
     var src = this.options.appid;
     if (options.savelogin) {
@@ -830,7 +831,7 @@
         }
       });
 
-      var url = apiroot+"/v1/app/"+options.appid+"/account/social/login";
+      var url = this.options.apiroot+"/v1/app/"+options.appid+"/account/social/login";
 
       var urlParams = {
         service: network,
@@ -1232,7 +1233,7 @@
     }
 
     this.setContentType(config.contentType || 'application/json');
-    this.url = [apiroot, "/v1/app/", this.config.options.appid, root, this.config.action].join("");
+    this.url = [this.config.options.apiroot, "/v1/app/", this.config.options.appid, root, this.config.action].join("");
 
     var sep = this.url.indexOf('?') === -1 ? '?' : '&';
     this.url = [this.url, (query ? sep + query : "")].join("");
@@ -2025,7 +2026,7 @@
   function nop(s) { return s; }
 
   // Export CloudMine objects.
-  var http, btoa, https, ajax, isNode, fs, url, getCollection, saveCollection, apiroot = "https://api.cloudmine.me";
+  var http, btoa, https, ajax, isNode, fs, url, getCollection, saveCollection;
   if (!this.window) {
     isNode = true;
     url = require('url');
@@ -2096,8 +2097,6 @@
     window.cloudmine = window.cloudmine || {};
     window.cloudmine.WebService = WebService;
     btoa = window.btoa;
-
-    if (window.cloudmine.API) apiroot = window.cloudmine.API;
 
     // Require the use of jQuery or Zepto.
     if (($ = this.jQuery || this.Zepto) != null) {
