@@ -9,5 +9,7 @@
     "examples",
     "docs",
     "tests"
-  ]
+  ],
+  "dependencies": {
+  }
 }
