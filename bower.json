@@ -1,0 +1,13 @@
+{
+  "name": "cloudmine-js",
+  "version": "0.9.9",
+  "main": "js/cloudmine.js",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "components",
+    "examples",
+    "docs",
+    "tests"
+  ]
+}
