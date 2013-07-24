@@ -41,6 +41,39 @@ $(function() {
     equal(query, "sort=field1&sort=field2", "secondary field");
   });
 
+  test("destroy builds proper URLs", function(){
+    var call, query;
+
+    // test empty call
+    call = webservice.destroy();
+    call.config.cancel = true; // don't make the HTTP call
+    query = call.url.split("?")[1];
+    equal(query, null, "empty call");
+
+    // list of keys
+    call = webservice.destroy(["key1", "key2"]);
+    call.config.cancel = true; // don't make the HTTP call
+    query = call.url.split("?")[1];
+    equal(query, "keys=key1%2Ckey2", "list of keys");
+
+    // delete all
+    call = webservice.destroy(null, {all: true});
+    call.config.cancel = true; //don't make the HTTP call
+    query = call.url.split("?")[1];
+    equal(query, "all=true", "delete all");
+
+    // delete via query
+    call = webservice.destroy(null, {query: {a: 'b'}});
+    call.config.cancel = true; //don't make the HTTP call
+    query = call.url.split("?")[1];
+    equal(query, "q=%5Ba%20%3D%20%22b%22%5D", "query");
+
+    // delete via query with nulls and undefineds
+    call = webservice.destroy(null, {query: {a: 'b', b: null, c: undefined}});
+    call.config.cancel = true; //don't make the HTTP call
+    query = call.url.split("?")[1];
+    equal(query, "q=%5Ba%20%3D%20%22b%22%2C%20b%20%3D%20null%2C%20c%20%3D%20undefined%5D", "null and undefined");
+  });
 
 
   QUnit.module("Integration Tests", {
