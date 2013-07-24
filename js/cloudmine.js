@@ -1,6 +1,6 @@
 /* CloudMine JavaScript Library v0.9.x cloudmine.me | cloudmine.me/license */
 (function() {
-  var version = '0.9.9';
+  var version = '0.9.10';
 
   /**
    * Construct a new WebService instance
@@ -325,6 +325,24 @@
         query: server_params(options, ''),
         options: options
       });
+    },
+
+    /**
+     * Sends a push notification to your users.
+     * This requires an API key with push permission.
+     * @param {object} [notification] A notification object. This object can have one or more fields for dispatching the notification.
+     * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
+     * @return {APICall} An APICall instance for the web service request used to attach events.
+     */
+    pushNotification: function(notification, options) {
+      options = opts(this, options);
+      return new APICall({
+        action: 'push',
+        type: 'POST',
+        query: server_params(options, ''),
+        options: options,
+        data: JSON.stringify(notification)
+      }); 
     },
 
     /**
