@@ -564,7 +564,9 @@ $(function() {
       apikey: webservice.options.apikey
     });
 
-    var key = 'test_object_' + util.noise(11);
+    var key1 = 'test_object_' + util.noise(11);
+    var key2 = 'test_object_' + util.noise(11);
+    var key3 = 'test_object_' + util.noise(11);
     var userObj = 'IAMA_UserDataInUserData';
     var appObj = 'IAMA_AppDataInUserData';
     var privateUserObj = 'IAMA_UserLevelObject';
@@ -575,17 +577,17 @@ $(function() {
     
     ok(!store.isLoggedIn(), 'User is not currently logged in.');
     ok(store.isApplicationData(), 'Store will refer to application-level data');
-    
-    store.set(key, appObj).on('success', function() {
-      util.track(store, key);
+
+    store.set(key1, appObj).on('success', function() {
+      util.track(store, key1);
       ok(true, 'Successfully created test object');
     }).on('error', function() {
       ok(false, 'Successfully created test object');
     }).on('complete', verifyValue);
     
     function verifyValue() {
-      store.get(key).on('success', function(data) {
-        deepEqual(data[key], appObj, 'Set object is the application object');
+      store.get(key1).on('success', function(data) {
+        deepEqual(data[key1], appObj, 'Set object is the application object');
       }).on('error', function() {
         ok(false, 'Could not verify value of key');
       }).on('complete', createUser);
@@ -608,7 +610,7 @@ $(function() {
     }
     
     function getUserValue() {
-      store.get(key).on('success', function(data) {
+      store.get(key1).on('success', function(data) {
         ok(false, 'Verify that the test object does not exist yet.');
       }).on('error', function() {
         ok(true, 'Verify that the test object does not exist yet.');
@@ -618,8 +620,9 @@ $(function() {
     function setUserValue() {
       ok(store.isLoggedIn(), 'User is currently logged in.');
       ok(!store.isApplicationData(), 'Store will refer to user-level data');
-      store.set(key, privateUserObj).on('success', function() {
-        util.track(store, key);
+
+      store.set(key2, privateUserObj).on('success', function() {
+        util.track(store, key2);
         ok(true, 'Successfully set value of user-level data while logged in as user');
       }).on('error', function() {
         ok(false, 'Successfully set value of user-level data while logged in as user');
@@ -627,8 +630,8 @@ $(function() {
     }
 
     function setAppValue() {
-      store.set(key, '2', {applevel: true}).on('success', function() {
-        util.track(store, key);
+      store.set(key3, '2', {applevel: true}).on('success', function() {
+        util.track(store, key3);
         ok(true, 'Successfully set value to application data while logged in as user');
       }).on('error', function() {
         ok(false, 'Successfully set value to application data while logged in as user');
@@ -636,16 +639,16 @@ $(function() {
     }
 
     function verifyUserValue() {
-      store.get(key).on('success', function(data) {
-        deepEqual(data[key], privateUserObj, 'Verify user-level data is what we set it to.');
+      store.get(key2).on('success', function(data) {
+        deepEqual(data[key2], privateUserObj, 'Verify user-level data is what we set it to.');
       }).on('error', function() {
         ok(false, 'Could not find value on user-level');
       }).on('complete', verifyAppValue);
     }
     
     function verifyAppValue() {
-      store.get(key, {applevel: true}).on('success', function(data) {
-        deepEqual(data[key], '2', 'Verify application-data is the application object we set it to.');
+      store.get(key3, {applevel: true}).on('success', function(data) {
+        deepEqual(data[key3], '2', 'Verify application-data is the application object we set it to.');
       }).on('error', function() {
         ok(false, 'Could not find value on application level.');
       }).on('complete', start);
@@ -661,7 +664,8 @@ $(function() {
       applevel: true
     });
 
-    var key = 'test_object_' + util.noise(11);
+    var key1 = 'test_object_' + util.noise(11);
+    var key2 = 'test_object_' + util.noise(11);
     var userObj = 'IAMA_UserDataInAppData';
     var appObj = 'IAMA_AppLevelObject';
     var privateUserObj = 'IAMA_UserLevelObject';
@@ -672,16 +676,16 @@ $(function() {
     
     ok(!store.isLoggedIn(), 'User is not currently logged in.');
     ok(store.isApplicationData(), 'Store will refer to application data');
-    store.set(key, appObj).on('success', function() {
-      util.track(store, key);
+    store.set(key1, appObj).on('success', function() {
+      util.track(store, key1);
       ok(true, 'Successfully created test object');
     }).on('error', function() {
       ok(false, 'Successfully created test object');
     }).on('complete', verifyValue);
     
     function verifyValue() {
-      store.get(key).on('success', function(data) {
-        deepEqual(data[key], appObj, 'Set object is the application object');
+      store.get(key1).on('success', function(data) {
+        deepEqual(data[key1], appObj, 'Set object is the application object');
       }).on('error', function() {
         ok(false, 'Could not verify value of key');
       }).on('complete', createUser);
@@ -706,16 +710,16 @@ $(function() {
     function getUserValue() {
       ok(store.isLoggedIn(), 'User is currently logged in.');
       ok(store.isApplicationData(), 'Store will refer to application data');
-      store.get(key).on('success', function(data) {
-        deepEqual(data[key], appObj, 'Verify that we can see application data when logged in');
+      store.get(key1).on('success', function(data) {
+        deepEqual(data[key1], appObj, 'Verify that we can see application data when logged in');
       }).on('error', function() {
         ok(false, 'Verify that we can see application data when logged in');
       }).on('complete', setAppValue);
     }
 
     function setAppValue() {
-      store.set(key, userObj).on('success', function() {
-        util.track(store, key);
+      store.set(key1, userObj).on('success', function() {
+        util.track(store, key1);
         ok(true, 'Successfully set value to application data while logged in as user');
       }).on('error', function() {
         ok(false, 'Successfully set value to application data while logged in as user');
@@ -723,8 +727,8 @@ $(function() {
     }
 
     function setUserValue() {
-      store.set(key, privateUserObj, {applevel: false}).on('success', function() {
-        util.track(store, key);
+      store.set(key2, privateUserObj, {applevel: false}).on('success', function() {
+        util.track(store, key2);
         ok(true, 'Successfully set value of user-level data while logged in as user');
       }).on('error', function() {
         ok(false, 'Successfully set value of user-level data while logged in as user');
@@ -732,16 +736,16 @@ $(function() {
     }
     
     function verifyAppValue() {
-      store.get(key).on('success', function(data) {
-        deepEqual(data[key], userObj, 'Verify application-data is the user object we set it to.');
+      store.get(key1).on('success', function(data) {
+        deepEqual(data[key1], userObj, 'Verify application-data is the user object we set it to.');
       }).on('error', function() {
         ok(false, 'Could not find value on application level.');
       }).on('complete', verifyUserValue);
     }
 
     function verifyUserValue() {
-      store.get(key, {applevel: false}).on('success', function(data) {
-        deepEqual(data[key], privateUserObj, 'Verify user-level data is what we set it to.');
+      store.get(key2, {applevel: false}).on('success', function(data) {
+        deepEqual(data[key2], privateUserObj, 'Verify user-level data is what we set it to.');
       }).on('error', function() {
         ok(false, 'Could not find value on user-level');
       }).on('complete', start);
@@ -757,7 +761,8 @@ $(function() {
       applevel: false
     });
 
-    var key = 'test_object_' + util.noise(11);
+    var key1 = 'test_object_' + util.noise(11);
+    var key2 = 'test_object_' + util.noise(11);
     var userObj = 'IAMA_UserDataInUserData';
     var appObj = 'IAMA_AppDataInUserData';
     var privateUserObj = 'IAMA_UserLevelObject';
@@ -768,15 +773,15 @@ $(function() {
     
     ok(!store.isLoggedIn(), 'User is not currently logged in.');
     ok(!store.isApplicationData(), 'Store will refer to user-level data');
-    store.set(key, appObj).on('success', function() {
-      util.track(store, key);
+    store.set(key1, appObj).on('success', function() {
+      util.track(store, key1);
       ok(false, 'Could not create object while not logged in.');
     }).on('error', function() {
       ok(true, 'Could not create object while not logged in.');
     }).on('complete', verifyValue);
     
     function verifyValue() {
-      store.get(key).on('success', function(data) {
+      store.get(key1).on('success', function(data) {
         ok(false, 'Could not get object while not logged in');
       }).on('error', function() {
         ok(true, 'Could not get object while not logged in');
@@ -802,7 +807,7 @@ $(function() {
     function getUserValue() {
       ok(store.isLoggedIn(), 'User is currently logged in.');
       ok(!store.isApplicationData(), 'Store will refer to user-level data');
-      store.get(key).on('success', function(data) {
+      store.get(key1).on('success', function(data) {
         ok(false, 'Verify that the test object does not exist yet.');
       }).on('error', function() {
         ok(true, 'Verify that the test object does not exist yet.');
@@ -810,8 +815,8 @@ $(function() {
     }
 
     function setUserValue() {
-      store.set(key, privateUserObj).on('success', function() {
-        util.track(store, key);
+      store.set(key2, privateUserObj).on('success', function() {
+        util.track(store, key2);
         ok(true, 'Successfully set value of user-level data while logged in as user');
       }).on('error', function() {
         ok(false, 'Successfully set value of user-level data while logged in as user');
@@ -819,8 +824,8 @@ $(function() {
     }
     
     function setAppValue() {
-      store.set(key, appObj, {applevel: true}).on('success', function() {
-        util.track(store, key);
+      store.set(key1, appObj, {applevel: true}).on('success', function() {
+        util.track(store, key1);
         ok(true, 'Successfully set value to application data while logged in as user');
       }).on('error', function() {
         ok(false, 'Successfully set value to application data while logged in as user');
@@ -828,16 +833,16 @@ $(function() {
     }
     
     function verifyAppValue() {
-      store.get(key, {applevel: true}).on('success', function(data) {
-        deepEqual(data[key], appObj, 'Verify application-data is the application object we set it to.');
+      store.get(key1, {applevel: true}).on('success', function(data) {
+        deepEqual(data[key1], appObj, 'Verify application-data is the application object we set it to.');
       }).on('error', function() {
         ok(false, 'Could not find value on application level.');
       }).on('complete', verifyUserValue);
     }
 
     function verifyUserValue() {
-      store.get(key).on('success', function(data) {
-        deepEqual(data[key], privateUserObj, 'Verify user-level data is what we set it to.');
+      store.get(key2).on('success', function(data) {
+        deepEqual(data[key2], privateUserObj, 'Verify user-level data is what we set it to.');
       }).on('error', function() {
         ok(false, 'Could not find value on user-level');
       }).on('complete', start);
