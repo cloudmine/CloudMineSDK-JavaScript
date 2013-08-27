@@ -1,5 +1,11 @@
 CloudMine JavaScript Library Change Log
 
+v0.9.11 August 27, 2013
+	Fix bug involving incorrect Content-Length being sent when using node.js and Unicode characters
+
+v0.9.10 July 24, 2013
+	Add ability to send push notifications
+
 v0.9.9  April 2, 2013
 	fixed crashed from incomplete responses due to connection errors
         added ability to destroy via search query

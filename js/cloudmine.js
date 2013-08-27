@@ -1,6 +1,6 @@
 /* CloudMine JavaScript Library v0.9.x cloudmine.me | cloudmine.me/license */
 (function() {
-  var version = '0.9.10';
+  var version = '0.9.11';
 
   /**
    * Construct a new WebService instance
@@ -1670,7 +1670,7 @@
     // Prevent node.js from sending transfer-encoding:chunked when there is no body
     config.data = config.data || '';
     if (isArray(config.data)) opts.headers['content-length'] = Buffer.byteLength(config.data);
-    else if (isString(config.data)) opts.headers['content-length'] = config.data.length;
+    else if (isString(config.data)) opts.headers['content-length'] = Buffer.byteLength(config.data);
 
     // Fire request.
     var self = this, cbContext = config.context || this;
