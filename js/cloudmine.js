@@ -659,6 +659,16 @@
       });
     },
 
+    updateUserMaster: function(user_id, profile, options) {
+      options = opts(this, options);
+      return new APICall({
+        action: 'account/' + user_id,
+        type: 'POST',
+        options: options,
+        query: server_params(options),
+        data: JSON.stringify(profile)
+      });
+    },
 
     /**
      * Change a user's password
