@@ -323,7 +323,7 @@
       return new APICall({
         action: 'account',
         type: 'GET',
-        query: server_params(options, ''),
+        query: server_params(options),
         options: options
       });
     },
