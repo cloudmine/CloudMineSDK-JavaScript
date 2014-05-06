@@ -659,6 +659,12 @@
       });
     },
 
+    /**
+     * Update a user object without having a session token. Requires the use of the master key
+     * @param {string} user_id the user id of the user to update.
+     * @param {object} profile a JSON object representing the profile
+     * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
+     */
     updateUserMaster: function(user_id, profile, options) {
       options = opts(this, options);
       return new APICall({
