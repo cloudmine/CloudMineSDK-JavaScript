@@ -340,7 +340,7 @@
       return new APICall({
         action: 'push',
         type: 'POST',
-        query: server_params(options, ''),
+        query: server_params(options),
         options: options,
         data: JSON.stringify(notification)
       }); 
@@ -359,7 +359,7 @@
       return new APICall({
         action: 'account/' + id,
         type: 'GET',
-        query: server_params(options, ''),
+        query: server_params(options),
         options: options
       });
     },
