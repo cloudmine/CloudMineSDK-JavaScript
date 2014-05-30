@@ -1,6 +1,6 @@
 /* CloudMine JavaScript Library v0.9.x cloudmine.me | cloudmine.me/license */
 (function() {
-  var version = '0.9.11';
+  var version = '0.9.12';
 
   /**
    * Construct a new WebService instance
@@ -343,7 +343,7 @@
         query: server_params(options),
         options: options,
         data: JSON.stringify(notification)
-      }); 
+      });
     },
 
     /**
@@ -917,7 +917,7 @@
       if (this.options.session_token && options.link !== false) {
         urlParams.session_token = this.options.session_token;
       }
-      
+
       if (options.scope) urlParams.scope = options.scope;
 
       var sep = url.indexOf("?") === -1 ? "?" : "&";

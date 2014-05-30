@@ -1,5 +1,11 @@
 CloudMine JavaScript Library Change Log
 
+v0.9.12 May 29, 2014
+	added changeCredentials function for new API
+	honor url params in options for more functions
+	configurable apiroot
+	added ACL handling functions
+
 v0.9.11 August 27, 2013
 	Fix bug involving incorrect Content-Length being sent when using node.js and Unicode characters
 
