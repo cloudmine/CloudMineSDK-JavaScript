@@ -1115,6 +1115,63 @@
     },
 
     /**
+     * Create or update an ACL rule for user-level objects. The API will automatically generate
+     * an id field if an __id__ attribute is not present. If it is, the ACL rule is updated.
+     *
+     * @param {object} acl The ACL object. See CloudMine documentation for reference. Example:
+     *   {
+     *     "__id__": "a4f84f89b2f14a87a3faa87289d72f98",
+     *     "members": ["8490e9c8d6d64e6f8d18df334ae4f4fb", "ecced9c0c4bd41f0ab0dcb93d2840fd8"],
+     *     "permissions": ["r", "u"],
+     *     "segments": {
+     *       "public": true,
+     *       "logged_in": true
+     *     },
+     *     "my_extra_info": 12345
+     *   }
+     *
+     * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
+     * @return {APICall} An APICall instance for the web service request used to attach events.
+     *
+     * @function
+     * @name updateACL
+     * @memberOf WebService.prototype
+     */
+    updateACL: function(acl, options){
+      options = opts(this, options);
+
+      return new APICall({
+        action: 'access',
+        type: 'PUT',
+        processResponse: APICall.basicResponse,
+        data: JSON.stringify(acl),
+        options: options
+      });
+    },
+
+    /**
+     * Get an ACL rule for user-level objects by id.
+     *
+     * @param {string} aclid The id of the ACL object to fetch.
+     * @return {APICall} An APICall instance for the web service request used to attach events.
+     *
+     * @function
+     * @name updateACL
+     * @memberOf WebService.prototype
+     */
+    getACL: function(aclid, options){
+      options = opts(this, options);
+
+      return new APICall({
+        action: 'access/' + aclid,
+        type: 'GET',
+        processResponse: APICall.basicResponse,
+        options: options
+      });
+    },
+
+
+    /**
      * Check if the store has a logged in user.
      * @return {boolean} True if the user is logged in, false otherwise.
      */
