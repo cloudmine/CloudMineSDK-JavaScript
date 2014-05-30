@@ -724,6 +724,41 @@
     },
 
     /**
+     * Change a user's credentials: user/email and/or password
+     * @param {object} auth An object with email, username, password, and new_password, new_email, new_username fields.
+     * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
+     * @return {APICall} An APICall instance for the web service request used to attach events.
+     *
+     * @function
+     * @name changeCredentials
+     * @memberOf WebService.prototype
+     */
+    changeCredentials: function(auth, options) {
+      options = opts(this, options);
+      options.applevel = true;
+
+      var payload = JSON.stringify({
+        email: auth.email,
+        username: auth.username,
+        password: auth.password,
+        credentials: {
+          password: auth.new_password,
+          username: auth.new_username,
+          email: auth.new_email
+        }
+      });
+
+      return new APICall({
+        action: 'account/credentials',
+        type: 'POST',
+        data: payload,
+        options: options,
+        processResponse: APICall.basicResponse
+      });
+    },
+
+
+    /**
      * Initiate a password reset request.
      * @param {string} email The email to send a reset password email to.
      * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
