@@ -1,4 +1,6 @@
 #!/bin/bash
+QUNIT=../node_modules/.bin/qunit
+
 if [ "$(which qunit)" == "" ]; then
   npm install qunit
 fi
@@ -11,4 +13,4 @@ fi
 
 export CLOUDMINE_APPID=$1
 export CLOUDMINE_APIKEY=$2
-qunit -c ../js/cloudmine.js -t ./tests.js
+$QUNIT -c ../js/cloudmine.js -d ./init.js ./util.js ./config.js -t ./tests.js

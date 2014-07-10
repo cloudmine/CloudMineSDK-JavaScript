@@ -1,6 +1,7 @@
 var fs = Import('fs');
 var path = Import('path');
 var cryptoMod = Import('crypto');
+var cloudmine = Import('../js/cloudmine.js');
 
 $(function() {
   var config = Import('./config');
