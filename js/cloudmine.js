@@ -1,6 +1,6 @@
 /* CloudMine JavaScript Library v0.9.x cloudmine.me | cloudmine.me/license */
 (function() {
-  var version = '0.9.12';
+  var version = '0.9.13-git';
 
   /**
    * Construct a new WebService instance
@@ -247,10 +247,18 @@
     search: function(query, options) {
       options = opts(this, options);
       query = {q: query != null ? convertQueryInput(query) : ''}
+
+      var data = undefined;
+      if(options.method === "POST"){
+        data = JSON.stringify(query);
+        query = {}; // don't send q in URL
+      }
+
       return new APICall({
         action: 'search',
-        type: 'GET',
+        type: options.method || 'GET',
         query: server_params(options, query),
+        data: data,
         options: options
       });
     },

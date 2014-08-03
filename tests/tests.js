@@ -8,6 +8,15 @@ $(function() {
   var util = Import('./util');
   var webservice;
 
+  // calls a method on webservice, but doesn't actually execuate an HTTP request
+  function unit_test_method(method_name){
+    return function(){
+      var call = webservice[method_name].apply(webservice, arguments);
+      call.config.cancel = true; // don't make the HTTP call
+      return call;
+    };
+  }
+
   QUnit.module("Unit Tests", {
     setup: function() {
       webservice = new cloudmine.WebService({
@@ -45,37 +54,67 @@ $(function() {
   test("destroy builds proper URLs", function(){
     var call, query;
 
+    var destroy = unit_test_method('destroy');
+
     // test empty call
-    call = webservice.destroy();
-    call.config.cancel = true; // don't make the HTTP call
+    call = destroy();
     query = call.url.split("?")[1];
     equal(query, null, "empty call");
 
     // list of keys
-    call = webservice.destroy(["key1", "key2"]);
-    call.config.cancel = true; // don't make the HTTP call
+    call = destroy(["key1", "key2"]);
     query = call.url.split("?")[1];
     equal(query, "keys=key1%2Ckey2", "list of keys");
 
     // delete all
-    call = webservice.destroy(null, {all: true});
-    call.config.cancel = true; //don't make the HTTP call
+    call = destroy(null, {all: true});
     query = call.url.split("?")[1];
     equal(query, "all=true", "delete all");
 
     // delete via query
-    call = webservice.destroy(null, {query: {a: 'b'}});
-    call.config.cancel = true; //don't make the HTTP call
+    call = destroy(null, {query: {a: 'b'}});
     query = call.url.split("?")[1];
     equal(query, "q=%5Ba%20%3D%20%22b%22%5D", "query");
 
     // delete via query with nulls and undefineds
-    call = webservice.destroy(null, {query: {a: 'b', b: null, c: undefined}});
-    call.config.cancel = true; //don't make the HTTP call
+    call = destroy(null, {query: {a: 'b', b: null, c: undefined}});
     query = call.url.split("?")[1];
     equal(query, "q=%5Ba%20%3D%20%22b%22%2C%20b%20%3D%20null%2C%20c%20%3D%20undefined%5D", "null and undefined");
   });
 
+  test("search queries can be sent with GET and POST", function(){
+    var call, query;
+    var search = unit_test_method('search');
+
+    //search({field: 240}, {method: 'POST', limit: 1}).on('complete', function(){
+
+    // standard GET-based query only
+    call = search({field: 'value'});
+    query = call.url.split("?")[1];
+    equal(query, 'q=%5Bfield%20%3D%20%22value%22%5D', "query in URL for GET query only");
+    equal(call.data, undefined, "no data for GET query only");
+    equal(call.type, "GET", "method is GET");
+
+    // standard GET-based query with params
+    call = search({field: 'value'}, {limit: 1});
+    query = call.url.split("?")[1];
+    equal(query, 'q=%5Bfield%20%3D%20%22value%22%5D&limit=1', "query in URL for GET query with params");
+
+
+    // POST-based search with no params
+    call = search({field: 'value'}, {method: 'POST'});
+    query = call.url.split("?")[1];
+    equal(query, undefined, "POST search query not set");
+    equal(call.requestData, call.config.data);
+    equal(call.requestData, JSON.stringify({q: '[field = "value"]'}), "POST data set to search query");
+
+    // POST-based search with params
+    call = search({field: 'value'}, {method: 'POST', limit: 1});
+    query = call.url.split("?")[1];
+    equal(query, 'limit=1', "POST search query just limit");
+    equal(call.requestData, call.config.data);
+    equal(call.requestData, JSON.stringify({q: '[field = "value"]'}), "POST data set to search query");
+  });
 
   QUnit.module("Integration Tests", {
     setup: function() {

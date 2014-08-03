@@ -2,13 +2,24 @@
 
 if (process.env.CLOUDMINE_APPID && process.env.CLOUDMINE_APIKEY) {
   var qunit = require('qunit');
+  qunit.setup({
+    log: {
+      summary: true,
+      coverage: true
+    },
+    coverage: true
+  });
+
   var config = {
     deps: [ "./tests/init.js", "./tests/util.js", "./tests/config.js" ],
     code: {path: "./js/cloudmine.js", namespace: "cloudmine"},
     tests: "./tests/tests.js"
   };
 
-  qunit.run(config);
+  qunit.run(config, function callback(err, report){
+    console.log("done all tests");
+    console.dir(report);
+  });
 } else {
   console.log("Cannot run tests without specifying an application id and api key.");
   console.log("Please export the following variables in your shell:");
