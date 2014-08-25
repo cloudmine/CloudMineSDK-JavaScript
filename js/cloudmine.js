@@ -1799,22 +1799,20 @@
         self.responseText.push(chunk);
       });
 
-      response.on('close', function() {
-        response.emit('end');
-      });
-
-      response.on('end', function() {
+      response.on('end', function () {
         self._headers = stringify(response.headers, ': ', '\n', true) || "";
         self.status = response.statusCode;
 
-        // Process data if necessary.
-        var data = self.responseText = self.responseText.join('');
-        if (config.dataType == 'json' || (config.dataType != 'text' && response.headers['content-type'].match(/\bapplication\/json\b/i))) {
-          try {
+        var data;
+        try {
+          // Process data if necessary.
+          data = self.responseText = self.responseText.join('');
+          if (config.dataType == 'json' || (config.dataType != 'text' && response.headers['content-type'].match(/\bapplication\/json\b/i))) {
             data = JSON.parse(data);
-          } catch (e) {
-            self._textStatus = 'parsererror';
           }
+        } catch(e)
+        {
+          self._textStatus = 'parsererror';
         }
 
         if (self._textStatus == 'success' && self.status >= 200 && self.status < 300) {
