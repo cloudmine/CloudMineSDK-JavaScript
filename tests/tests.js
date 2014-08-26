@@ -131,7 +131,7 @@ $(function() {
     }
   });
 
-  asyncTest('Verify Get functionality', 9, function() {
+  asyncTest('Verify Get functionality', 10, function() {
     console.log('Verify Get functionality');
     
     var obj1 = 'test_' + util.noise(5);
@@ -154,6 +154,15 @@ $(function() {
     function getSingleObject() {
       msg = "Get single object by key name";
       webservice.get(obj1).on('error', function(data) {
+        ok(false, msg);
+      }).on('success', function(data) {
+        deepEqual(data[obj1], payload[obj1], msg);
+      }).on('complete', getSingleObjectViaAPI);
+    }
+
+    function getSingleObjectViaAPI() {
+      msg = "Get single object by key name via API";
+      webservice.api('text', 'GET', null, null, {keys: obj1}).on('error', function(data) {
         ok(false, msg);
       }).on('success', function(data) {
         deepEqual(data[obj1], payload[obj1], msg);

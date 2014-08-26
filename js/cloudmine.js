@@ -70,6 +70,26 @@
   /** @namespace WebService.prototype */
   WebService.prototype = {
     /**
+     * generic function for calling the api with a minimal set of logic and optons
+     * @param {string} action Action endpoint - 'text', 'data',  etc
+     * @param {string} type HTTP method, such as GET or POST
+     * @param {object} [data] An object hash where the top level properties are the keys.
+     * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
+     * @param {string} [query] Query parameters.
+     * @return {APICall} An APICall instance for the web service request used to attach events.
+     */
+    api: function(action, type, data, options, query) {
+      options = opts(this, options);
+      return new APICall({
+        action: action,
+        type: type,
+        options: options,
+        query: query,
+        data: JSON.stringify(data)
+      });
+    },
+
+    /**
      * Get data from CloudMine.
      * Results may be affected by defaults and/or by the options parameter.
      * @param {string|string[]|null} [keys] If set, return the specified keys, otherwise return all keys.
