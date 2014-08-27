@@ -93,8 +93,8 @@
         query: query,
       };
         
-      if (isObject(data) && method != 'GET') {
-        args['data'] = JSON.stringify(data);
+      if (isObject(data) && method !== 'GET') {
+        args.data = JSON.stringify(data);
       }
 
       return new APICall(args);
