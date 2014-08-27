@@ -61,7 +61,7 @@ $(function() {
     query = call.url.split("?")[1];
     equal(query, 'key=value', "query in URL matches");
     equal(call.type, "POST", "method is POST");
-    equal(call.requestData, '{"some":"data"}', "stringified json in data slot: " + call.data);
+    equal(call.requestData, '{"some":"data"}', "stringified json in data slot");
 
   });
 
