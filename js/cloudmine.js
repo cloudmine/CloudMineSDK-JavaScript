@@ -72,21 +72,32 @@
     /**
      * generic function for calling the api with a minimal set of logic and optons
      * @param {string} action Action endpoint - 'text', 'data',  etc
-     * @param {string} type HTTP method, such as GET or POST
-     * @param {object} [data] An object hash where the top level properties are the keys.
      * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
-     * @param {string} [query] Query parameters.
+     * @param {object} [query] Query parameters.
+     * @param {object} [data] Request body.
      * @return {APICall} An APICall instance for the web service request used to attach events.
+     *
+     * @function
+     * @name api
+     * @memberOf WebService.prototype
      */
-    api: function(action, type, data, options, query) {
+    api: function(action, options, query, data) {
       options = opts(this, options);
-      return new APICall({
+
+      method = options.method || 'GET';
+
+      args = {
         action: action,
-        type: type,
+        type: method,
         options: options,
         query: query,
-        data: JSON.stringify(data)
-      });
+      };
+        
+      if (isObject(data) && method != 'GET') {
+        args['data'] = JSON.stringify(data);
+      }
+
+      return new APICall(args);
     },
 
     /**

@@ -162,7 +162,7 @@ $(function() {
 
     function getSingleObjectViaAPI() {
       msg = "Get single object by key name via API";
-      webservice.api('text', 'GET', null, null, {keys: obj1}).on('error', function(data) {
+      webservice.api('text', null, {keys: obj1}, null).on('error', function(data) {
         ok(false, msg);
       }).on('success', function(data) {
         deepEqual(data[obj1], payload[obj1], msg);
