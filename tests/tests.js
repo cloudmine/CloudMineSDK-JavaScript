@@ -33,31 +33,31 @@ $(function() {
   });
 
   test("api unit tests", function(){
-    var call, action, data, query;
+    var call, query;
 
     var api = unit_test_method('api');
 
     // GET
-    call = api('text', null, {key: 'value'}, null);
+    call = api('text', {query: {key: 'value'}});
     query = call.url.split("?")[1];
     equal(query, 'key=value', "query in URL matches");
     equal(call.type, "GET", "method is GET");
     equal(call.requestData, undefined, "no data slot in GET query");
 
-    call = api('text', null, {key: 'value'}, {some: 'data'});
+    call = api('text', {query: {key: 'value'}}, {some: 'data'});
     query = call.url.split("?")[1];
     equal(query, 'key=value', "query in URL matches");
     equal(call.type, "GET", "method is GET");
     equal(call.requestData, undefined, "still no data slot in GET query");
 
     // POST
-    call = api('text', {method: 'POST'}, {key: 'value'}, null);
+    call = api('text', {method: 'POST', query: {key: 'value'}});
     query = call.url.split("?")[1];
     equal(query, 'key=value', "query in URL matches");
     equal(call.type, "POST", "method is POST");
     equal(call.requestData, undefined, "no data slot for no data");
 
-    call = api('text', {method: 'POST'}, {key: 'value'}, {some: 'data'});
+    call = api('text', {method: 'POST', query: {key: 'value'}}, {some: 'data'});
     query = call.url.split("?")[1];
     equal(query, 'key=value', "query in URL matches");
     equal(call.type, "POST", "method is POST");
