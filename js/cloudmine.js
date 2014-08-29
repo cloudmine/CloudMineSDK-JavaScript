@@ -84,13 +84,13 @@
     api: function(action, options, query, data) {
       options = opts(this, options);
 
-      method = options.method || 'GET';
+      var method = options.method || 'GET';
 
-      args = {
+      var args = {
         action: action,
         type: method,
         options: options,
-        query: query,
+        query: query
       };
         
       if (isObject(data) && method !== 'GET') {
