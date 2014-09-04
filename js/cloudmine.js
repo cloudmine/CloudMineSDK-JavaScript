@@ -73,21 +73,11 @@
      * generic function for calling the api with a minimal set of logic and optons
      * @param {string} action Action endpoint - 'text', 'data',  etc
      * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
-     * @param {object} [data] Request body.
+     * @param {object} [data] Request body (optional).  If present, will be automatically stringified.
      * @return {APICall} An APICall instance for the web service request used to attach events.
      *
      * @function
      * @name api
-     * @memberOf WebService.prototype
-     */
-    /**
-     * generic function for calling the api with a minimal set of logic and optons
-     * @param {string} action Action endpoint - 'text', 'data',  etc
-     * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
-     * @return {APICall} An APICall instance for the web service request used to attach events.
-     *
-     * @function
-     * @name api^2
      * @memberOf WebService.prototype
      */
     api: function(action, options, data) {
@@ -98,7 +88,7 @@
       var args = {
         action: action,
         type: method,
-        options: options,
+        options: options
       };
         
       if (options.query) {
@@ -106,7 +96,7 @@
         delete args.options.query;
       }
 
-      if (isObject(data) && method !== 'GET') {
+      if (data !== undefined) {
         args.data = JSON.stringify(data);
       }
 

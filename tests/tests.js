@@ -44,12 +44,6 @@ $(function() {
     equal(call.type, "GET", "method is GET");
     equal(call.requestData, undefined, "no data slot in GET query");
 
-    call = api('text', {query: {key: 'value'}}, {some: 'data'});
-    query = call.url.split("?")[1];
-    equal(query, 'key=value', "query in URL matches");
-    equal(call.type, "GET", "method is GET");
-    equal(call.requestData, undefined, "still no data slot in GET query");
-
     // POST
     call = api('text', {method: 'POST', query: {key: 'value'}});
     query = call.url.split("?")[1];
