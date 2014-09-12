@@ -32,6 +32,33 @@ $(function() {
     }
   });
 
+  test("api unit tests", function(){
+    var call, query;
+
+    var api = unit_test_method('api');
+
+    // GET
+    call = api('text', {query: {key: 'value'}});
+    query = call.url.split("?")[1];
+    equal(query, 'key=value', "query in URL matches");
+    equal(call.type, "GET", "method is GET");
+    equal(call.requestData, undefined, "no data slot in GET query");
+
+    // POST
+    call = api('text', {method: 'POST', query: {key: 'value'}});
+    query = call.url.split("?")[1];
+    equal(query, 'key=value', "query in URL matches");
+    equal(call.type, "POST", "method is POST");
+    equal(call.requestData, undefined, "no data slot for no data");
+
+    call = api('text', {method: 'POST', query: {key: 'value'}}, {some: 'data'});
+    query = call.url.split("?")[1];
+    equal(query, 'key=value', "query in URL matches");
+    equal(call.type, "POST", "method is POST");
+    equal(call.requestData, '{"some":"data"}', "stringified json in data slot");
+
+  });
+
   test("sort parameters get serialzed properly", function(){
     expect(2);
     var call, query;
@@ -131,7 +158,7 @@ $(function() {
     }
   });
 
-  asyncTest('Verify Get functionality', 9, function() {
+  asyncTest('Verify Get functionality', 10, function() {
     console.log('Verify Get functionality');
     
     var obj1 = 'test_' + util.noise(5);
@@ -154,6 +181,15 @@ $(function() {
     function getSingleObject() {
       msg = "Get single object by key name";
       webservice.get(obj1).on('error', function(data) {
+        ok(false, msg);
+      }).on('success', function(data) {
+        deepEqual(data[obj1], payload[obj1], msg);
+      }).on('complete', getSingleObjectViaAPI);
+    }
+
+    function getSingleObjectViaAPI() {
+      msg = "Get single object by key name via API";
+      webservice.api('text', null, {keys: obj1}, null).on('error', function(data) {
         ok(false, msg);
       }).on('success', function(data) {
         deepEqual(data[obj1], payload[obj1], msg);
