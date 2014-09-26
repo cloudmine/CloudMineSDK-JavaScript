@@ -215,6 +215,15 @@ access the results of the method called.</div>
 						      <tr>
 							      <td class="attributes">&nbsp;</td>
 							      <td class="nameDescription">
+								      <div class="fixedFont"><b><a href="../symbols/WebService.html#changeCredentials">changeCredentials</a></b>(auth, options)
+								      </div>
+								      <div class="description">Change a user's credentials: user/email and/or password</div>
+							      </td>
+						      </tr>
+					      
+						      <tr>
+							      <td class="attributes">&nbsp;</td>
+							      <td class="nameDescription">
 								      <div class="fixedFont"><b><a href="../symbols/WebService.html#changePassword">changePassword</a></b>(data, options)
 								      </div>
 								      <div class="description">Change a user's password</div>
@@ -539,6 +548,15 @@ access the results of the method called.</div>
 						      <tr>
 							      <td class="attributes">&nbsp;</td>
 							      <td class="nameDescription">
+								      <div class="fixedFont"><b><a href="../symbols/WebService.html#updateACL">updateACL</a></b>(acl, options)
+								      </div>
+								      <div class="description">Create or update an ACL rule for user-level objects.</div>
+							      </td>
+						      </tr>
+					      
+						      <tr>
+							      <td class="attributes">&nbsp;</td>
+							      <td class="nameDescription">
 								      <div class="fixedFont"><b><a href="../symbols/WebService.html#updateUser">updateUser</a></b>(data, options)
 								      </div>
 								      <div class="description">Update user object of logged in user.</div>
@@ -551,6 +569,15 @@ access the results of the method called.</div>
 								      <div class="fixedFont"><b><a href="../symbols/WebService.html#updateUser^2">updateUser</a></b>(field, value, options)
 								      </div>
 								      <div class="description">Update user object of logged in user.</div>
+							      </td>
+						      </tr>
+					      
+						      <tr>
+							      <td class="attributes">&nbsp;</td>
+							      <td class="nameDescription">
+								      <div class="fixedFont"><b><a href="../symbols/WebService.html#updateUserMaster">updateUserMaster</a></b>(user_id, profile, options)
+								      </div>
+								      <div class="description">Update a user object without having a session token.</div>
 							      </td>
 						      </tr>
 					      
@@ -785,6 +812,55 @@ Results may be affected by defaults and/or by the options parameter.
 						
 							<dl class="detailList">
 							  <dt class="heading">Parameters:</dt>
+							  
+								  <dt>
+									  <span class="light fixedFont">{object}</span> <b>options</b>
+									  <i>Optional</i>
+								  </dt>
+								  <dd>Override defaults set on WebService. See WebService constructor for parameters.</dd>
+							  
+							</dl>
+						
+						
+						
+					
+					
+						<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{<a href="../symbols/APICall.html">APICall</a>}</span> An APICall instance for the web service request used to attach events.</dd>
+							
+						</dl>
+					
+					
+					
+
+					<hr />
+				
+					  <a name="changeCredentials"> </a>
+					  <div class="fixedFont">
+					    
+					    <span class="light">{<a href="../symbols/APICall.html">APICall</a>}</span>
+					    <b>changeCredentials</b>(auth, options)
+					    
+					  </div>
+					  <div class="description">
+						  Change a user's credentials: user/email and/or password
+						  
+						  
+					  </div>
+					  
+					  
+					  
+						
+							<dl class="detailList">
+							  <dt class="heading">Parameters:</dt>
+							  
+								  <dt>
+									  <span class="light fixedFont">{object}</span> <b>auth</b>
+									  
+								  </dt>
+								  <dd>An object with email, username, password, and new_password, new_email, new_username fields.</dd>
 							  
 								  <dt>
 									  <span class="light fixedFont">{object}</span> <b>options</b>
@@ -2647,6 +2723,66 @@ Results may be affected by defaults and/or by the options parameter.
 
 					<hr />
 				
+					  <a name="updateACL"> </a>
+					  <div class="fixedFont">
+					    
+					    <span class="light">{<a href="../symbols/APICall.html">APICall</a>}</span>
+					    <b>updateACL</b>(acl, options)
+					    
+					  </div>
+					  <div class="description">
+						  Create or update an ACL rule for user-level objects. The API will automatically generate
+an id field if an __id__ attribute is not present. If it is, the ACL rule is updated.
+						  
+						  
+					  </div>
+					  
+					  
+					  
+						
+							<dl class="detailList">
+							  <dt class="heading">Parameters:</dt>
+							  
+								  <dt>
+									  <span class="light fixedFont">{object}</span> <b>acl</b>
+									  
+								  </dt>
+								  <dd>The ACL object. See CloudMine documentation for reference. Example:
+  {
+    "__id__": "a4f84f89b2f14a87a3faa87289d72f98",
+    "members": ["8490e9c8d6d64e6f8d18df334ae4f4fb", "ecced9c0c4bd41f0ab0dcb93d2840fd8"],
+    "permissions": ["r", "u"],
+    "segments": {
+      "public": true,
+      "logged_in": true
+    },
+    "my_extra_info": 12345
+  }</dd>
+							  
+								  <dt>
+									  <span class="light fixedFont">{object}</span> <b>options</b>
+									  <i>Optional</i>
+								  </dt>
+								  <dd>Override defaults set on WebService. See WebService constructor for parameters.</dd>
+							  
+							</dl>
+						
+						
+						
+					
+					
+						<dl class="detailList">
+							<dt class="heading">Returns:</dt>
+							
+								<dd><span class="light fixedFont">{<a href="../symbols/APICall.html">APICall</a>}</span> An APICall instance for the web service request used to attach events.</dd>
+							
+						</dl>
+					
+					
+					
+
+					<hr />
+				
 					  <a name="updateUser"> </a>
 					  <div class="fixedFont">
 					    
@@ -2745,6 +2881,54 @@ Results may be affected by defaults and/or by the options parameter.
 								<dd><span class="light fixedFont">{<a href="../symbols/APICall.html">APICall</a>}</span> An APICall instance for the web service request used to attach events.</dd>
 							
 						</dl>
+					
+					
+					
+
+					<hr />
+				
+					  <a name="updateUserMaster"> </a>
+					  <div class="fixedFont">
+					    
+					    
+					    <b>updateUserMaster</b>(user_id, profile, options)
+					    
+					  </div>
+					  <div class="description">
+						  Update a user object without having a session token. Requires the use of the master key
+						  
+						  
+					  </div>
+					  
+					  
+					  
+						
+							<dl class="detailList">
+							  <dt class="heading">Parameters:</dt>
+							  
+								  <dt>
+									  <span class="light fixedFont">{string}</span> <b>user_id</b>
+									  
+								  </dt>
+								  <dd>the user id of the user to update.</dd>
+							  
+								  <dt>
+									  <span class="light fixedFont">{object}</span> <b>profile</b>
+									  
+								  </dt>
+								  <dd>a JSON object representing the profile</dd>
+							  
+								  <dt>
+									  <span class="light fixedFont">{object}</span> <b>options</b>
+									  <i>Optional</i>
+								  </dt>
+								  <dd>Override defaults set on WebService. See WebService constructor for parameters.</dd>
+							  
+							</dl>
+						
+						
+						
+					
 					
 					
 					
@@ -2957,8 +3141,8 @@ Results may be affected by defaults and/or by the options parameter.
       </section>
     </div>
     <footer>
-      <h1>Copyright &copy;2013 CloudMine, LLC. All Rights Reserved.</h1>
-	    <div>Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blankt">JsDoc Toolkit</a> 2.4.0 on Wed Jul 24 2013 16:28:37 GMT-0400 (EDT)</div>
+      <h1>Copyright &copy;2014 CloudMine, LLC. All Rights Reserved.</h1>
+	    <div>Documentation generated by <a href="http://code.google.com/p/jsdoc-toolkit/" target="_blankt">JsDoc Toolkit</a> 2.4.0 on Fri Sep 26 2014 18:50:14 GMT-0400 (EDT)</div>
     </footer>
   </body>
 </html>
