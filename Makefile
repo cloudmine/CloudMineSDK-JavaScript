@@ -23,7 +23,7 @@ integration-rackspace:
 	-t ./tests/tests.js   
 
 integration:
-	$(MAKE) integration-rackspace && $(MAKE) integration-rackspace
+	$(MAKE) integration-aws && $(MAKE) integration-rackspace
 
 test:
 	$(MAKE) unit
