@@ -48,9 +48,10 @@ minify = (next) ->
       fs.writeFile "js/cloudmine-#{version}.min.js", compressed, 'utf8', next
 
 test = (info, next) ->
-  if info.app? and info.key?
+  if info.app? and ihostnfo.key? and info.host?
     process.env.CLOUDMINE_APPID = info.app
     process.env.CLOUDMINE_APIKEY = info.key
+    process.env.CLOUDMINE_HOST = info.host
 
     qunit = require 'qunit'
     config =

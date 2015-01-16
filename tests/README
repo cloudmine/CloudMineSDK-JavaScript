@@ -1,0 +1,28 @@
+the application to be tested needs the following two snippets:
+
+reverse:
+function reverse(data) {
+    if (data && typeof data == 'object' && data.length) {
+        var out = Array(data.length);
+        for (var i = 0; i < data.length; ++i) { out[i] = reverse(data[i]); }
+        return out;
+     } else if (data && typeof data == 'object') {
+            var out = {};
+            for (var key in data) { if (data.hasOwnProperty(key)) out[key] = reverse(data[key]); }
+            return out;
+            } else if (typeof data == 'string') {
+                var out = "";
+                for (var i = 0, c = data.length; i < data.length; ++i) { out += data[--c]; }
+                return out;
+                }
+                
+                return data;
+                
+}
+exit(reverse(data));
+
+test_standalone:
+exit({
+    you_sent: data.params,
+    i_am: 'test_standalone'
+});

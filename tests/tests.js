@@ -22,6 +22,7 @@ $(function() {
       webservice = new cloudmine.WebService({
         appid: config.appid,
         apikey: config.apikey,
+        apiroot: config.apiroot,
         appname: 'UnitTests',
         appversion: cloudmine.WebService.VERSION
       });
@@ -148,6 +149,7 @@ $(function() {
       webservice = new cloudmine.WebService({
         appid: config.appid,
         apikey: config.apikey,
+        apiroot: config.apiroot,
         appname: 'UnitTests',
         appversion: cloudmine.WebService.VERSION
       });
@@ -533,7 +535,8 @@ $(function() {
     function test1() {
       var webservice_bad_apikey = new cloudmine.WebService({
         appid: webservice.options.appid,
-        apikey: "00000000000000000000000000000001"
+        apikey: "00000000000000000000000000000001",
+        apiroot: webservice.options.apiroot
       });
 
       webservice_bad_apikey.get(key).on('unauthorized', function() {
@@ -550,7 +553,8 @@ $(function() {
     function test2() {
       var webservice_bad_appid = new cloudmine.WebService({
         appid: "00000000000000000000000000000001",
-        apikey: webservice.options.apikey
+        apikey: webservice.options.apikey,
+        apiroot: webservice.options.apiroot
       });
 
       webservice_bad_appid.get(key).on('unauthorized', function() {
@@ -637,7 +641,8 @@ $(function() {
     // Create a new store for this case using webservice's properties.
     var store = new cloudmine.WebService({
       appid: webservice.options.appid,
-      apikey: webservice.options.apikey
+      apikey: webservice.options.apikey,
+      apiroot: webservice.options.apiroot
     });
 
     var key1 = 'test_object_' + util.noise(11);
@@ -737,6 +742,7 @@ $(function() {
     var store = new cloudmine.WebService({
       appid: webservice.options.appid,
       apikey: webservice.options.apikey,
+      apiroot: webservice.options.apiroot,
       applevel: true
     });
 
@@ -834,6 +840,7 @@ $(function() {
     var store = new cloudmine.WebService({
       appid: webservice.options.appid,
       apikey: webservice.options.apikey,
+      apiroot: webservice.options.apiroot,
       applevel: false
     });
 
