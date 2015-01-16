@@ -4,12 +4,26 @@ run:
 unit:
 	@echo "no unit tests yet"
 
-integration:
-	CLOUDMINE_APPID=793dcffc4f67f94c36a8f20628d3d31b \
-	CLOUDMINE_APIKEY=8b05c2e5d0e88b471c5aae8ba6cf9f7b \
+# apps/keys are for applications named "cloudmine-integraton" in geoff's account
+integration-aws:
+	CLOUDMINE_APPID=4d2631c701a74e11a17197f5bcf506b5 \
+	CLOUDMINE_APIKEY=a5126d647c32486e8ed525f859725df7 \
+	CLOUDMINE_APIROOT=https://api.cloudmine.me \
 	./node_modules/qunit/bin/cli.js -d ./tests/init.js ./tests/util.js ./tests/config.js \
 	-c ./js/cloudmine.js \
 	-t ./tests/tests.js   
+
+# apps/keys are for applications named "cloudmine-integraton" in geoff's account
+integration-rackspace:
+	CLOUDMINE_APPID=11d74d7cd2bd40e8813f7d4aba8a98b5 \
+	CLOUDMINE_APIKEY=2532af65040d4090b6f561f5ba5db901 \
+	CLOUDMINE_APIROOT=https://api.rs.cloudmine.me \
+	./node_modules/qunit/bin/cli.js -d ./tests/init.js ./tests/util.js ./tests/config.js \
+	-c ./js/cloudmine.js \
+	-t ./tests/tests.js   
+
+integration:
+	$(MAKE) integration-rackspace && $(MAKE) integration-rackspace
 
 test:
 	$(MAKE) unit
