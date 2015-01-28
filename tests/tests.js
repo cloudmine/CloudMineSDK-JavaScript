@@ -636,7 +636,7 @@ $(function() {
   });
 
 
-  asyncTest('Normal behavior: action use user-level data when possible.', 13, function() {
+  asyncTest('Normal behavior: action use user-level data when possible.', 15, function() {
     console.log('Normal behavior: action use user-level data when possible.');
     // Create a new store for this case using webservice's properties.
     var store = new cloudmine.WebService({
@@ -648,8 +648,8 @@ $(function() {
     var key1 = 'test_object_' + util.noise(11);
     var key2 = 'test_object_' + util.noise(11);
     var key3 = 'test_object_' + util.noise(11);
-    var userObj = 'IAMA_UserDataInUserData';
-    var appObj = 'IAMA_AppDataInUserData';
+    var userObj = 'IAMA_UserDataInUserData1';
+    var appObj = 'IAMA_AppDataInUserData1';
     var privateUserObj = 'IAMA_UserLevelObject';
     var user = {
       email: util.noise(5) + '@' + util.noise(5) + '.com',
@@ -732,11 +732,27 @@ $(function() {
         deepEqual(data[key3], '2', 'Verify application-data is the application object we set it to.');
       }).on('error', function() {
         ok(false, 'Could not find value on application level.');
+      }).on('complete', deleteAppLevelData);
+    }
+
+    function deleteAppLevelData() {
+      store.destroy([key1, key3], {applevel: true}).on('success', function() {
+        ok(true, 'App-level data cleanup successful.');
+      }).on('error', function() {
+        ok(false, 'App-level data cleanup failure.');
+      }).on('complete', deleteUserLevelData);
+    }
+
+    function deleteUserLevelData() {
+      store.destroy([key2], {applevel: false}).on('success', function() {
+        ok(true, 'User-level data cleanup successful.');
+      }).on('error', function() {
+        ok(false, 'User-level data cleanup failure.');
       }).on('complete', start);
     }
   });
 
-  asyncTest('Force usage of application-level data, even if logged in.', 13, function() {
+  asyncTest('Force usage of application-level data, even if logged in.', 15, function() {
     console.log('Force usage of application-level data, even if logged in.');
     // Create a new store for this case using webservice's properties.
     var store = new cloudmine.WebService({
@@ -748,8 +764,8 @@ $(function() {
 
     var key1 = 'test_object_' + util.noise(11);
     var key2 = 'test_object_' + util.noise(11);
-    var userObj = 'IAMA_UserDataInAppData';
-    var appObj = 'IAMA_AppLevelObject';
+    var userObj = 'IAMA_UserDataInAppData2';
+    var appObj = 'IAMA_AppLevelObject2';
     var privateUserObj = 'IAMA_UserLevelObject';
     var user = {
       email: util.noise(5) + '@' + util.noise(5) + '.com',
@@ -830,11 +846,27 @@ $(function() {
         deepEqual(data[key2], privateUserObj, 'Verify user-level data is what we set it to.');
       }).on('error', function() {
         ok(false, 'Could not find value on user-level');
+      }).on('complete', deleteAppLevelData);
+    }
+
+    function deleteAppLevelData() {
+      store.destroy(key1, {applevel: true}).on('success', function() {
+        ok(true, 'App-level data cleanup successful.');
+      }).on('error', function() {
+        ok(false, 'App-level data cleanup failure.');
+      }).on('complete', deleteUserLevelData);
+    }
+
+    function deleteUserLevelData() {
+      store.destroy([key2], {applevel: false}).on('success', function() {
+        ok(true, 'User-level data cleanup successful.');
+      }).on('error', function() {
+        ok(false, 'User-level data cleanup failure.');
       }).on('complete', start);
     }
   });
 
-  asyncTest('Force usage of user-level data, even if not logged in.', 13, function() {
+  asyncTest('Force usage of user-level data, even if not logged in.', 15, function() {
     console.log('Force usage of user-level data, even if not logged in.');
     // Create a new store for this case using webservice's properties.
     var store = new cloudmine.WebService({
@@ -846,8 +878,8 @@ $(function() {
 
     var key1 = 'test_object_' + util.noise(11);
     var key2 = 'test_object_' + util.noise(11);
-    var userObj = 'IAMA_UserDataInUserData';
-    var appObj = 'IAMA_AppDataInUserData';
+    var userObj = 'IAMA_UserDataInUserData3';
+    var appObj = 'IAMA_AppDataInUserData3';
     var privateUserObj = 'IAMA_UserLevelObject';
     var user = {
       email: util.noise(5) + '@' + util.noise(5) + '.com',
@@ -928,6 +960,22 @@ $(function() {
         deepEqual(data[key2], privateUserObj, 'Verify user-level data is what we set it to.');
       }).on('error', function() {
         ok(false, 'Could not find value on user-level');
+      }).on('complete', deleteAppLevelData);
+    }
+
+    function deleteAppLevelData() {
+      store.destroy(key1, {applevel: true}).on('success', function() {
+        ok(true, 'App-level data cleanup successful.');
+      }).on('error', function() {
+        ok(false, 'App-level data cleanup failure.');
+      }).on('complete', deleteUserLevelData);
+    }
+
+    function deleteUserLevelData() {
+      store.destroy(key2, {applevel: false}).on('success', function() {
+        ok(true, 'User-level data cleanup successful.');
+      }).on('error', function() {
+        ok(false, 'User-level data cleanup failure.');
       }).on('complete', start);
     }
   });
