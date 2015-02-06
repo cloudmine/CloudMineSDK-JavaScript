@@ -2139,8 +2139,15 @@
 
   function isEmptyObject(item) {
     if (item) {
-      for (var k in item) {
-        if (item.hasOwnProperty(k)) return false;
+      if (item % 1 === 0) {
+        return false;
+      }
+      else {
+        for (var k in item) {
+          if (item.hasOwnProperty(k)) {
+            return false;
+          }
+        }
       }
     }
     return true;

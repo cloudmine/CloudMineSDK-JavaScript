@@ -1,5 +1,21 @@
 for integration tests, there needs to be an application with the
-the following two snippets:
+the below 5 snippets
+
+on rackspace, production, and staging there is an application called
+"cloudmine-integration" in geoff's account that serves this purpose.
+
+
+test_integer:
+exit(42);
+
+
+test_array:
+exit(["one", 2]);
+
+
+test_string:
+exit("I'm a string");
+
 
 reverse:
 function reverse(data) {
@@ -28,12 +44,10 @@ function reverse(data) {
 }
 exit(reverse(data));
 
+
 test_standalone:
 exit({
   you_sent: data.params,
   i_am: 'test_standalone'
 });
 
-
-on rackspace, production, and staging there is an application called
-"cloudmine-integration" in geoff's account that serves this purpose

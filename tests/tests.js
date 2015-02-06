@@ -988,6 +988,27 @@ $(function() {
     }).on('complete', start);
   });
 
+  asyncTest('Code snippets - integer', 1, function() {
+    webservice.run('test_integer').on('result', function(data) {
+      var result = 42;
+      deepEqual(data, result, 'test_integer snippet call returned expected results');
+    }).on('complete', start);
+  });
+
+  asyncTest('Code snippets - string', 1, function() {
+    webservice.run('test_string').on('result', function(data) {
+      var result = "I'm a string";
+      deepEqual(data, result, 'test_string snippet call returned expected results');
+    }).on('complete', start);
+  });
+
+  asyncTest('Code snippets - array', 1, function() {
+    webservice.run('test_array').on('result', function(data) {
+      var result = ["one", 2];
+      deepEqual(data, result, 'test_array snippet call returned expected results');
+    }).on('complete', start);
+  });
+
   asyncTest('Ensure code snippets execute properly for actions', 33, function() {
     console.log('Ensure code snippets execute properly for actions');
     var opts = {snippet: 'reverse', params: {a: 1, b: { c: 2 }}};
