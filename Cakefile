@@ -27,7 +27,7 @@ installDeps = (next) ->
     next()
 
 generateDocs = (next) ->
-  exec "node app/run.js -D=\"generatedBy:CloudMine LLC\" -D=\"copyright:#{new Date().getFullYear()} CloudMine, LLC. All Rights Reserved.\" -d=\"../../docs\" -t=\"../../docs/template\" ../../js/cloudmine.js", {cwd: 'node_modules/jsdoc-toolkit'}, (err, out) ->
+  exec "node app/run.js -D=\"generatedBy:CloudMine Inc.\" -D=\"copyright:#{new Date().getFullYear()} CloudMine, Inc. All Rights Reserved.\" -d=\"../../docs\" -t=\"../../docs/template\" ../../js/cloudmine.js", {cwd: 'node_modules/jsdoc-toolkit'}, (err, out) ->
     if err
       console.log "Failed to generate docs"
       console.log err
