@@ -1234,7 +1234,7 @@ $(function() {
       }
 
       function compareHashes() {
-        var exists = path.existsSync(downloadTo); 
+        var exists = fs.existsSync(downloadTo);
         ok(exists, 'File was downloaded to the correct file name.');
         if (exists) {
           var originalHash = hash(fs.readFileSync(sourceFile, 'binary'));
