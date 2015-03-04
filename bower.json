@@ -1,15 +1,16 @@
 {
-  "name": "cloudmine-js",
-  "version": "0.9.12",
+  "name": "cloudmine",
+  "version": "0.9.13",
   "homepage": "https://github.com/cloudmine/cloudmine-js",
   "authors": [
-    "Splat <rdonahue.dev@gmail.com>"
+    "CloudMine <dev@cloudmine.me>"
   ],
   "description": "CloudMine is a backend-as-a-service platform for mobile and web developers to rapidly build and quickly scale their apps. Build and scale iOS, Android, Windows Phone, and web apps on our secure and managed backend.",
   "moduleType": [
     "amd",
     "node"
   ],
+  "main": "js/cloudmine.js",
   "keywords": [
     "cloudmine"
   ],

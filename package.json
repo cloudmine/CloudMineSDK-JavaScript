@@ -1,15 +1,11 @@
 {
   "name": "cloudmine",
   "preferGlobal": false,
-  "version": "0.9.13-git",
+  "version": "0.9.13",
   "author": {
-    "name": "Steve Berlan",
-    "email": "steven@cloudmine.me"
+    "name": "CloudMine, Inc.",
+    "email": "dev@cloudmine.me"
   },
-  "contributors": [
-    "Artur Sapek <artur@cloudmine.me>",
-    "Ilya Braude <ilya@cloudmine.me>"
-  ],
   "description": "CloudMine JavaScript library for node and browsers",
   "keywords": ["cloudmine", "backend", "baas", "mbaas"],
   "homepage": "https://cloudmine.me/docs/js",
@@ -22,7 +18,7 @@
   },
   "license": "MIT",
   "engines": {
-    "node": ">=0.6.0"
+    "node": ">=0.8.0"
   },
   "devDependencies": {
     "uglify-js": "^1.3.3",
@@ -30,6 +26,5 @@
   },
   "scripts": {
     "test": "node run_tests.js"
-  },
-  "optionalDependencies": {}
+  }
 }
