@@ -7,6 +7,14 @@ unit:
 # apps/keys for integration tests are from applications named
 # "cloudmine-integraton" in geoff's account - see tests/README
 
+integration-verizon:
+	CLOUDMINE_APPID=a701e4ef8d454b158366b233c69e3e70 \
+	CLOUDMINE_APIKEY=44512e2760e44e67826ab4e7f7113efc \
+	CLOUDMINE_APIROOT=http://204.151.47.194 \
+	./node_modules/qunit/bin/cli.js -d ./tests/init.js ./tests/util.js ./tests/config.js \
+	-c ./js/cloudmine.js \
+	-t ./tests/tests.js   
+
 integration-aws:
 	CLOUDMINE_APPID=4d2631c701a74e11a17197f5bcf506b5 \
 	CLOUDMINE_APIKEY=a5126d647c32486e8ed525f859725df7 \
