@@ -7,7 +7,12 @@
     "email": "dev@cloudmine.me"
   },
   "description": "CloudMine JavaScript library for node and browsers",
-  "keywords": ["cloudmine", "backend", "baas", "mbaas"],
+  "keywords": [
+    "cloudmine",
+    "backend",
+    "baas",
+    "mbaas"
+  ],
   "homepage": "https://cloudmine.me/docs/js",
   "repository": {
     "type": "git",
@@ -15,6 +20,8 @@
   },
   "main": "js/cloudmine.js",
   "dependencies": {
+    "assert": "^1.3.0",
+    "nock": "^1.5.0"
   },
   "license": "MIT",
   "engines": {
