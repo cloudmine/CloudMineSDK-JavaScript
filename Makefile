@@ -2,7 +2,11 @@ run:
 	node js/cloudmine.js
 
 unit:
-	@echo "no unit tests yet"
+	CLOUDMINE_APPID=a701e4ef8d454b158366b233c69e3e70 \
+	CLOUDMINE_APIKEY=44512e2760e44e67826ab4e7f7113efc \
+	CLOUDMINE_APIROOT=https://api.cloudmine.me \
+	node_modules/mocha/bin/mocha ./tests/headers.js
+
 
 # apps/keys for integration tests are from applications named
 # "cloudmine-integraton" in geoff's account - see tests/README
