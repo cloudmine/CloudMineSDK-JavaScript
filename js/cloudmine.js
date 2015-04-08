@@ -1402,8 +1402,7 @@
     this.config.headers = this.requestHeaders;
 
     if (!isEmptyObject(perfComplete)) {
-      var perfHeaderLimit = 20;
-      this.config.headers['X-CloudMine-UT'] += ';' + stringify(perfComplete, ':', ',', null, perfHeaderLimit);
+      this.config.headers['X-CloudMine-UT'] += ';' + stringify(perfComplete, ':', ',', null, PERF_HEADER_LIMIT);
       perfComplete = {};
     }
 
@@ -1954,6 +1953,8 @@
     'conflict': 409
   };
 
+  var PERF_HEADER_LIMIT = 20;
+
   // Scope external dependencies, if necessary.
   var base = this.window ? window : root;
   var defaultType = 'application/octet-stream';
@@ -2156,7 +2157,7 @@
 
   function stringify(map, sep, eol, ignore, limit) {
     sep = sep || '=';
-    limit = limit || -1;
+    limit = limit == undefined ? -1 : limit;
     var out = [], val, escape = ignore ? nop : encodeURIComponent;
     var numMapped = 0;
     for (var k in map) {
