@@ -1402,7 +1402,8 @@
     this.config.headers = this.requestHeaders;
 
     if (!isEmptyObject(perfComplete)) {
-      this.config.headers['X-CloudMine-UT'] += ';' + stringify(perfComplete, ':', ',');
+      var perfHeaderLimit = 20;
+      this.config.headers['X-CloudMine-UT'] += ';' + stringify(perfComplete, ':', ',', null, perfHeaderLimit);
       perfComplete = {};
     }
 
@@ -2153,9 +2154,11 @@
     return true;
   }
 
-  function stringify(map, sep, eol, ignore) {
+  function stringify(map, sep, eol, ignore, limit) {
     sep = sep || '=';
+    limit = limit || -1;
     var out = [], val, escape = ignore ? nop : encodeURIComponent;
+    var numMapped = 0;
     for (var k in map) {
       if (map[k] != null && !isFunction(map[k])){
         if(isArray(map[k])){
@@ -2167,6 +2170,8 @@
           out.push(escape(k) + sep + escape(val));
         }
       }
+      numMapped++;
+      if (numMapped === limit) break;
     }
     return out.join(eol || '&');
   }
