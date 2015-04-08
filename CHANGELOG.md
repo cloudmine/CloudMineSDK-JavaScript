@@ -1,5 +1,9 @@
 # CloudMine JavaScript Library Change Log
 
+## v0.9.14 April 08, 2015
+* Fixed a bug with the performance headers not always being set
+* Limit the performance header to have only 20 time stamps at a time
+
 ## v0.9.13 March 04, 2015
 * Updated license
 * Updated outdated unit tests

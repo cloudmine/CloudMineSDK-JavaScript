@@ -1,6 +1,6 @@
 /* CloudMine JavaScript Library v0.9.x cloudmine.me | cloudmine.me/license */
 (function() {
-  var version = '0.9.13';
+  var version = '0.9.14';
 
   /**
    * Construct a new WebService instance
@@ -90,7 +90,7 @@
         type: method,
         options: options
       };
-        
+
       if (options.query) {
         args.query = options.query;
         delete args.options.query;
@@ -1402,7 +1402,7 @@
     this.config.headers = this.requestHeaders;
 
     if (!isEmptyObject(perfComplete)) {
-      this.config.headers['X-CloudMine-UT'] += ';' + stringify(perfComplete, ':', ',');
+      this.config.headers['X-CloudMine-UT'] += ';' + stringify(perfComplete, ':', ',', null, PERF_HEADER_LIMIT);
       perfComplete = {};
     }
 
@@ -1423,7 +1423,7 @@
         self.responseHeaders = unstringify(xhr.getAllResponseHeaders(), /:\s*/, /(?:\r|\n)?\n/);
 
         // Performance metrics, if applicable.
-        var requestId = self.responseHeaders['X-Request-Id'];
+        var requestId = mapInsensitive(self.responseHeaders, 'X-Request-Id');
         if (requestId) perfComplete[requestId] = +(new Date) - timestamp;
 
         // If we can parse the data as JSON or store the original data.
@@ -1953,6 +1953,8 @@
     'conflict': 409
   };
 
+  var PERF_HEADER_LIMIT = 20;
+
   // Scope external dependencies, if necessary.
   var base = this.window ? window : root;
   var defaultType = 'application/octet-stream';
@@ -2153,9 +2155,11 @@
     return true;
   }
 
-  function stringify(map, sep, eol, ignore) {
+  function stringify(map, sep, eol, ignore, limit) {
     sep = sep || '=';
+    limit = limit == undefined ? -1 : limit;
     var out = [], val, escape = ignore ? nop : encodeURIComponent;
+    var numMapped = 0;
     for (var k in map) {
       if (map[k] != null && !isFunction(map[k])){
         if(isArray(map[k])){
@@ -2167,6 +2171,8 @@
           out.push(escape(k) + sep + escape(val));
         }
       }
+      numMapped++;
+      if (numMapped === limit) break;
     }
     return out.join(eol || '&');
   }
