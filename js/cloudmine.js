@@ -90,7 +90,7 @@
         type: method,
         options: options
       };
-        
+
       if (options.query) {
         args.query = options.query;
         delete args.options.query;
@@ -1423,7 +1423,7 @@
         self.responseHeaders = unstringify(xhr.getAllResponseHeaders(), /:\s*/, /(?:\r|\n)?\n/);
 
         // Performance metrics, if applicable.
-        var requestId = self.responseHeaders['X-Request-Id'];
+        var requestId = mapInsensitive(self.responseHeaders, 'X-Request-Id');
         if (requestId) perfComplete[requestId] = +(new Date) - timestamp;
 
         // If we can parse the data as JSON or store the original data.
