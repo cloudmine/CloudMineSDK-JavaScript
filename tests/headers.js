@@ -34,11 +34,11 @@ describe("Headers should", function() {
 
     var totalReturned = 0;
     for(var i = 0; i < 30; i++) {
-      nock(config.apiroot).get('/v1/app/dfdf0b32811647d1a8147601b3bf1f12/text?keys=test').delay(1000).reply(200, { success: {}, errors: {} }, { 'X-Request-Id': uuid()});
-      webservice.get('test').on('complete', function() {
+      nock(config.apiroot).get('/v1/app/' + config.appid + '/text?keys=test').delay(1000).reply(200, { success: {}, errors: {} }, { 'X-Request-Id': uuid()});
+      webservice.get('test').on('complete', function(body, data) {
         totalReturned++;
         if(totalReturned == 30) {
-          nock(config.apiroot).get('/v1/app/dfdf0b32811647d1a8147601b3bf1f12/text?keys=lastrequest').reply(200, { success: {}, errors: {} }, { 'X-Request-Id': uuid()});
+          nock(config.apiroot).get('/v1/app/' + config.appid + '/text?keys=lastrequest').reply(200, { success: {}, errors: {} }, { 'X-Request-Id': uuid()});
           webservice.get('lastrequest').on('complete', function(body, data) {
             var UT = data.requestHeaders['X-CloudMine-UT'];
             console.log(UT);
