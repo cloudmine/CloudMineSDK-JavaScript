@@ -79,7 +79,6 @@ This library has been tested to work under the following environments:
 * Safari 5
 * Internet Explorer 10
 
-
 ## Known Issues
 * Firefox 3.6 will not trigger specific error events (notfound, unauthorized) for invalid application or api key specification.
 * Internet Explorer 10 changes location of entire page while downloading files when running locally.
