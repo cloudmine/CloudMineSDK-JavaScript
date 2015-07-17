@@ -19,7 +19,7 @@ describe("Headers should", function() {
   function hex() {
     return Math.round(Math.random() * 16).toString(16)
   }
-  
+
   function uuid() {
     var out = Array(32), i;
     out[14] = 4;
@@ -47,8 +47,27 @@ describe("Headers should", function() {
           });
 
         }
-      });      
+      });
     }
-
   });
+
+  it("Should not add Unique ID header if global is not defined", function(done) {
+    nock(config.apiroot).get('/v1/app/' + config.appid + '/text?keys=test').delay(1000).reply(200, { success: {}, errors: {} });
+    webservice.get('test').on('complete', function(body, data) {
+      assert.equal(undefined, data.requestHeaders['X-Unique-Id']);
+      done();
+    });
+  });
+
+  it("Should add Unique ID header if global is defined", function(done) {
+    _$XUniqueID = 'abc123456789';
+    nock(config.apiroot).get('/v1/app/' + config.appid + '/text?keys=test').delay(1000).reply(200, { success: {}, errors: {} });
+    webservice.get('test').on('complete', function(body, data) {
+      var uniqueIdHeader = data.requestHeaders['X-Unique-Id']
+      console.log('uniqueid:',uniqueIdHeader);
+      assert.equal(_$XUniqueID, uniqueIdHeader);
+      done();
+    });
+  });
+
 });
