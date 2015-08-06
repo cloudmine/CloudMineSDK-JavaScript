@@ -766,6 +766,29 @@
     },
 
     /**
+     * Update a user password without having a session token. Requires the use of the master key
+     * @param {string} user_id The id of the user to change the password.
+     * @param {string} password The new password for the user.
+     * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
+     * @return {APICall} An APICall instance for the web service request used to attach events.
+     */
+    changePasswordMaster: function(user_id, password, options) {
+      options = opts(this, options);
+
+      var payload = JSON.stringify({
+        password: password
+      });
+
+      return new APICall({
+        action: 'account/' + user_id + 'password/change',
+        type: 'POST',
+        data: payload,
+        options: options,
+        processResponse: APICall.basicResponse
+      });
+    },
+
+    /**
      * Change a user's credentials: user/email and/or password
      * @param {object} auth An object with email, username, password, and new_password, new_email, new_username fields.
      * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
