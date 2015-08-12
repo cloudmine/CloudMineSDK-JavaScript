@@ -36,8 +36,8 @@ integration-rackspace:
 	-t ./tests/tests.js   
 
 integration-staging:
-	CLOUDMINE_APPID=15a1317012c54c1fb33d17acb9aa6470 \
-	CLOUDMINE_APIKEY=147f4e7ec075487abcc1b29132474ac3 \
+	CLOUDMINE_APPID=9249ede3e7874c89ac0b6b775cdf9642 \
+	CLOUDMINE_APIKEY=4265b75da6a54102a4e9436cf24c95e0 \
 	CLOUDMINE_APIROOT=http://api-staging.cloudmine.me \
 	./node_modules/qunit/bin/cli.js -d ./tests/init.js ./tests/util.js ./tests/config.js \
 	-c ./js/cloudmine.js \
