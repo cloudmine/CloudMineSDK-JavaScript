@@ -780,11 +780,11 @@
       });
 
       return new APICall({
-        action: 'account/' + user_id + 'password/change',
+        action: 'account/' + user_id + '/password/change',
         type: 'POST',
-        data: payload,
         options: options,
-        processResponse: APICall.basicResponse
+        processResponse: APICall.basicResponse,
+        data: payload
       });
     },
 
