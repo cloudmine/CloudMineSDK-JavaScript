@@ -1,8 +1,8 @@
 for integration tests, there needs to be an application with the
 the below 5 snippets
 
-on rackspace, production, and staging there is an application called
-"cloudmine-integration" in geoff's account that serves this purpose.
+on production, and staging there is an application called
+"cloudmine-integration" in geoff's account that serves this purpose. For rackspace, Mike Caputo has the cloudmine-integration app.
 
 
 test_integer:
