@@ -66,6 +66,17 @@ In browsers:
 
 Now check your CloudMine dashboard (https://cloudmine.me/dashboard/) to see your data saved.
 
+## Contributing
+
+Please feel free to contribute to the SDK if you find any issues or if you have a new feature you think would be cool. Just go ahead and fork the SDK, make your changes locally, and then submit a pull request. In order for a pull request to be accepted, it must meet the following requirements:
+
+* All new code must be tested. Any code changes that do not have a corresponding test change will not be accepted.
+* All tests must be passing. Run `make test` to check the tests.
+* Pull request must have a clear explanation of your additions.
+* Code must meet style guidelines. Run `make lint` to ensure that everything is up to snuff. (Note - we use jslint to run the linting, but this will likely change in the future)
+* Pull request must be from the `develop` branch.
+
+Any pull request that does not meet the above requirements will not be accepted. If you have any questions, feel free to reach out to us! And as always, if you find an issue but don't want to fix it, just open an issue in github!
 
 ## License
 

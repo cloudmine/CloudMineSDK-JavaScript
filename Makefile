@@ -28,8 +28,8 @@ integration-aws:
 	-t ./tests/tests.js   
 
 integration-rackspace:
-	CLOUDMINE_APPID=11d74d7cd2bd40e8813f7d4aba8a98b5 \
-	CLOUDMINE_APIKEY=2532af65040d4090b6f561f5ba5db901 \
+	CLOUDMINE_APPID=7bf87751c85e4e03bb5553fa6388dab3 \
+	CLOUDMINE_APIKEY=427fde0286a24377b31541bf4facf67a \
 	CLOUDMINE_APIROOT=https://api.rs.cloudmine.me \
 	./node_modules/qunit/bin/cli.js -d ./tests/init.js ./tests/util.js ./tests/config.js \
 	-c ./js/cloudmine.js \
@@ -49,6 +49,9 @@ integration:
 test:
 	$(MAKE) unit
 	$(MAKE) integration
+
+lint:
+	./node_modules/jslint/bin/jslint.js --maxerr=1000 --passfail=false 'js/cloudmine.js'
 
 kill-node:
 	-kill `ps -eo pid,comm | awk '$$2 == "node" { print $$1 }'`
