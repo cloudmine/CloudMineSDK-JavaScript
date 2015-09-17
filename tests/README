@@ -1,5 +1,5 @@
 for integration tests, there needs to be an application with the
-the below 5 snippets
+the below 6 snippets
 
 on rackspace, production, and staging there is an application called
 "cloudmine-integration" in geoff's account that serves this purpose.
@@ -51,3 +51,18 @@ exit({
   i_am: 'test_standalone'
 });
 
+
+create_object:
+var cloudmine = require("cloudmine");
+
+var ws = new cloudmine.WebService({
+  appid: '4d2631c701a74e11a17197f5bcf506b5',
+  apikey: '20DF680D234C441B9869A21B8FEB6523',
+  apiroot:'https://api.cloudmine.me'
+});
+
+var d = new Date();
+var obj = {testkey: d.toString()};
+console.log(obj);
+ws.set(obj);
+exit({"done": true});
