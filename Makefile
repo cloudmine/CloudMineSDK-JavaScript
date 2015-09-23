@@ -19,6 +19,14 @@ integration-verizon:
 	-c ./js/cloudmine.js \
 	-t ./tests/tests.js   
 
+integration-secure:
+	CLOUDMINE_APPID=94aec595a8d142a78da057a9a5b5f354 \
+	CLOUDMINE_APIKEY=a31309107b2e431b9d6e1f1e12b73adb \
+	CLOUDMINE_APIROOT=https://api.secure.cloudmine.me \
+	./node_modules/qunit/bin/cli.js -d ./tests/init.js ./tests/util.js ./tests/config.js \
+	-c ./js/cloudmine.js \
+	-t ./tests/tests.js   
+
 integration-aws:
 	CLOUDMINE_APPID=4d2631c701a74e11a17197f5bcf506b5 \
 	CLOUDMINE_APIKEY=a5126d647c32486e8ed525f859725df7 \
@@ -28,8 +36,8 @@ integration-aws:
 	-t ./tests/tests.js   
 
 integration-rackspace:
-	CLOUDMINE_APPID=11d74d7cd2bd40e8813f7d4aba8a98b5 \
-	CLOUDMINE_APIKEY=2532af65040d4090b6f561f5ba5db901 \
+	CLOUDMINE_APPID=7bf87751c85e4e03bb5553fa6388dab3 \
+	CLOUDMINE_APIKEY=427fde0286a24377b31541bf4facf67a \
 	CLOUDMINE_APIROOT=https://api.rs.cloudmine.me \
 	./node_modules/qunit/bin/cli.js -d ./tests/init.js ./tests/util.js ./tests/config.js \
 	-c ./js/cloudmine.js \
