@@ -162,7 +162,7 @@ $(function() {
 
   asyncTest('Verify Get functionality', 10, function() {
     console.log('Verify Get functionality');
-    
+
     var obj1 = 'test_' + util.noise(5);
     var obj2 = 'test_' + util.noise(5);
     var obj3 = 'test_' + util.noise(5);
@@ -170,7 +170,7 @@ $(function() {
     payload[obj1] = { "test123": util.noise(32) };
     payload[obj2] = { "test456": util.noise(32) };
     payload[obj3] = { "test789": util.noise(32) };
-    
+
     function getObjectsNoParams() {
       msg = "Get all objects without parameters";
       webservice.get().on('error', function(data) {
@@ -179,7 +179,7 @@ $(function() {
         ok(true, msg);
       }).on('complete', getSingleObject);
     }
-    
+
     function getSingleObject() {
       msg = "Get single object by key name";
       webservice.get(obj1).on('error', function(data) {
@@ -197,7 +197,7 @@ $(function() {
         deepEqual(data[obj1], payload[obj1], msg);
       }).on('complete', getMultipleObjects);
     }
-    
+
     function getMultipleObjects() {
       msg = "Get multiple object by array";
       webservice.get([obj1, obj2, obj3]).on('error', function(data) {
@@ -206,7 +206,7 @@ $(function() {
         deepEqual(data, payload, msg);
       }).on('complete', getObjectsWithOptions);
     }
-    
+
     function getObjectsWithOptions() {
       msg = "Get all objects with count option";
       webservice.get({count: true}).on('error', function(data) {
@@ -215,7 +215,7 @@ $(function() {
         ok(resp.count > 0 && util.keys(data).length > 0, msg);
       }).on('complete', getSingleObjectWithOptions);
     }
-    
+
     function getSingleObjectWithOptions() {
       msg = "Get single object by key name with count option";
       webservice.get(obj1, {count: true}).on('error', function(data) {
@@ -252,7 +252,7 @@ $(function() {
       email: util.noise(5) + '@' + util.noise(5) + '.com',
       password: util.noise(5)
     };
-    
+
     webservice.createUser(user.email, user.password).on('success', function() {
       ok(true, 'Created user ' + user.email + ' with password ' + user.password);
     }).on('error', function() {
@@ -263,7 +263,7 @@ $(function() {
             'CloudMine Agent exposes app name and version');
       verify();
     });
-    
+
     function verify() {
       webservice.verify(user.email, user.password).on('error', function() {
         ok(false, "Verified that account was created.");
@@ -295,6 +295,7 @@ $(function() {
         ok(true, 'Verified that account was destroyed.');
       }).on('complete', start);
     }
+
   });
 
   asyncTest('Create a user with a profile', 5, function() {
@@ -346,7 +347,7 @@ $(function() {
     }).on('error', function() {
       ok(false, 'Successfully set key');
     }).on('complete', verify);
-    
+
     function verify() {
       webservice.get(key).on('success', function(data) {
         deepEqual(value, data[key], 'Set then get a value. Equivilent?');
@@ -365,7 +366,7 @@ $(function() {
       array: [3, '2', 1],
       object: { '3': 2, '1': 'a' }
     };
-    
+
     webservice.update(key, value).on('success', function() {
       util.track(webservice, key);
       ok(true, 'Successfully created key');
@@ -472,7 +473,7 @@ $(function() {
         });
       } else start();
     }
-    
+
     // Kick off the initial set.
     var originalState = JSON.stringify(state);
     webservice.set(key, state).on('success', function() {
@@ -578,7 +579,7 @@ $(function() {
     // Need to temporarily hijack the search function.
     var search = webservice.search, query, expectedResult;
     webservice.search = function(term) {
-      ok(term == expectedResult, ['Query: ', query, ', Expecting: ', expectedResult, ', Received: ', term].join('')); 
+      ok(term == expectedResult, ['Query: ', query, ', Expecting: ', expectedResult, ', Received: ', term].join(''));
     };
 
     query = null;
@@ -636,7 +637,7 @@ $(function() {
   });
 
 
-  asyncTest('Normal behavior: action use user-level data when possible.', 15, function() {
+  asyncTest('Normal behavior: action use user-level data when possible.', 16, function() {
     console.log('Normal behavior: action use user-level data when possible.');
     // Create a new store for this case using webservice's properties.
     var store = new cloudmine.WebService({
@@ -655,7 +656,7 @@ $(function() {
       email: util.noise(5) + '@' + util.noise(5) + '.com',
       password: util.noise(5)
     };
-    
+
     ok(!store.isLoggedIn(), 'User is not currently logged in.');
     ok(store.isApplicationData(), 'Store will refer to application-level data');
 
@@ -665,7 +666,7 @@ $(function() {
     }).on('error', function() {
       ok(false, 'Successfully created test object');
     }).on('complete', verifyValue);
-    
+
     function verifyValue() {
       store.get(key1).on('success', function(data) {
         deepEqual(data[key1], appObj, 'Set object is the application object');
@@ -689,7 +690,7 @@ $(function() {
         ok(false, 'Logged in new user');
       }).on('complete', getUserValue);
     }
-    
+
     function getUserValue() {
       store.get(key1).on('success', function(data) {
         ok(false, 'Verify that the test object does not exist yet.');
@@ -726,7 +727,7 @@ $(function() {
         ok(false, 'Could not find value on user-level');
       }).on('complete', verifyAppValue);
     }
-    
+
     function verifyAppValue() {
       store.get(key3, {applevel: true}).on('success', function(data) {
         deepEqual(data[key3], '2', 'Verify application-data is the application object we set it to.');
@@ -748,11 +749,21 @@ $(function() {
         ok(true, 'User-level data cleanup successful.');
       }).on('error', function() {
         ok(false, 'User-level data cleanup failure.');
+      }).on('complete', deleteUser);
+    }
+
+    function deleteUser() {
+      var msg = 'User was deleted.';
+      webservice.deleteUser(user.email, user.password).on('success', function() {
+        ok(true, msg);
+      }).on('error', function() {
+        ok(false, msg);
       }).on('complete', start);
     }
+
   });
 
-  asyncTest('Force usage of application-level data, even if logged in.', 15, function() {
+  asyncTest('Force usage of application-level data, even if logged in.', 16, function() {
     console.log('Force usage of application-level data, even if logged in.');
     // Create a new store for this case using webservice's properties.
     var store = new cloudmine.WebService({
@@ -771,7 +782,7 @@ $(function() {
       email: util.noise(5) + '@' + util.noise(5) + '.com',
       password: util.noise(5)
     };
-    
+
     ok(!store.isLoggedIn(), 'User is not currently logged in.');
     ok(store.isApplicationData(), 'Store will refer to application data');
     store.set(key1, appObj).on('success', function() {
@@ -780,7 +791,7 @@ $(function() {
     }).on('error', function() {
       ok(false, 'Successfully created test object');
     }).on('complete', verifyValue);
-    
+
     function verifyValue() {
       store.get(key1).on('success', function(data) {
         deepEqual(data[key1], appObj, 'Set object is the application object');
@@ -832,7 +843,7 @@ $(function() {
         ok(false, 'Successfully set value of user-level data while logged in as user');
       }).on('complete', verifyAppValue);
     }
-    
+
     function verifyAppValue() {
       store.get(key1).on('success', function(data) {
         deepEqual(data[key1], userObj, 'Verify application-data is the user object we set it to.');
@@ -862,11 +873,21 @@ $(function() {
         ok(true, 'User-level data cleanup successful.');
       }).on('error', function() {
         ok(false, 'User-level data cleanup failure.');
+      }).on('complete', deleteUser);
+    }
+
+    function deleteUser() {
+      var msg = 'User was deleted.';
+      webservice.deleteUser(user.email, user.password).on('success', function() {
+        ok(true, msg);
+      }).on('error', function() {
+        ok(false, msg);
       }).on('complete', start);
     }
+
   });
 
-  asyncTest('Force usage of user-level data, even if not logged in.', 15, function() {
+  asyncTest('Force usage of user-level data, even if not logged in.', 16, function() {
     console.log('Force usage of user-level data, even if not logged in.');
     // Create a new store for this case using webservice's properties.
     var store = new cloudmine.WebService({
@@ -885,7 +906,7 @@ $(function() {
       email: util.noise(5) + '@' + util.noise(5) + '.com',
       password: util.noise(5)
     };
-    
+
     ok(!store.isLoggedIn(), 'User is not currently logged in.');
     ok(!store.isApplicationData(), 'Store will refer to user-level data');
     store.set(key1, appObj).on('success', function() {
@@ -894,7 +915,7 @@ $(function() {
     }).on('error', function() {
       ok(true, 'Could not create object while not logged in.');
     }).on('complete', verifyValue);
-    
+
     function verifyValue() {
       store.get(key1).on('success', function(data) {
         ok(false, 'Could not get object while not logged in');
@@ -937,7 +958,7 @@ $(function() {
         ok(false, 'Successfully set value of user-level data while logged in as user');
       }).on('complete', setAppValue);
     }
-    
+
     function setAppValue() {
       store.set(key1, appObj, {applevel: true}).on('success', function() {
         util.track(store, key1);
@@ -946,7 +967,7 @@ $(function() {
         ok(false, 'Successfully set value to application data while logged in as user');
       }).on('complete', verifyAppValue);
     }
-    
+
     function verifyAppValue() {
       store.get(key1, {applevel: true}).on('success', function(data) {
         deepEqual(data[key1], appObj, 'Verify application-data is the application object we set it to.');
@@ -976,8 +997,18 @@ $(function() {
         ok(true, 'User-level data cleanup successful.');
       }).on('error', function() {
         ok(false, 'User-level data cleanup failure.');
+      }).on('complete', deleteUser);
+    }
+
+    function deleteUser() {
+      var msg = 'User was deleted.';
+      webservice.deleteUser(user.email, user.password).on('success', function() {
+        ok(true, msg);
+      }).on('error', function() {
+        ok(false, msg);
       }).on('complete', start);
     }
+
   });
 
   asyncTest('Ensure code snippets execute standalone', 1, function() {
@@ -1009,12 +1040,12 @@ $(function() {
     }).on('complete', start);
   });
 
-  asyncTest('Ensure code snippets execute properly for actions', 33, function() {
+  asyncTest('Ensure code snippets execute properly for actions', 34, function() {
     console.log('Ensure code snippets execute properly for actions');
     var opts = {snippet: 'reverse', params: {a: 1, b: { c: 2 }}};
     var key = 'code_snip_test_' + util.noise(8);
-    var user = {email: util.noise(32) + '@' + util.noise(32) + '.com', password: util.noise(32)};    
-    
+    var user = {email: util.noise(32) + '@' + util.noise(32) + '.com', password: util.noise(32)};
+
     var snipRan = false;
     webservice.createUser(user).on('success', function() {
       ok(true, 'Created user for code snippet test');
@@ -1183,7 +1214,7 @@ $(function() {
         deleteAppData();
       });
     }
-    
+
     function deleteAppData() {
       snipRan = false;
       webservice.destroy(appKey, opts).on('result', function() {
@@ -1195,14 +1226,24 @@ $(function() {
       }).on('complete', function(data) {
         ok(snipRan, 'Snippet ran as expected');
         deepEqual(data && data.result ? util.reverse(data.result.success) : null, data.success, "Success data matches matches reversed output");
-        start();
+        deleteUser();
       });
     }
+
+    function deleteUser() {
+      var msg = 'User was deleted.';
+      webservice.deleteUser(user.email, user.password).on('success', function() {
+        ok(true, msg);
+      }).on('error', function() {
+        ok(false, msg);
+      }).on('complete', start);
+    }
+
   });
 
   asyncTest('Verify download integrity.', 4, function() {
     console.log('Verify download integrity.');
-    var sourceFile = inBrowser ? "binary.png" : "tests/binary.png"; 
+    var sourceFile = inBrowser ? "binary.png" : "tests/binary.png";
     if (inBrowser) {
       expect(1);
       ok(true, 'This test currently cannot be performed in browsers for files.');
@@ -1253,12 +1294,12 @@ $(function() {
     var uploadKey = 'test_obj_' + util.noise(8);
     var sourceFile = inBrowser ? "binary.png" : "tests/binary.png";
     var fileHandle, filename;
-    
+
     if (inBrowser) {
       if (FileReader) {
         var elem = document.querySelector('#dnd');
         var button = elem.querySelector('button');
-        
+
         button.addEventListener('click', function skipTest() {
           clearInterval(waitForDrag.interval);
           elem.parentNode.removeChild(elem);
@@ -1266,7 +1307,7 @@ $(function() {
           ok(true, "Skipped test as directed by user.");
           start();
         }, false);
-        
+
         function hammerTime(e) {
           e.preventDefault();
           e.stopPropagation();
@@ -1281,10 +1322,10 @@ $(function() {
           fileHandle = e.dataTransfer.files[0];
           filename = fileHandle.name;
         }, true);
-        
+
         // Wait for user input.
         elem.style.display = 'block';
-        
+
         function waitForDrag() {
           if (fileHandle) {
             clearInterval(waitForDrag.interval);
@@ -1302,7 +1343,7 @@ $(function() {
       fileHandle = filename = sourceFile;
       uploadContents();
     }
-    
+
     function uploadContents() {
       // FileReader may cause upload to abort.
       var aborted = false;
@@ -1316,7 +1357,7 @@ $(function() {
         ok(true, "User specified file uploaded to server");
       }).on('complete', verifyUpload);
     }
-    
+
     function verifyUpload() {
       webservice.get(uploadKey).on('error', function() {
         ok(false, "File was uploaded to server");
@@ -1324,7 +1365,7 @@ $(function() {
         ok(true, "File was uploaded to server");
       }).on('complete', downloadFile);
     }
-    
+
     function downloadFile() {
       webservice.download(uploadKey, {filename: filename.replace(/\.([a-z]+)/, ' (copy).$1')}).on('success', function() {
         ok(true, "Downloaded file to computer");
@@ -1340,7 +1381,7 @@ $(function() {
         ok(true, 'Delete file from server');
       }).on('complete', verifyDestroy);
     }
-    
+
     function verifyDestroy() {
       webservice.get(uploadKey).on('error', function() {
         ok(true, 'File does not exist on server');
@@ -1393,14 +1434,14 @@ $(function() {
 
       // Upload the binary buffer to the server. Should automatically be base64 encoded.
       webservice.upload(key, buffer).on('error', function() {
-        ok(false, "Upload unnamed binary buffer to server"); 
+        ok(false, "Upload unnamed binary buffer to server");
       }).on('success', function() {
         util.track(webservice, key);
         ok(true, "Upload unnamed binary buffer to server");
       }).on('complete', downloadData);
     }
   });
-  
+
   asyncTest("Canvas upload test", 2, function() {
     console.log("Canvas upload test");
     if (!CanvasRenderingContext2D) {
@@ -1409,7 +1450,7 @@ $(function() {
       start();
     } else {
       // Create a canvas, blue square overlaying red square [credit: MDN].
-      var canvas = document.createElement('canvas');  
+      var canvas = document.createElement('canvas');
       var ctx = canvas.getContext("2d");
       ctx.fillStyle = "rgb(200,0,0)";
       ctx.fillRect (10, 10, 55, 50);
@@ -1423,7 +1464,7 @@ $(function() {
           ok(false, "Downloaded canvas. Should be a red square with a blue square overlaid.");
         }).on('complete', start);
       }
-      
+
       var key = "canvas_image_" + util.noise(12);
       webservice.upload(key, ctx).on('success', function() {
         util.track(webservice, key);
@@ -1434,7 +1475,7 @@ $(function() {
     }
   });
 
-  asyncTest("User update/search test with strings as parameters", 15, function(){
+  asyncTest("User update/search test with strings as parameters", 16, function(){
     var msg;
     var user = {
       email: util.noise(5) + '@' + util.noise(5) + '.com',
@@ -1513,7 +1554,7 @@ $(function() {
         equal(1, users.length, "One user matches key.");
         deepEqual(value, data[users[0]][key], "First key matches what was sent to server.");
         deepEqual(value2, data[users[0]][key2], "Second key matches what was sent to server.");
-      }).on('complete', searchMissingFirstKey);      
+      }).on('complete', searchMissingFirstKey);
     }
 
     function searchMissingFirstKey() {
@@ -1533,14 +1574,23 @@ $(function() {
       }).on('success', function(data) {
         ok(true, msg);
         equal(0, util.keys(data).length, "No users matches missing key.");
-      }).on('complete', start);      
+      }).on('complete', deleteUser);
+    }
+
+    function deleteUser() {
+      var msg = 'User was deleted.';
+      webservice.deleteUser(user.email, user.password).on('success', function() {
+        ok(true, msg);
+      }).on('error', function() {
+        ok(false, msg);
+      }).on('complete', start);
     }
 
     // Start test
     createUser();
   });
 
-  asyncTest("User update/search test with objects as parameters", 15, function(){
+  asyncTest("User update/search test with objects as parameters", 16, function(){
     var msg;
     var user = {
       email: util.noise(5) + '@' + util.noise(5) + '.com',
@@ -1632,7 +1682,7 @@ $(function() {
         equal(1, users.length, "One user matches key.");
         deepEqual(value, data[users[0]][key], "First key matches what was sent to server.");
         deepEqual(value2, data[users[0]][key2], "Second key matches what was sent to server.");
-      }).on('complete', searchMissingFirstKey);      
+      }).on('complete', searchMissingFirstKey);
     }
 
     function searchMissingFirstKey() {
@@ -1659,18 +1709,27 @@ $(function() {
       }).on('success', function(data) {
         ok(true, msg);
         equal(0, util.keys(data).length, "No users matches missing key.");
-      }).on('complete', start);      
+      }).on('complete', deleteUser);
+    }
+
+    function deleteUser() {
+      var msg = 'User was deleted.';
+      webservice.deleteUser(user.email, user.password).on('success', function() {
+        ok(true, msg);
+      }).on('error', function() {
+        ok(false, msg);
+      }).on('complete', start);
     }
 
     // Start test
     createUser();
   });
 
-  asyncTest("User search by ID", 2, function(){
+  asyncTest("User search by ID", 3, function(){
     var user = {
       email: util.noise(5) + '@' + util.noise(5) + '.com',
       password: util.noise(5)
-    }, 
+    },
     id;
 
     function search(response){
@@ -1679,7 +1738,7 @@ $(function() {
         .on('success', function(response){
           if (util.keys(response).length == 1){
             ok(true, "Search for user by id, get one result");
-          } else { 
+          } else {
             ok(false, "Search for user by id, get one result");
           }
         })
@@ -1698,7 +1757,16 @@ $(function() {
         .on('error', function(){
           ok(true, "Search for non-existent user by id, get no results");
         })
-        .on('complete', start)
+        .on('complete', deleteUser)
+    }
+
+    function deleteUser() {
+      var msg = 'User was deleted.';
+      webservice.deleteUser(user.email, user.password).on('success', function() {
+        ok(true, msg);
+      }).on('error', function() {
+        ok(false, msg);
+      }).on('complete', start);
     }
 
     webservice.createUser({email: user.email, password: user.password})
@@ -1725,7 +1793,7 @@ $(function() {
     var obj1 = "test_" + util.noise(5);
     var obj2 = "test_" + util.noise(5);
     var obj3 = "test_" + util.noise(5);
-    
+
     var payload = {};
     payload[obj1] = {
       loc: {
@@ -1757,13 +1825,13 @@ $(function() {
     function createPayload() {
       msg = "Create test payload";
       webservice.set(payload).on('error', function(data, resp) {
-        ok(false, msg); 
+        ok(false, msg);
       }).on('success', function(data, resp) {
         util.track(webservice, payload);
         ok(true, msg);
       }).on('complete', findObjsNearPhilly);
     }
-    
+
     function findObjsNearPhilly() {
       msg = 'Find objects within 30 miles of Philly';
       webservice.searchGeo('loc', payload[obj1], {radius: '30mi'}).on('error', function(data, resp) {
@@ -1785,7 +1853,7 @@ $(function() {
         deepEqual(data[obj1], payload[obj1], "Found Philadelphia Object");
         deepEqual(data[obj2], payload[obj2], "Found Conshohocken Object");
         deepEqual(undefined, data[obj3], "Did not find New York object");
-        
+
       }).on('complete', findObjsWithDistance);
     }
 
@@ -1811,7 +1879,7 @@ $(function() {
     }
 
     // Start tests
-    createPayload();    
+    createPayload();
   });
 
   asyncTest('Attempt a social login to Twitter and Github', 7, function() {
