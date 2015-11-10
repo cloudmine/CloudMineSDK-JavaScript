@@ -46,9 +46,13 @@ integration-staging:
 integration:
 	$(MAKE) integration-aws && $(MAKE) integration-rackspace
 
+security:
+	./node_modules/.bin/snyk test
+
 test:
 	$(MAKE) unit
 	$(MAKE) integration
+	$(MAKE) security
 
 lint:
 	./node_modules/jslint/bin/jslint.js --maxerr=1000 --passfail=false 'js/cloudmine.js'
