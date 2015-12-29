@@ -44,7 +44,7 @@ integration-staging:
 	-t ./tests/tests.js   
 
 integration:
-	$(MAKE) integration-aws && $(MAKE) integration-rackspace
+	$(MAKE) integration-aws
 
 test:
 	$(MAKE) unit
