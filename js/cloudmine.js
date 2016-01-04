@@ -1411,7 +1411,7 @@
     }
 
     this.setContentType(config.contentType || 'application/json');
-    var endpointVersion = this.config.options.version || 'v2';
+    var endpointVersion = this.config.options.version || 'v1';
     var versionPath = '/' + endpointVersion + '/app/';
     this.url = [this.config.options.apiroot, versionPath, this.config.options.appid, root, this.config.action].join("");
 

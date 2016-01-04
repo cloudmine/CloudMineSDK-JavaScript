@@ -34,11 +34,11 @@ describe("Headers should", function() {
 
     var totalReturned = 0;
     for(var i = 0; i < 30; i++) {
-      nock(config.apiroot).get('/v2/app/' + config.appid + '/text?keys=test').delay(1000).reply(200, { success: {}, errors: {} }, { 'X-Request-Id': uuid()});
+      nock(config.apiroot).get('/v1/app/' + config.appid + '/text?keys=test').delay(1000).reply(200, { success: {}, errors: {} }, { 'X-Request-Id': uuid()});
       webservice.get('test').on('complete', function(body, data) {
         totalReturned++;
         if(totalReturned == 30) {
-          nock(config.apiroot).get('/v2/app/' + config.appid + '/text?keys=lastrequest').reply(200, { success: {}, errors: {} }, { 'X-Request-Id': uuid()});
+          nock(config.apiroot).get('/v1/app/' + config.appid + '/text?keys=lastrequest').reply(200, { success: {}, errors: {} }, { 'X-Request-Id': uuid()});
           webservice.get('lastrequest').on('complete', function(body, data) {
             var UT = data.requestHeaders['X-CloudMine-UT'];
             console.log(UT);
@@ -52,7 +52,7 @@ describe("Headers should", function() {
   });
 
   it("Should not add Unique ID header if global is not defined", function(done) {
-    nock(config.apiroot).get('/v2/app/' + config.appid + '/text?keys=test').delay(1000).reply(200, { success: {}, errors: {} });
+    nock(config.apiroot).get('/v1/app/' + config.appid + '/text?keys=test').delay(1000).reply(200, { success: {}, errors: {} });
     webservice.get('test').on('complete', function(body, data) {
       assert.equal(undefined, data.requestHeaders['X-Unique-Id']);
       done();
@@ -61,7 +61,7 @@ describe("Headers should", function() {
 
   it("Should add Unique ID header if global is defined", function(done) {
     _$XUniqueID = 'abc123456789';
-    nock(config.apiroot).get('/v2/app/' + config.appid + '/text?keys=test').delay(1000).reply(200, { success: {}, errors: {} });
+    nock(config.apiroot).get('/v1/app/' + config.appid + '/text?keys=test').delay(1000).reply(200, { success: {}, errors: {} });
     webservice.get('test').on('complete', function(body, data) {
       var uniqueIdHeader = data.requestHeaders['X-Unique-Id']
       console.log('uniqueid:',uniqueIdHeader);
