@@ -52,11 +52,14 @@ integration-staging:
 	-t ./tests/tests.js   
 
 integration:
-	$(MAKE) integration-aws && $(MAKE) integration-rackspace
+	$(MAKE) integration-aws
 
 test:
 	$(MAKE) unit
 	$(MAKE) integration
+
+lint:
+	./node_modules/jslint/bin/jslint.js --maxerr=1000 --passfail=false 'js/cloudmine.js'
 
 kill-node:
 	-kill `ps -eo pid,comm | awk '$$2 == "node" { print $$1 }'`

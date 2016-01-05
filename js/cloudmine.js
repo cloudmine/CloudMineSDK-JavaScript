@@ -1434,7 +1434,9 @@
     }
 
     this.setContentType(config.contentType || 'application/json');
-    this.url = [this.config.options.apiroot, "/v1/app/", this.config.options.appid, root, this.config.action].join("");
+    var endpointVersion = this.config.options.version || 'v1';
+    var versionPath = '/' + endpointVersion + '/app/';
+    this.url = [this.config.options.apiroot, versionPath, this.config.options.appid, root, this.config.action].join("");
 
     var sep = this.url.indexOf('?') === -1 ? '?' : '&';
     this.url = [this.url, (query ? sep + query : "")].join("");
