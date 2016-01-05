@@ -1,5 +1,9 @@
 # CloudMine JavaScript Library Change Log
 
+## v0.9.15 January 5, 2016
+* Add support for an endpoint version to be passed to the WebService as an option.
+* Fixes a few small outstanding bugs
+
 ## v0.9.14 April 08, 2015
 * Fixed a bug with the performance headers not always being set
 * Limit the performance header to have only 20 time stamps at a time
