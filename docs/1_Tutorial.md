@@ -156,6 +156,6 @@ ws.search('[__class__ = "Car", make = "Porsche"]', function(data, response) {
 # Next Steps
 Now that you've seen the basics, start coding up your app! The [JavaScript Library Reference](#/javascript#application-objects) has plenty of examples to help you accomplish what you need to using CloudMine.
 
-Also, don't forget that if you can't find what you're looking for in these docs, you are always welcome to email [CloudMine support](mailto:support@cloudmine.me).
+Also, don't forget that if you can't find what you're looking for in these docs, you are always welcome to email [CloudMine support](mailto:support@cloudmineinc.com).
 
 Happy coding!
