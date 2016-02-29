@@ -13,7 +13,7 @@
     "baas",
     "mbaas"
   ],
-  "homepage": "https://cloudmine.io/docs/js",
+  "homepage": "https://cloudmine.io/docs/#/javascript",
   "repository": {
     "type": "git",
     "url": "git://github.com/cloudmine/cloudmine-js.git"

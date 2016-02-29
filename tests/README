@@ -58,7 +58,7 @@ var cloudmine = require("cloudmine");
 var ws = new cloudmine.WebService({
   appid: '4d2631c701a74e11a17197f5bcf506b5',
   apikey: '20DF680D234C441B9869A21B8FEB6523',
-  apiroot:'https://api.cloudmine.me'
+  apiroot:'https://api.cloudmine.io'
 });
 
 var d = new Date();

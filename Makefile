@@ -2,7 +2,7 @@ testfiles := $(wildcard tests/snippets/*)
 CLOUDMINE_APPID := ENOAPPID
 CLOUDMINE_APIKEY := ENOAPIKEY
 CLOUDMINE_MASTERKEY := ENOMASTERKEY
-CLOUDMINE_APIROOT := https://api.cloudmine.me
+CLOUDMINE_APIROOT := https://api.cloudmine.io
 
 run:
 	node js/cloudmine.js
@@ -94,7 +94,7 @@ aws-env:
 	$(eval CLOUDMINE_APPID := 4d2631c701a74e11a17197f5bcf506b5)
 	$(eval CLOUDMINE_APIKEY := a5126d647c32486e8ed525f859725df7)
 	$(eval CLOUDMINE_MASTERKEY := 20DF680D234C441B9869A21B8FEB6523)
-	$(eval CLOUDMINE_APIROOT := http://api.cloudmine.me)
+	$(eval CLOUDMINE_APIROOT := http://api.cloudmine.io)
 
 secure-env:
 	$(eval CLOUDMINE_APPID := 94aec595a8d142a78da057a9a5b5f354)

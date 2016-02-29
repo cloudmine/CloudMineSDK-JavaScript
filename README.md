@@ -25,9 +25,7 @@ You may also rebuild and test the CloudMine JavaScript library by using the prov
 
 ## Documentation
 
-Detailed documentation, tutorials and code samples are on our developer site: https://cloudmine.io/docs/js.
-
-Direct link to API reference documentation: https://cloudmine.io/js-docs/symbols/WebService.html.
+Detailed documentation, tutorials and code samples are on our developer site: https://cloudmine.io/docs/#/javascript.
 
 Also check out the [examples](https://github.com/cloudmine/cloudmine-js/tree/master/examples) included with the repository.
 
