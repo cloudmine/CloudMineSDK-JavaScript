@@ -1,4 +1,4 @@
-/* CloudMine JavaScript Library v0.9.x cloudmine.me | cloudmine.me/license */
+/* CloudMine JavaScript Library v0.9.x cloudmineinc.com | https://github.com/cloudmine/cloudmine-js/blob/master/LICENSE */
 (function() {
   var version = '0.9.15';
 
@@ -55,7 +55,7 @@
    */
   function WebService(options) {
     this.options = opts(this, options);
-    if(!this.options.apiroot) this.options.apiroot = "https://api.cloudmine.me";
+    if(!this.options.apiroot) this.options.apiroot = "https://api.cloudmine.io";
 
     var src = this.options.appid;
     if (options.savelogin) {
