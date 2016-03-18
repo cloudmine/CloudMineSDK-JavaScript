@@ -1,6 +1,6 @@
 /* CloudMine JavaScript Library v0.9.x cloudmineinc.com | https://github.com/cloudmine/cloudmine-js/blob/master/LICENSE */
 (function() {
-  var version = '0.9.15';
+  var version = '0.9.16';
 
   /**
    * Construct a new WebService instance
@@ -2253,6 +2253,10 @@
     url = require('url');
     http = require('http');
     https = require('https');
+    // in node lower than 0.12, this defaults to 5
+    https.globalAgent.maxSockets = 50;
+    http.globalAgent.maxSockets = 50;
+
     fs = require('fs');
     module.exports = { WebService: WebService };
 
