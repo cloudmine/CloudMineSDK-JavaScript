@@ -1350,6 +1350,13 @@
     'zeo'
   ];
 
+  /**
+   * Set the X-Unique-ID to be used in all WebService requests. This function allows it to be set
+   * on before the WebService object is instantiated.
+   */
+  WebService.setXUniqueID = function(xUniqueID) {
+    global._$XUniqueID = xUniqueID;
+  }
 
   /**
    * <p>WebService will return an instance of this class that should be used to interact with
