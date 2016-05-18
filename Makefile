@@ -82,7 +82,7 @@ staging-env:
 	$(eval CLOUDMINE_APPID := 9249ede3e7874c89ac0b6b775cdf9642)
 	$(eval CLOUDMINE_APIKEY := 4265b75da6a54102a4e9436cf24c95e0)
 	$(eval CLOUDMINE_MASTERKEY := 4265b75da6a54102a4e9436cf24c95e0)
-	$(eval CLOUDMINE_APIROOT := http://api-staging.cloudmine.me)
+	$(eval CLOUDMINE_APIROOT := https://api.staging.cloudmine.me)
 
 pentest-env:
 	$(eval CLOUDMINE_APPID := 1fa68ef4142f415e972bc610ff434f21)
@@ -94,13 +94,13 @@ aws-env:
 	$(eval CLOUDMINE_APPID := 4d2631c701a74e11a17197f5bcf506b5)
 	$(eval CLOUDMINE_APIKEY := a5126d647c32486e8ed525f859725df7)
 	$(eval CLOUDMINE_MASTERKEY := 20DF680D234C441B9869A21B8FEB6523)
-	$(eval CLOUDMINE_APIROOT := http://api.cloudmine.io)
+	$(eval CLOUDMINE_APIROOT := https://api.cloudmine.io)
 
 secure-env:
 	$(eval CLOUDMINE_APPID := 94aec595a8d142a78da057a9a5b5f354)
 	$(eval CLOUDMINE_APIKEY := a31309107b2e431b9d6e1f1e12b73adb)
 	$(eval CLOUDMINE_MASTERKEY := C7A6A3B9DB1649BFA059EF6C07FA09AB)
-	$(eval CLOUDMINE_APIROOT := http://api.secure.cloudmine.me)
+	$(eval CLOUDMINE_APIROOT := https://api.secure.cloudmine.me)
 
 verizon-env:
 	$(eval CLOUDMINE_APPID := a701e4ef8d454b158366b233c69e3e70)
