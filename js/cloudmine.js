@@ -1,6 +1,6 @@
-/* CloudMine JavaScript Library v0.9.x cloudmineinc.com | https://github.com/cloudmine/cloudmine-js/blob/master/LICENSE */
+/* CloudMine JavaScript Library v0.10.x cloudmineinc.com | https://github.com/cloudmine/cloudmine-js/blob/master/LICENSE */
 (function() {
-  var version = '0.9.16';
+  var version = '0.10.0';
 
   /**
    * Construct a new WebService instance
@@ -1954,7 +1954,8 @@
     userid: 'userid',
     count: 'count',
     distance: 'distance', // Only applies to geo-query searches
-    units: 'units' // Only applies to geo-query searches
+    units: 'units', // Only applies to geo-query searches
+    extended_responses: 'extended_responses' // Only applies to atomic operations
   };
 
   // Default jQuery ajax configuration.
