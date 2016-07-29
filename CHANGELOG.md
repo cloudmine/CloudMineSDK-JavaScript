@@ -1,6 +1,6 @@
 # CloudMine JavaScript Library Change Log
 
-## 0.10.0 
+## 0.9.16 
 * Add support for atomic operations via the extend_responses param
 
 ## v0.9.15 January 5, 2016
