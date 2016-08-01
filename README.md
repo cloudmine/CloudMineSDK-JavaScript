@@ -1,6 +1,6 @@
 # CloudMine JavaScript SDK
 
-[CloudMine](http://cloudmineinc.com/ is a backend-as-a-service platform for mobile and web developers to rapidly build and quickly scale their apps. Build and scale iOS, Android, Windows Phone, and web apps on our secure and managed backend.
+[CloudMine](http://cloudmineinc.com/) is a backend-as-a-service platform for mobile and web developers to rapidly build and quickly scale their apps. Build and scale iOS, Android, Windows Phone, and web apps on our secure and managed backend.
 
 The JavaScript library supports both Node.js and browsers.
 
