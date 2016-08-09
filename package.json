@@ -1,10 +1,10 @@
 {
   "name": "cloudmine",
   "preferGlobal": false,
-  "version": "0.9.15",
+  "version": "0.9.17",
   "author": {
     "name": "CloudMine, Inc.",
-    "email": "dev@cloudmine.me"
+    "email": "tech@cloudmineinc.com"
   },
   "description": "CloudMine JavaScript library for node and browsers",
   "keywords": [
