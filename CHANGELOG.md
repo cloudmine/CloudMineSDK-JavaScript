@@ -1,5 +1,8 @@
 # CloudMine JavaScript Library Change Log
 
+## 0.9.18
+* Bring develop and master into parity with each other
+
 ## 0.9.17 August 9, 2016
 * Add support for atomic operations via the extend_responses param
 
