@@ -1,5 +1,8 @@
 # CloudMine JavaScript Library Change Log
 
+## 0.9.17 August 9, 2016
+* Add support for atomic operations via the extend_responses param
+
 ## v0.9.15 January 5, 2016
 * Add support for an endpoint version to be passed to the WebService as an option.
 * Fixes a few small outstanding bugs

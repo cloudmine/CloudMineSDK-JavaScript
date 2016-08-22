@@ -1,6 +1,6 @@
-/* CloudMine JavaScript Library v0.9.x cloudmine.me | cloudmine.me/license */
+/* CloudMine JavaScript Library v0.10.x cloudmineinc.com | https://github.com/cloudmine/cloudmine-js/blob/master/LICENSE */
 (function() {
-  var version = '0.9.15';
+  var version = '0.9.16';
 
   /**
    * Construct a new WebService instance
@@ -55,7 +55,7 @@
    */
   function WebService(options) {
     this.options = opts(this, options);
-    if(!this.options.apiroot) this.options.apiroot = "https://api.cloudmine.me";
+    if(!this.options.apiroot) this.options.apiroot = "https://api.cloudmine.io";
 
     var src = this.options.appid;
     if (options.savelogin) {
@@ -1350,6 +1350,13 @@
     'zeo'
   ];
 
+  /**
+   * Set the X-Unique-ID to be used in all WebService requests. This function allows it to be set
+   * on before the WebService object is instantiated.
+   */
+  WebService.setXUniqueID = function(xUniqueID) {
+    global._$XUniqueID = xUniqueID;
+  }
 
   /**
    * <p>WebService will return an instance of this class that should be used to interact with
@@ -1947,7 +1954,8 @@
     userid: 'userid',
     count: 'count',
     distance: 'distance', // Only applies to geo-query searches
-    units: 'units' // Only applies to geo-query searches
+    units: 'units', // Only applies to geo-query searches
+    extended_responses: 'extended_responses' // Only applies to atomic operations
   };
 
   // Default jQuery ajax configuration.
@@ -2253,6 +2261,10 @@
     url = require('url');
     http = require('http');
     https = require('https');
+    // in node lower than 0.12, this defaults to 5
+    https.globalAgent.maxSockets = 50;
+    http.globalAgent.maxSockets = 50;
+
     fs = require('fs');
     module.exports = { WebService: WebService };
 

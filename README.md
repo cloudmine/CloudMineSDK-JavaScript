@@ -1,6 +1,6 @@
 # CloudMine JavaScript SDK
 
-[CloudMine](https://cloudmine.me) is a backend-as-a-service platform for mobile and web developers to rapidly build and quickly scale their apps. Build and scale iOS, Android, Windows Phone, and web apps on our secure and managed backend.
+[CloudMine](http://cloudmineinc.com/) is a backend-as-a-service platform for mobile and web developers to rapidly build and quickly scale their apps. Build and scale iOS, Android, Windows Phone, and web apps on our secure and managed backend.
 
 The JavaScript library supports both Node.js and browsers.
 
@@ -25,9 +25,7 @@ You may also rebuild and test the CloudMine JavaScript library by using the prov
 
 ## Documentation
 
-Detailed documentation, tutorials and code samples are on our developer site: https://cloudmine.me/docs/js.
-
-Direct link to API reference documentation: https://cloudmine.me/js-docs/symbols/WebService.html.
+Detailed documentation, tutorials and code samples are on our developer site: https://cloudmine.io/docs/#/javascript.
 
 Also check out the [examples](https://github.com/cloudmine/cloudmine-js/tree/master/examples) included with the repository.
 
@@ -64,7 +62,7 @@ In browsers:
 </script>
 ```
 
-Now check your CloudMine dashboard (https://cloudmine.me/dashboard/) to see your data saved.
+Now check your CloudMine dashboard (https://compass.cloudmine.io/) to see your data saved.
 
 ## Contributing
 

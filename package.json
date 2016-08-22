@@ -1,10 +1,10 @@
 {
   "name": "cloudmine",
   "preferGlobal": false,
-  "version": "0.9.15",
+  "version": "0.9.16",
   "author": {
     "name": "CloudMine, Inc.",
-    "email": "dev@cloudmine.me"
+    "email": "support@cloudmineinc.com"
   },
   "description": "CloudMine JavaScript library for node and browsers",
   "keywords": [
@@ -13,7 +13,7 @@
     "baas",
     "mbaas"
   ],
-  "homepage": "https://cloudmine.me/docs/js",
+  "homepage": "https://cloudmine.io/docs/#/javascript",
   "repository": {
     "type": "git",
     "url": "git://github.com/cloudmine/cloudmine-js.git"

@@ -67,5 +67,5 @@ The options passed to the WebService constructor can always be accessed in `ws.o
 
 Check out a couple sample apps that show what you can really quickly hack together with CloudMine!
 
-* [Live chat app](https://cloudmine.me/sample-apps/chat/index.html)
-* [User-specific to-do list](https://cloudmine.me/sample-apps/todo/index.html)
+* [Live chat app](https://cloudmine.io/sample-apps/chat/index.html)
+* [User-specific to-do list](https://cloudmine.io/sample-apps/todo/index.html)
