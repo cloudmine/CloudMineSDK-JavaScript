@@ -19,6 +19,7 @@
     "url": "git://github.com/cloudmine/cloudmine-js.git"
   },
   "main": "js/cloudmine.js",
+  "typings": "cloudmine.d.ts",
   "dependencies": {
     "assert": "^1.3.0",
     "jslint": "^0.9.3",
