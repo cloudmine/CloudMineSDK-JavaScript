@@ -370,6 +370,23 @@
       });
     },
 
+    
+    /**
+     * Get the profile information for the logged in user. If there is no user currently logged in, this 
+     * call will fail with a 401 error.
+     * Results may be affected by defaults and/or by the options parameter.
+     * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
+     * @return {APICall} An APICall instance for the web service request used to attach events.
+     */
+    getCurrentUser: function(options) {
+      options = opts(this, options);
+      return new APICall({
+        action: 'account/mine',
+        type: 'GET',
+        options: options
+      })
+    },
+    
     /**
      * Sends a push notification to your users.
      * This requires an API key with push permission.
