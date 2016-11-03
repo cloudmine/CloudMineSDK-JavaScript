@@ -1,14 +1,15 @@
 // Browser specific functionality.
 (function() {
   var host = window.localStorage ? localStorage.getItem('cm_host') : null;
+  Export('../js/cloudmine.js', window.cloudmine);
   if (host) {
-    window.cloudmine = {API: host};
+    window.cloudmine.API = host;
   }
 })();
 
 function dom(selector) {
   return document.querySelectorAll(selector);
-}  
+}
 
 $(function() {
   var forgetApp = dom('.forgetapp')[0];

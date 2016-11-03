@@ -233,7 +233,9 @@ $(function() {
       }).on('success', function(data, resp) {
         deepEqual(data, payload, msg);
         ok(resp.count == 3 && util.keys(data).length == resp.count, "Multiple object returned, confirmed by count");
-      }).on('complete', start);
+      }).on('complete', function () {
+        start();
+      });
     }
 
     // Start tests
@@ -253,14 +255,15 @@ $(function() {
       password: util.noise(5)
     };
 
+
     webservice.createUser(user.email, user.password).on('success', function() {
       ok(true, 'Created user ' + user.email + ' with password ' + user.password);
     }).on('error', function() {
       ok(false, 'Created user ' + user.email + ' with password ' + user.password);
     }).on('complete', function(data, apicall) {
       equal(apicall.requestHeaders['X-CloudMine-Agent'],
-            'JS/' + cloudmine.WebService.VERSION + ' UnitTests/' + cloudmine.WebService.VERSION,
-            'CloudMine Agent exposes app name and version');
+        'JS/' + cloudmine.WebService.VERSION + ' UnitTests/' + cloudmine.WebService.VERSION,
+        'CloudMine Agent exposes app name and version');
       verify();
     });
 
@@ -293,7 +296,9 @@ $(function() {
         ok(false, 'Verified that account was destroyed.');
       }).on('error', function() {
         ok(true, 'Verified that account was destroyed.');
-      }).on('complete', start);
+      }).on('complete', function () {
+        start();
+      });
     }
 
   });
@@ -325,7 +330,9 @@ $(function() {
         ok(true, msg);
       }).on('error', function() {
         ok(false, msg);
-      }).on('complete', start);
+      }).on('complete', function () {
+        start();
+      });
     }
 
     // Start
@@ -353,7 +360,9 @@ $(function() {
         deepEqual(value, data[key], 'Set then get a value. Equivilent?');
       }).on('error', function() {
         ok(false, 'Could not get key');
-      }).on('complete', start);
+      }).on('complete', function () {
+        start();
+      });
     }
   });
 
@@ -379,7 +388,9 @@ $(function() {
         deepEqual(value, data[key], 'Update then get a value.');
       }).on('error', function() {
         ok(false, 'Could not get key.');
-      }).on('complete', start);
+      }).on('complete', function () {
+        start();
+      });
     }
   });
 
@@ -517,7 +528,9 @@ $(function() {
         if (!destroyed) ok(false, 'Error upon trying to get deleted object');
       }).on('success', function() {
         ok(false, 'Error upon trying to get deleted object');
-      }).on('complete', start);
+      }).on('complete', function() {
+        start();
+      });
     }
   });
 
@@ -567,7 +580,9 @@ $(function() {
         ok(false, '404 error fired correctly for appid "philly cheese steak" (200 received)');
       }).on('error', function() {
         if (!test2_404) ok(false, '404 error fired correctly for appid "philly cheese steak"');
-      }).on('complete', start);
+      }).on('complete', function () {
+        start();
+      });
     }
   });
 
@@ -758,7 +773,9 @@ $(function() {
         ok(true, msg);
       }).on('error', function() {
         ok(false, msg);
-      }).on('complete', start);
+      }).on('complete', function () {
+        start();
+      });
     }
 
   });
@@ -882,7 +899,9 @@ $(function() {
         ok(true, msg);
       }).on('error', function() {
         ok(false, msg);
-      }).on('complete', start);
+      }).on('complete', function () {
+        start();
+      });
     }
 
   });
@@ -1006,7 +1025,9 @@ $(function() {
         ok(true, msg);
       }).on('error', function() {
         ok(false, msg);
-      }).on('complete', start);
+      }).on('complete', function () {
+        start();
+      });
     }
 
   });
@@ -1016,28 +1037,36 @@ $(function() {
     webservice.run('test_standalone', sent).on('result', function(data) {
       var result = {you_sent: sent, i_am: 'test_standalone'};
       deepEqual(data, result, 'test_standalone snippet call returned expected results');
-    }).on('complete', start);
+    }).on('complete', function () {
+      start();
+    });
   });
 
   asyncTest('Code snippets - integer', 1, function() {
     webservice.run('test_integer').on('result', function(data) {
       var result = 42;
       deepEqual(data, result, 'test_integer snippet call returned expected results');
-    }).on('complete', start);
+    }).on('complete', function () {
+      start();
+    });
   });
 
   asyncTest('Code snippets - string', 1, function() {
     webservice.run('test_string').on('result', function(data) {
       var result = "I'm a string";
       deepEqual(data, result, 'test_string snippet call returned expected results');
-    }).on('complete', start);
+    }).on('complete', function () {
+      start();
+    });
   });
 
   asyncTest('Code snippets - array', 1, function() {
     webservice.run('test_array').on('result', function(data) {
       var result = ["one", 2];
       deepEqual(data, result, 'test_array snippet call returned expected results');
-    }).on('complete', start);
+    }).on('complete', function () {
+      start();
+    });
   });
 
   asyncTest('Ensure code snippets execute properly for actions', 34, function() {
@@ -1236,7 +1265,9 @@ $(function() {
         ok(true, msg);
       }).on('error', function() {
         ok(false, msg);
-      }).on('complete', start);
+      }).on('complete', function () {
+        start();
+      });
     }
 
   });
@@ -1387,7 +1418,9 @@ $(function() {
         ok(true, 'File does not exist on server');
       }).on('success', function() {
         ok(false, 'File does not exist on server');
-      }).on('complete', start);
+      }).on('complete', function () {
+        start();
+      });
     }
   });
 
@@ -1429,7 +1462,9 @@ $(function() {
           ok(true, 'Deleted unnamed binary buffer from server.');
         }).on('error', function() {
           ok(false, 'Deleted unnamed binary buffer from server.');
-        }).on('complete', start);
+        }).on('complete', function () {
+          start();
+        });
       }
 
       // Upload the binary buffer to the server. Should automatically be base64 encoded.
@@ -1462,7 +1497,9 @@ $(function() {
           ok(true, "Downloaded canvas. Should be a red square with a blue square overlaid.");
         }).on('error', function() {
           ok(false, "Downloaded canvas. Should be a red square with a blue square overlaid.");
-        }).on('complete', start);
+        }).on('complete', function () {
+          start();
+        });
       }
 
       var key = "canvas_image_" + util.noise(12);
@@ -1583,7 +1620,9 @@ $(function() {
         ok(true, msg);
       }).on('error', function() {
         ok(false, msg);
-      }).on('complete', start);
+      }).on('complete', function () {
+        start();
+      });
     }
 
     // Start test
@@ -1718,7 +1757,9 @@ $(function() {
         ok(true, msg);
       }).on('error', function() {
         ok(false, msg);
-      }).on('complete', start);
+      }).on('complete', function () {
+        start();
+      });
     }
 
     // Start test
@@ -1766,7 +1807,9 @@ $(function() {
         ok(true, msg);
       }).on('error', function() {
         ok(false, msg);
-      }).on('complete', start);
+      }).on('complete', function () {
+        start();
+      });
     }
 
     webservice.createUser({email: user.email, password: user.password})
@@ -1785,7 +1828,9 @@ $(function() {
       .on('error', function(response){
         ok(false, "Error retrieveing users.");
       })
-      .on('complete', start);
+      .on('complete', function () {
+        start();
+      });
   });
 
   asyncTest("Find objects by using geo search", 17, function() {
@@ -1903,7 +1948,9 @@ $(function() {
           equal(data.session_token, previousSession, "Session token did not change during github link.");
         }).on('error', function() {
           ok(false, "Did not successfully login to Github.");
-        }).on('complete', start);
+        }).on('complete', function () {
+          start();
+        });
       }
 
       // Start tests
@@ -1938,7 +1985,9 @@ $(function() {
                       ok(true, "Successfully destroyed the list we created.");
                   }).on('error', function(data) {
                       ok(false, "Did not successfully destroy the list.");
-                  }).on('complete', start);
+                  }).on('complete', function () {
+                    start();
+                  });
               }).on('error', function(data) {
                   ok(false, "Did not successfully create the list.");
                   start();
