@@ -248,24 +248,31 @@ $(function() {
     }).on('complete', getObjectsNoParams);
   });
 
-  asyncTest('Register a new user, verify user, cloudmine-agent, login the user, delete user.', 6, function() {
+  asyncTest('Register a new user, verify user, cloudmine-agent, login the user, delete user.', 8, function() {
     console.log('Register a new user, verify user, cloudmine-agent, login the user, delete user.');
     var user = {
       email: util.noise(5) + '@' + util.noise(5) + '.com',
       password: util.noise(5)
     };
 
+    webservice.getCurrentUser().on('success', function () {
+      ok(false, "Verify that mine errors when not logged in")
+    }).on('error', function () {
+      ok(true, "Verify that mine errors when not logged in")
+    }).on('complete', createUser);
 
-    webservice.createUser(user.email, user.password).on('success', function() {
-      ok(true, 'Created user ' + user.email + ' with password ' + user.password);
-    }).on('error', function() {
-      ok(false, 'Created user ' + user.email + ' with password ' + user.password);
-    }).on('complete', function(data, apicall) {
-      equal(apicall.requestHeaders['X-CloudMine-Agent'],
-        'JS/' + cloudmine.WebService.VERSION + ' UnitTests/' + cloudmine.WebService.VERSION,
-        'CloudMine Agent exposes app name and version');
-      verify();
-    });
+    function createUser() {
+      webservice.createUser(user.email, user.password).on('success', function() {
+        ok(true, 'Created user ' + user.email + ' with password ' + user.password);
+      }).on('error', function() {
+        ok(false, 'Created user ' + user.email + ' with password ' + user.password);
+      }).on('complete', function(data, apicall) {
+        equal(apicall.requestHeaders['X-CloudMine-Agent'],
+          'JS/' + cloudmine.WebService.VERSION + ' UnitTests/' + cloudmine.WebService.VERSION,
+          'CloudMine Agent exposes app name and version');
+        verify();
+      });
+    }
 
     function verify() {
       webservice.verify(user.email, user.password).on('error', function() {
@@ -280,7 +287,16 @@ $(function() {
         ok(data.hasOwnProperty('session_token'), 'Has session token');
       }).on('error', function() {
         ok(false, 'Could not login.');
-      }).on('complete', destroy);
+      }).on('complete', mine);
+    }
+
+    function mine() {
+      webservice.getCurrentUser().on('success', function(data) {
+        var userId = Object.keys(data)[0];
+        ok(userId === data[userId].__id__, "Account ID accessible")
+      }).on('error', function() {
+        ok(false, "Account ID accessible")
+      }).on('complete', destroy)
     }
 
     function destroy() {
