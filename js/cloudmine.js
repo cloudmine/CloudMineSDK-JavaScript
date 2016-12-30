@@ -298,6 +298,20 @@
     },
 
     /**
+     * Search the CloudMine ElasticSearch endpoint. Must pass a valid 
+     * ElasticSearch query in.
+     */
+    search_es: function(klass, query, options) {
+      options = opts(this, options);
+      options.version = 'v2';
+      return new APICall({
+        action: 'class/' + klass + '/elasticsearch',
+        type: 'POST',
+        data: query,
+        options: options
+      });
+    }
+    /**
      * Search CloudMine explicitly querying for files.
      * Note: This does not search the contents of files.
      * Results may be affected by defaults and/or by the options parameter.
