@@ -310,7 +310,7 @@
         data: query,
         options: options
       });
-    }
+    },
     /**
      * Search CloudMine explicitly querying for files.
      * Note: This does not search the contents of files.
