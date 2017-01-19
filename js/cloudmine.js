@@ -1,6 +1,6 @@
 /* CloudMine JavaScript Library v0.10.x cloudmineinc.com | https://github.com/cloudmine/cloudmine-js/blob/master/LICENSE */
 (function() {
-  var version = '0.9.18';
+  var version = '0.9.20';
 
   /**
    * Construct a new WebService instance
@@ -297,10 +297,14 @@
       });
     },
 
-    /**
-     * Search the CloudMine ElasticSearch endpoint. Must pass a valid 
-     * ElasticSearch query in.
-     */
+     /**
+      * Search CloudMine for text objects.
+      * Results may be affected by defaults and/or by the options parameter.
+      * @param {string} klass The Elasticsearch __class__ you want to query.
+      * @param {string} query The Elasticsearch query to be executed.
+      * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
+      * @return {APICall} An APICall instance for the web service request used to attach events.
+      */
     search_es: function(klass, query, options) {
       options = opts(this, options);
       options.version = 'v2';
