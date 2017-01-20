@@ -305,8 +305,8 @@
       * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
       * @return {APICall} An APICall instance for the web service request used to attach events.
       */
-    search_es: function(klass, query, options) {
-      query = JSON.stringify(query);
+    searchES: function(klass, query, options) {
+      if(isObject(query)) query = JSON.stringify(query);
       options = opts(this, options);
       options.version = 'v2';
       return new APICall({
