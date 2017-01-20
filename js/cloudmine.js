@@ -1,6 +1,6 @@
 /* CloudMine JavaScript Library v0.10.x cloudmineinc.com | https://github.com/cloudmine/cloudmine-js/blob/master/LICENSE */
 (function() {
-  var version = '0.9.18';
+  var version = '0.9.21';
 
   /**
    * Construct a new WebService instance
@@ -297,11 +297,16 @@
       });
     },
 
-    /**
-     * Search the CloudMine ElasticSearch endpoint. Must pass a valid 
-     * ElasticSearch query in.
-     */
+     /**
+      * Search CloudMine for text objects.
+      * Results may be affected by defaults and/or by the options parameter.
+      * @param {string} klass The Elasticsearch __class__ you want to query.
+      * @param {string} query The Elasticsearch query to be executed.
+      * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
+      * @return {APICall} An APICall instance for the web service request used to attach events.
+      */
     search_es: function(klass, query, options) {
+      query = JSON.stringify(query);
       options = opts(this, options);
       options.version = 'v2';
       return new APICall({
@@ -311,6 +316,24 @@
         options: options
       });
     },
+
+    /**
+     * Search CloudMine for user-level ACLs.
+     * Results may be affected by defaults and/or by the options parameter.
+     * @param {string} query The query to be used when searching for target ACLs.
+     * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
+     * @return {APICall} An APICall instance for the web service request used to attach events.
+     */
+   searchACLs: function(query, options) {
+     query = {q: query != null ? convertQueryInput(query) : ''}
+     options = opts(this, options);
+     return new APICall({
+       action: 'access/search',
+       type: 'GET',
+       query: server_params(options, query),
+       options: options
+     });
+   },
     /**
      * Search CloudMine explicitly querying for files.
      * Note: This does not search the contents of files.
