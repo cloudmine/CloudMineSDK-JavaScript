@@ -315,6 +315,20 @@
         options: options
       });
     },
+
+    /**
+  TBD
+     */
+   searchACLs: function(query, options) {
+     query = convertQueryInput(query);
+     options = opts(this, options);
+     return new APICall({
+       action: 'access/search',
+       type: 'GET',
+       query: server_params(options, query),
+       options: options
+     });
+   },
     /**
      * Search CloudMine explicitly querying for files.
      * Note: This does not search the contents of files.
