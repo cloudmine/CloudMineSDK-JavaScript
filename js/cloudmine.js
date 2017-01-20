@@ -306,7 +306,7 @@
       * @return {APICall} An APICall instance for the web service request used to attach events.
       */
     search_es: function(klass, query, options) {
-      query = JSON.stringify(query); 
+      query = JSON.stringify(query);
       options = opts(this, options);
       options.version = 'v2';
       return new APICall({
@@ -318,7 +318,11 @@
     },
 
     /**
-  TBD
+     * Search CloudMine for user-level ACLs.
+     * Results may be affected by defaults and/or by the options parameter.
+     * @param {string} query The query to be used when searching for target ACLs.
+     * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
+     * @return {APICall} An APICall instance for the web service request used to attach events.
      */
    searchACLs: function(query, options) {
      query = {q: query != null ? convertQueryInput(query) : ''}
