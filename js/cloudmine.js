@@ -306,6 +306,7 @@
       * @return {APICall} An APICall instance for the web service request used to attach events.
       */
     search_es: function(klass, query, options) {
+      query = JSON.stringify(query); 
       options = opts(this, options);
       options.version = 'v2';
       return new APICall({
@@ -320,7 +321,7 @@
   TBD
      */
    searchACLs: function(query, options) {
-     query = convertQueryInput(query);
+     query = {q: query != null ? convertQueryInput(query) : ''}
      options = opts(this, options);
      return new APICall({
        action: 'access/search',
