@@ -1,5 +1,8 @@
 # CloudMine JavaScript Library Change Log
 
+## 0.9.22
+* Introduces deleteACL function
+
 ## 0.9.18
 * Bring develop and master into parity with each other
 
