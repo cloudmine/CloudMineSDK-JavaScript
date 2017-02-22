@@ -1268,7 +1268,7 @@
       options = opts(this, options);
 
       return new APICall({
-        action: 'access',
+        action: 'access/' + aclid,
         type: 'DELETE',
         processResponse: APICall.basicResponse,
         data: JSON.stringify(acl),
