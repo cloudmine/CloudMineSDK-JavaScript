@@ -1271,7 +1271,6 @@
         action: 'access/' + aclid,
         type: 'DELETE',
         processResponse: APICall.basicResponse,
-        data: JSON.stringify(acl),
         options: options
       });
     },
