@@ -334,6 +334,8 @@
        options: options
      });
    },
+
+
     /**
      * Search CloudMine explicitly querying for files.
      * Note: This does not search the contents of files.
@@ -1250,7 +1252,29 @@
         options: options
       });
     },
+    /**
+     * Deletes an ACL via id.
+     *
+     * @param {object} aclid The ACL id value to be deleted.
+     *
+     * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
+     * @return {APICall} An APICall instance for the web service request used to attach events.
+     *
+     * @function
+     * @name deleteACL
+     * @memberOf WebService.prototype
+     */
+    deleteACL: function(aclid, options){
+      options = opts(this, options);
 
+      return new APICall({
+        action: 'access',
+        type: 'DELETE',
+        processResponse: APICall.basicResponse,
+        data: JSON.stringify(acl),
+        options: options
+      });
+    },
     /**
      * Get an ACL rule for user-level objects by id.
      *
