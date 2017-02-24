@@ -1958,7 +1958,7 @@ $(function() {
     }
   });
 
-  asyncTest("Test ACL CRUD", 18, function(){
+  asyncTest("Test ACL CRUD", 23, function(){
     console.log("Test ACL CRUD")
     var user1 = {
       email: util.noise(5) + '@' + util.noise(5) + '.com',
@@ -1990,10 +1990,8 @@ $(function() {
 
     var acl_id = null
 
-
-    //good
     function createUser1() {
-      msg = "Create test user1";
+      msg = "Create user1";
       webservice.createUser({email: user1.email, password: user1.password}).on('error', function() {
         ok(false, msg);
       }).on('success', function(data) {
@@ -2003,7 +2001,7 @@ $(function() {
     }
 
     function createUser2() {
-      msg = "Create test user2";
+      msg = "Create user2";
       webservice.createUser({email: user2.email, password: user2.password}).on('error', function() {
         ok(false, msg);
       }).on('success', function(data) {
@@ -2013,8 +2011,6 @@ $(function() {
     }
 
     function loginUser1_CreateUserData() {
-      console.log(user1_id)
-      console.log(user2_id)
       webservice.login(user1).on('success', function(data) {
         user1_session_token = data.session_token
         ok(true, 'Logged in user1');
@@ -2035,7 +2031,7 @@ $(function() {
       webservice.logout({email: user1.email, password: user1.password, session_token: user1_session_token}).on('success', function(data) {
         ok(true, 'User1 logged out');
       }).on('error', function() {
-        ok(false, 'Could not logout.');
+        ok(false, 'Failed to logout as user1');
       }).on('complete', loginUser2_NoACL);
     }
 
@@ -2049,13 +2045,10 @@ $(function() {
     }
 
     function verifyNoACL() {
-      console.log(webservice.getUserID())
-      webservice.get(user_object_key, {applevel: false}).on('success', function(data) {
-        ok(false,'had access to data')
-      }).on('error', function(data) {
-        console.log('should 403')
-        console.log(data)
-        ok(true, 'Could not find value on user level.');
+      webservice.get(user_object_key, {applevel: false}).on('success', function() {
+        ok(false,'User2 had access to user1 data')
+      }).on('error', function() {
+        ok(true, 'User2 could not find the key');
       }).on('complete', logoutUser2_NoACL);
     }
 
@@ -2063,7 +2056,7 @@ $(function() {
       webservice.logout({email: user2.email, password: user2.password, session_token: user2_session_token}).on('success', function(data) {
         ok(true, 'User2 logged out');
       }).on('error', function() {
-        ok(false, 'Could not login.');
+        ok(false, 'Failed to logout as user2');
       }).on('complete', loginUser1_CreateACL);
     }
 
@@ -2077,14 +2070,21 @@ $(function() {
     }
 
     function createACL() {            
-      console.log(webservice.getUserID())
-      msg = "Create test ACL";
+      msg = "Create ACL as user1";
       acl.members = [user2_id]
       webservice.updateACL(acl).on('error', function() {
         ok(false, msg);
       }).on('success', function(data) {
         acl_id = Object.keys(data)[0]
         ok(true, msg);
+      }).on('complete', updateObjectWithACL);
+    }
+
+    function updateObjectWithACL() {
+      webservice.update(user_object_key, {__access__:acl_id}).on('success', function(data) {
+        ok(true, 'User1 updated the test object');
+      }).on('error', function() {
+        ok(false, 'User1 failed to update the test object');
       }).on('complete', logoutUser1_CreateACL);
     }
 
@@ -2092,7 +2092,7 @@ $(function() {
       webservice.logout({email: user1.email, password: user1.password, session_token: user1_session_token}).on('success', function(data) {
         ok(true, 'User1 logged out');
       }).on('error', function() {
-        ok(false, 'Could not login.');
+        ok(false, 'Failed to logout as user1');
       }).on('complete', loginUser2_ACL);
     }
 
@@ -2101,18 +2101,15 @@ $(function() {
         user2_session_token = data.session_token
         ok(true, 'Logged in as user2');
       }).on('error', function() {
-        ok(false, 'Failed to  login as user2');
-      }).on('complete', verifyACLCreated);
+        ok(false, 'Failed to login as user2');
+      }).on('complete',  verifyACLCreated);
     }
 
     function verifyACLCreated() {
-      console.log(webservice.getUserID())
-      msg = "Get user1 data";
-      webservice.get(user_object_key, {applevel: false}).on('success', function(data) {
+      msg = "User2 got user1 data";
+      webservice.get(user_object_key, {applevel: false}).on('success', function() {
         ok(true, msg)
-      }).on('error', function(data) {
-        console.log('should 200')
-        console.log(data)
+      }).on('error', function() {
         ok(false, 'Could not find user1 data');
       }).on('complete', logoutUser2_ACL);
     }
@@ -2121,7 +2118,7 @@ $(function() {
       webservice.logout({email: user2.email, password: user2.password, session_token: user2_session_token}).on('success', function(data) {
         ok(true, 'User2 logged out');
       }).on('error', function() {
-        ok(false, 'Could not login.');
+        ok(false, 'Failed to logout as user2.');
       }).on('complete', loginUser1_DeleteACL);
     }
 
@@ -2129,23 +2126,58 @@ $(function() {
       webservice.login(user1).on('success', function(data) {
         user1_session_token = data.session_token
         ok(true, 'Logged in as user1');
-      }).on('error', function(data) {
-        console.log(data)
+      }).on('error', function() {
         ok(false, 'Failed to login as user1');
       }).on('complete', deleteACL);
     }
 
     function deleteACL() {
       var msg = 'Test user ACL was deleted.';
-      webservice.deleteACL(acl_id).on('success', function(data) {
+      webservice.deleteACL(acl_id).on('success', function() {
         ok(true, msg);
       }).on('error', function() {
         ok(false, msg);
+      }).on('complete', logoutUser1_DeleteACL);
+    }
+
+    function logoutUser1_DeleteACL() {
+      webservice.login(user1).on('success', function(data) {
+        user1_session_token = data.session_token
+        ok(true, 'Logged in as user1');
+      }).on('error', function() {
+        ok(false, 'Failed to login as user1');
+      }).on('complete', loginUser2_DeleteACL);
+    }
+
+    function loginUser2_DeleteACL() {
+      webservice.login(user2).on('success', function(data) {
+        user2_session_token = data.session_token
+        ok(true, 'Logged in as user2');
+      }).on('error', function() {
+        ok(false, 'Failed to  login as user2');
+      }).on('complete',  verifyACLDeleted);
+    }
+
+    function verifyACLDeleted() {
+      msg = "Verify acl deleted";
+      webservice.get(user_object_key, {applevel: false}).on('success', function() {
+        ok(false, "acl still active")
+      }).on('error', function() {
+        ok(true, 'User2 could not find the key');
+      }).on('complete', logoutUser2_ACLDeleted);
+    }
+    
+    function logoutUser2_ACLDeleted() {
+      webservice.logout({email: user2.email, password: user2.password, session_token: user2_session_token}).on('success', function(data) {
+        ok(true, 'User2 logged out');
+      }).on('error', function() {
+        ok(false, 'Could not login.');
       }).on('complete', deleteUser1);
     }
 
+
     function deleteUser1() {
-      var msg = 'User1 was deleted.';
+      var msg = 'User1 was deleted';
       webservice.deleteUser(user1.email, user1.password).on('success', function() {
         ok(true, msg);
       }).on('error', function() {
@@ -2154,7 +2186,7 @@ $(function() {
     }    
 
     function deleteUser2() {
-      var msg = 'User2 was deleted.';
+      var msg = 'User2 was deleted';
       webservice.deleteUser(user2.email, user2.password).on('success', function() {
         ok(true, msg);
       }).on('error', function() {
