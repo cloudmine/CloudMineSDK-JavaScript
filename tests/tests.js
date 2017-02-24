@@ -1991,22 +1991,20 @@ $(function() {
     var acl_id = null
 
     function createUser1() {
-      msg = "Create user1";
       webservice.createUser({email: user1.email, password: user1.password}).on('error', function() {
-        ok(false, msg);
+        ok(false, "Create user1");
       }).on('success', function(data) {
         user1_id = data["__id__"]
-        ok(true, msg);
+        ok(true, "Create user1");
       }).on('complete', createUser2);
     }
 
     function createUser2() {
-      msg = "Create user2";
       webservice.createUser({email: user2.email, password: user2.password}).on('error', function() {
-        ok(false, msg);
+        ok(false, "Create user2");
       }).on('success', function(data) {
         user2_id = data["__id__"]
-        ok(true, msg);
+        ok(true, "Create user2");
       }).on('complete', loginUser1_CreateUserData);
     }
 
@@ -2070,13 +2068,12 @@ $(function() {
     }
 
     function createACL() {            
-      msg = "Create ACL as user1";
       acl.members = [user2_id]
       webservice.updateACL(acl).on('error', function() {
-        ok(false, msg);
+        ok(false, "Create ACL as user1");
       }).on('success', function(data) {
         acl_id = Object.keys(data)[0]
-        ok(true, msg);
+        ok(true, "Create ACL as user1");
       }).on('complete', updateObjectWithACL);
     }
 
@@ -2106,9 +2103,8 @@ $(function() {
     }
 
     function verifyACLCreated() {
-      msg = "User2 got user1 data";
       webservice.get(user_object_key, {applevel: false}).on('success', function() {
-        ok(true, msg)
+        ok(true, "User2 got user1 data")
       }).on('error', function() {
         ok(false, 'Could not find user1 data');
       }).on('complete', logoutUser2_ACL);
@@ -2132,11 +2128,10 @@ $(function() {
     }
 
     function deleteACL() {
-      var msg = 'Test user ACL was deleted.';
       webservice.deleteACL(acl_id).on('success', function() {
-        ok(true, msg);
+        ok(true, 'Test user ACL was deleted.');
       }).on('error', function() {
-        ok(false, msg);
+        ok(false, 'Test user ACL was deleted.');
       }).on('complete', logoutUser1_DeleteACL);
     }
 
@@ -2159,7 +2154,6 @@ $(function() {
     }
 
     function verifyACLDeleted() {
-      msg = "Verify acl deleted";
       webservice.get(user_object_key, {applevel: false}).on('success', function() {
         ok(false, "acl still active")
       }).on('error', function() {
@@ -2177,20 +2171,18 @@ $(function() {
 
 
     function deleteUser1() {
-      var msg = 'User1 was deleted';
       webservice.deleteUser(user1.email, user1.password).on('success', function() {
-        ok(true, msg);
+        ok(true, 'User1 was deleted');
       }).on('error', function() {
-        ok(false, msg);
+        ok(false, 'User1 was deleted');
       }).on('complete', deleteUser2);
     }    
 
     function deleteUser2() {
-      var msg = 'User2 was deleted';
       webservice.deleteUser(user2.email, user2.password).on('success', function() {
-        ok(true, msg);
+        ok(true, 'User2 was deleted');
       }).on('error', function() {
-        ok(false, msg);
+        ok(false, 'User2 was deleted');
       }).on('complete', start);
     }
 
