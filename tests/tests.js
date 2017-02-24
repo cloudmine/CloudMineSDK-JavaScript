@@ -1973,8 +1973,8 @@ $(function() {
     var acl = {
       members: [],
       segments: {
-        public: true,
-        logged_in: true
+        public: false,
+        logged_in: false
       },
       permissions: ["r", "u"]
     }
@@ -2028,7 +2028,7 @@ $(function() {
     }
 
     function logoutUser1_CreateUserData() {
-      webservice.logout({email: user1.email, password: user1.password, session_token: user1_session_token}).on('success', function(data) {
+      webservice.logout({session_token: user1_session_token}).on('success', function(data) {
         ok(true, 'User1 logged out');
       }).on('error', function() {
         ok(false, 'Failed to logout as user1');
@@ -2053,7 +2053,7 @@ $(function() {
     }
 
     function logoutUser2_NoACL() {
-      webservice.logout({email: user2.email, password: user2.password, session_token: user2_session_token}).on('success', function(data) {
+      webservice.logout({session_token: user2_session_token}).on('success', function(data) {
         ok(true, 'User2 logged out');
       }).on('error', function() {
         ok(false, 'Failed to logout as user2');
@@ -2089,7 +2089,7 @@ $(function() {
     }
 
     function logoutUser1_CreateACL() {
-      webservice.logout({email: user1.email, password: user1.password, session_token: user1_session_token}).on('success', function(data) {
+      webservice.logout({session_token: user1_session_token}).on('success', function(data) {
         ok(true, 'User1 logged out');
       }).on('error', function() {
         ok(false, 'Failed to logout as user1');
@@ -2115,7 +2115,7 @@ $(function() {
     }
     
     function logoutUser2_ACL() {
-      webservice.logout({email: user2.email, password: user2.password, session_token: user2_session_token}).on('success', function(data) {
+      webservice.logout({session_token: user2_session_token}).on('success', function(data) {
         ok(true, 'User2 logged out');
       }).on('error', function() {
         ok(false, 'Failed to logout as user2.');
@@ -2141,7 +2141,7 @@ $(function() {
     }
 
     function logoutUser1_DeleteACL() {
-      webservice.login(user1).on('success', function(data) {
+      webservice.logout({session_token: user1_session_token}).on('success', function(data) {
         user1_session_token = data.session_token
         ok(true, 'Logged in as user1');
       }).on('error', function() {
@@ -2168,7 +2168,7 @@ $(function() {
     }
     
     function logoutUser2_ACLDeleted() {
-      webservice.logout({email: user2.email, password: user2.password, session_token: user2_session_token}).on('success', function(data) {
+      webservice.logout({session_token: user2_session_token}).on('success', function(data) {
         ok(true, 'User2 logged out');
       }).on('error', function() {
         ok(false, 'Could not login.');

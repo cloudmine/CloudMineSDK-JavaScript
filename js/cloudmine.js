@@ -1255,7 +1255,7 @@
     /**
      * Deletes an ACL via id.
      *
-     * @param {object} aclid The ACL id value to be deleted.
+     * @param {string} aclid The ACL id value to be deleted.
      *
      * @param {object} [options] Override defaults set on WebService. See WebService constructor for parameters.
      * @return {APICall} An APICall instance for the web service request used to attach events.
