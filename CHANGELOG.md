@@ -1,5 +1,8 @@
 # CloudMine JavaScript Library Change Log
 
+## 0.10.00
+* Add ability to forward X-Unique-Id to WebService objects
+
 ## 0.9.22
 * Introduces deleteACL function
 
