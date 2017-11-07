@@ -1462,7 +1462,7 @@
       'X-CloudMine-UT': opts.user_token
     };
 
-    if (typeof opts.xuniqueid != 'undefined') {
+    if (opts.xuniqueid) {
       this.requestHeaders['X-Unique-Id'] = opts.xuniqueid;
     }
 
