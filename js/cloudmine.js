@@ -36,6 +36,7 @@
    * @param {object} Default configuration for this WebService
    * @config {string} [appid] The application id for requests (Required)
    * @config {string} [apikey] The api key for requests (Required)
+   * @config {string} [xuniqueid] The X-Unique-ID you want to apply to all requests using this WebService (optional)
    * @config {string} [appname] An alphanumeric identifier for your app, used for stats purposes
    * @config {string} [appversion] A version identifier for you app, used for stats purposes
    * @config {boolean} [applevel] If true, always send requests to application.
@@ -1411,14 +1412,6 @@
   ];
 
   /**
-   * Set the X-Unique-ID to be used in all WebService requests. This function allows it to be set
-   * on before the WebService object is instantiated.
-   */
-  WebService.setXUniqueID = function(xUniqueID) {
-    global._$XUniqueID = xUniqueID;
-  }
-
-  /**
    * <p>WebService will return an instance of this class that should be used to interact with
    * the API. Upon completion of the AJAX call, this object will fire the event handlers based on
    * what were attached.
@@ -1469,8 +1462,8 @@
       'X-CloudMine-UT': opts.user_token
     };
 
-    if (typeof(global) != 'undefined' && typeof global._$XUniqueID != 'undefined') {
-      this.requestHeaders['X-Unique-Id'] = global._$XUniqueID
+    if (opts.xuniqueid) {
+      this.requestHeaders['X-Unique-Id'] = opts.xuniqueid;
     }
 
     this.responseHeaders = {};
