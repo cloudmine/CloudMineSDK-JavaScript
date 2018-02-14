@@ -50,7 +50,7 @@ ws.set("key", {"hello": "world"});
 In browsers:
 
 ```html
-<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script type="text/javascript" src="https://raw.github.com/cloudmine/cloudmine-js/master/js/cloudmine.js"></script>
 <script>
   var ws = new cloudmine.WebService({
