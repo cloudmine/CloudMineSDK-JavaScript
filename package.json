@@ -20,16 +20,16 @@
   },
   "main": "js/cloudmine.js",
   "dependencies": {
-    "assert": "^1.3.0",
-    "jslint": "^0.9.3",
-    "nock": "^1.5.0"
+    "assert": "^1.4.1",
+    "jslint": "^0.12.0",
+    "nock": "^9.1.6"
   },
   "license": "MIT",
   "engines": {
     "node": ">=0.8.0"
   },
   "devDependencies": {
-    "mocha": "2.2.4",
+    "mocha": "5.0.0",
     "qunit": "^0.5.7",
     "uglify-js": "^1.3.3"
   },
