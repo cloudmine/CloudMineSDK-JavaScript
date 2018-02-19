@@ -51,21 +51,23 @@ describe("Headers should", function() {
     }
   });
 
-  it("Should not add Unique ID header if global is not defined", function(done) {
+  it("Should not add Unique ID header if options.xuniqueid is not defined", function(done) {
     nock(config.apiroot).get('/v1/app/' + config.appid + '/text?keys=test').delay(1000).reply(200, { success: {}, errors: {} });
-    webservice.get('test').on('complete', function(body, data) {
+    webservice.get('test', {}).on('complete', function(body, data) {
       assert.equal(undefined, data.requestHeaders['X-Unique-Id']);
       done();
     });
   });
 
-  it("Should add Unique ID header if global is defined", function(done) {
-    _$XUniqueID = 'abc123456789';
+  it("Should add Unique ID header if options.xuniqueid is defined", function(done) {
+    var options = {
+        xuniqueid: 'abc123456789'
+    };
     nock(config.apiroot).get('/v1/app/' + config.appid + '/text?keys=test').delay(1000).reply(200, { success: {}, errors: {} });
-    webservice.get('test').on('complete', function(body, data) {
+    webservice.get('test', options).on('complete', function(body, data) {
       var uniqueIdHeader = data.requestHeaders['X-Unique-Id']
       console.log('uniqueid:',uniqueIdHeader);
-      assert.equal(_$XUniqueID, uniqueIdHeader);
+      assert.equal(options.xuniqueid, uniqueIdHeader);
       done();
     });
   });
