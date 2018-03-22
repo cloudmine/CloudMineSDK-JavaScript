@@ -1,7 +1,8 @@
 # CloudMine JavaScript Library Change Log
 
 ## 0.10.1
-* Updated dependencies 
+* Updated dependencies
+* Updated unit tests
 
 ## 0.10.0
 * Add ability to forward X-Unique-Id to WebService objects
