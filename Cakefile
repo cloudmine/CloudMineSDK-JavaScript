@@ -14,6 +14,7 @@ task "all", "Produce documentation and minify javascript for production use", ->
         complete()
 option '', '--key [key]', 'API Key to use with unit tests'
 option '', '--app [app]', 'Application ID to use with unit tests'
+option '', '--host [host]', 'Address of the CloudMine Web Interface'
 
 # ==================================
 
@@ -48,10 +49,10 @@ minify = (next) ->
       fs.writeFile "js/cloudmine-#{version}.min.js", compressed, 'utf8', next
 
 test = (info, next) ->
-  if info.app? and ihostnfo.key? and info.host?
+  if info.app? and info.key? and info.host?
     process.env.CLOUDMINE_APPID = info.app
     process.env.CLOUDMINE_APIKEY = info.key
-    process.env.CLOUDMINE_HOST = info.host
+    process.env.CLOUDMINE_APIROOT = info.host
 
     qunit = require 'qunit'
     config =
@@ -60,9 +61,9 @@ test = (info, next) ->
       tests: "./tests/tests.js"
     qunit.run config, next
   else
-    console.log "Cannot run tests without specifying an application id and api key."
-    console.log "Please specify an application id via --app flag and api key via --key flag."
-    console.log "e.g. cake --app 793dcffc4f67f94c36a8f20628d3d31b --key 8b05c2e5d0e88b471c5aae8ba6cf9f7b test"
+    console.log "Cannot run tests without specifying an application id, api key and host."
+    console.log "Please specify an application id via --app flag, api key via --key flag and host via --host flag."
+    console.log "e.g. cake --app 793dcffc4f67f94c36a8f20628d3d31b --key 8b05c2e5d0e88b471c5aae8ba6cf9f7b --host https://api.cloudmine.com test"
     next()
 
 complete = ->
