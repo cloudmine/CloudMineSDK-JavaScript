@@ -1,5 +1,6 @@
 # CloudMine JavaScript Library Change Log
-## Unreleased
+
+## 0.10.2
 * added replaceUserMaster method to cloudmine.js
 
 ## 0.10.1
