@@ -1428,6 +1428,17 @@
     'zeo'
   ];
 
+    /**
+     * Putting this method back so that we don't break current projects using the js sdk
+     * on before the WebService object is instantiated. Put an if check to make sure 'global' is not an undefined obj before
+     * trying access it
+     */
+    WebService.setXUniqueID = function(xUniqueID) {
+      if (typeof(global) != 'undefined') {
+          global._$XUniqueID = xUniqueID;
+      }
+    }
+
   /**
    * <p>WebService will return an instance of this class that should be used to interact with
    * the API. Upon completion of the AJAX call, this object will fire the event handlers based on
@@ -1479,8 +1490,17 @@
       'X-CloudMine-UT': opts.user_token
     };
 
+      /**
+       * I am adding an else here to account for the adding back the old set webservice method. I don't know if the global
+       * object is even used anymore but if for some strange reason the xuniqueid is not set in the option
+       * we can possibly get it from the global obj ... if global is set
+       */
     if (opts.xuniqueid) {
       this.requestHeaders['X-Unique-Id'] = opts.xuniqueid;
+    } else {
+        if (typeof(global) != 'undefined' && typeof global._$XUniqueID != 'undefined') {
+            this.requestHeaders['X-Unique-Id'] = global._$XUniqueID;
+        }
     }
 
     this.responseHeaders = {};
