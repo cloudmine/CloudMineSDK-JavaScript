@@ -1497,8 +1497,7 @@
        */
     if (opts.xuniqueid) {
       this.requestHeaders['X-Unique-Id'] = opts.xuniqueid;
-    }
-    else {
+    } else {
         if (typeof(global) != 'undefined' && typeof global._$XUniqueID != 'undefined') {
             this.requestHeaders['X-Unique-Id'] = global._$XUniqueID;
         }
