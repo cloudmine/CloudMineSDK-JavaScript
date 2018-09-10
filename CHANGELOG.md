@@ -1,5 +1,8 @@
 # CloudMine JavaScript Library Change Log
 
+## 0.10.3
+* added back old set_xunique_id method back to fix current code-runner which still depends on it.
+
 ## 0.10.2
 * added replaceUserMaster method to cloudmine.js
 
